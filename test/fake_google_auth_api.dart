@@ -8,9 +8,10 @@ class FakeGoogleAuthApi implements GoogleAuthApi {
   @override
   Future<GoogleAuthResult?> signInWithGoogle() async {
     return const GoogleAuthResult(
-      userId: 'test-user',
+      firebaseUid: 'test-firebase-uid',
       email: 'test@example.com',
       displayName: 'Test User',
+      googleUserId: 'test-google-id',
       idToken: 'fake-id-token',
     );
   }

@@ -1,15 +1,21 @@
-/// Snapshot after a successful Google Sign-In (for UI or backend handoff).
+/// Snapshot after a successful Google + Firebase sign-in.
 class GoogleAuthResult {
   const GoogleAuthResult({
-    required this.userId,
+    required this.firebaseUid,
     required this.email,
+    this.googleUserId,
     this.displayName,
     this.photoUrl,
     this.idToken,
     this.accessToken,
   });
 
-  final String userId;
+  /// Firebase Auth user id (`User.uid`).
+  final String firebaseUid;
+
+  /// Google account id from [GoogleSignInAccount.id], if needed for diagnostics.
+  final String? googleUserId;
+
   final String email;
   final String? displayName;
   final String? photoUrl;

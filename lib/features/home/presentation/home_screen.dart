@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../utils/app_routes.dart';
 import '../../auth/data/google_auth_api.dart';
 import '../../auth/data/google_auth_result.dart';
 
@@ -26,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       await widget.auth.signOut();
       if (!mounted) return;
-      context.go('/login');
+      context.go( AppRoutes.AUTH );
     } finally {
       if (mounted) setState(() => _signingOut = false);
     }
@@ -36,6 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final name = widget.session.displayName ?? widget.session.email;
+
 
     return Scaffold(
       appBar: AppBar(
@@ -61,6 +63,17 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (widget.session.photoUrl != null) ...[
+              CircleAvatar(
+                radius: 40,
+                backgroundImage: NetworkImage(widget.session.photoUrl!),
+                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              ),
+              const SizedBox(height: 16),
+            ] else ...[
+              const Icon(Icons.account_circle, size: 80),
+              const SizedBox(height: 16),
+            ],
             Text(
               'Você entrou',
               style: theme.textTheme.headlineSmall,
@@ -77,10 +90,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
+            const SizedBox(height: 8),
+            Text(
+              'UID Firebase: ${widget.session.firebaseUid}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+
             if (widget.session.idToken != null) ...[
               const SizedBox(height: 24),
               Text(
-                'idToken recebido — pronto para enviar ao backend ou Firebase.',
+                'idToken recebido — sessão válida no Firebase Auth.',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.primary,
                 ),

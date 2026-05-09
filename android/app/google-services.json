@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "786022998658",
+    "project_id": "galdinos-secret-santa",
+    "storage_bucket": "galdinos-secret-santa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:786022998658:android:fd003d82d6dced8426ca9b",
+        "android_client_info": {
+          "package_name": "br.com.galdino.secret_santa"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "786022998658-5k93l3nmnovgn4sh8443n85ij501e9t9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWwJBBFr_4Rig6oyoyl5v0rtosZ7RFolU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "786022998658-5k93l3nmnovgn4sh8443n85ij501e9t9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

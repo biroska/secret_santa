@@ -1,10 +1,13 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:secret_santa/utils/app_routes.dart';
 
 import '../data/google_auth_api.dart';
 import '../data/google_auth_service.dart';
 import 'widgets/google_sign_in_button.dart';
+import 'package:sign_in_button/sign_in_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, required this.auth});
@@ -26,12 +29,19 @@ class _LoginScreenState extends State<LoginScreen> {
     });
     try {
       final result = await widget.auth.signInWithGoogle();
+
       if (!mounted) return;
       if (result == null) {
         setState(() => _loading = false);
         return;
       }
-      context.go('/home', extra: result);
+      context.go( AppRoutes.HOME, extra: result);
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = e.message ?? e.code;
+      });
     } on PlatformException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -57,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const Spacer(),
               Icon(
@@ -75,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Entre para organizar seu amigo secreto',
+                'Entre para participar do amigo secreto',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
@@ -93,6 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
               ],
+
               if (_error != null) ...[
                 Text(
                   _error!,
@@ -103,9 +114,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
               ],
-              GoogleSignInButton(
+              /*GoogleSignInButton(
                 onPressed: supported ? _onGoogleSignIn : null,
                 isLoading: _loading,
+              ),*/
+              Text( " Google login is supported? " + supported.toString() ),
+              SignInButton(
+                Buttons.google,
+                onPressed: () {
+                  _onGoogleSignIn();
+                },
               ),
               const Spacer(),
             ],
