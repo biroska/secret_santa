@@ -6,8 +6,9 @@ import '../features/auth/data/google_auth_result.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/group/presentation/create_group_screen.dart';
-import '../features/group/presentation/group_details_screen.dart'; // Importando a nova tela de detalhes
+import '../features/group/presentation/group_details_screen.dart';
 import '../theme/app_theme.dart';
+import '../services/firestore/event_service.dart'; // Importando EventService
 
 class SecretSantaApp extends StatefulWidget {
   const SecretSantaApp({super.key, required this.auth});
@@ -20,11 +21,13 @@ class SecretSantaApp extends StatefulWidget {
 
 class _SecretSantaAppState extends State<SecretSantaApp> {
   late final GoRouter _router;
+  late final EventService _eventService; // Declarando a instância do EventService
 
   @override
   void initState() {
     super.initState();
     final auth = widget.auth;
+    _eventService = EventService(); // Instanciando EventService
     _router = GoRouter(
       initialLocation: '/login',
       routes: [
@@ -42,7 +45,11 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
           },
           builder: (context, state) {
             final session = state.extra! as GoogleAuthResult;
-            return HomeScreen(auth: auth, session: session);
+            return HomeScreen(
+              auth: auth,
+              session: session,
+              eventService: _eventService, // Passando o EventService para HomeScreen
+            );
           },
         ),
         GoRoute(
@@ -50,7 +57,7 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
           builder: (context, state) => const CreateGroupScreen(),
         ),
         GoRoute(
-          path: '/group-details', // Nova rota para detalhes do grupo
+          path: '/group-details',
           builder: (context, state) => const GroupDetailsScreen(),
         ),
       ],

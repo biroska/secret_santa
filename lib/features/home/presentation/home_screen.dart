@@ -6,16 +6,19 @@ import '../../../utils/app_routes.dart';
 import '../../auth/data/google_auth_api.dart';
 import '../../auth/data/google_auth_result.dart';
 import '../../../dtos/event_card_dto.dart'; // Importando o DTO
+import '../../../services/firestore/event_service.dart'; // Importando o EventService
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     required this.auth,
     required this.session,
+    required this.eventService, // Adicionando eventService ao construtor
   });
 
   final GoogleAuthApi auth;
   final GoogleAuthResult session;
+  final EventService eventService; // Declarando eventService
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -23,34 +26,18 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool _signingOut = false;
+  late Future<List<EventCardDto>> _eventsFuture; // Future para carregar os eventos
 
-  // Lista de eventos mockados
-  final List<EventCardDto> mockEvents = [
-    EventCardDto(
-      name: 'Amigo Secreto da Empresa',
-      eventDate: DateTime(2024, 12, 25),
-      drawDate: DateTime(2024, 12, 10),
-      icon: Icons.business,
-    ),
-    EventCardDto(
-      name: 'Natal em Família',
-      eventDate: DateTime(2024, 12, 24),
-      drawDate: DateTime(2024, 12, 5),
-      icon: Icons.family_restroom,
-    ),
-    EventCardDto(
-      name: 'Confraternização Amigos',
-      eventDate: DateTime(2024, 12, 30),
-      drawDate: DateTime(2024, 12, 15),
-      icon: Icons.people,
-    ),
-    EventCardDto(
-      name: 'Amigo Secreto da Faculdade',
-      eventDate: DateTime(2024, 12, 20),
-      drawDate: DateTime(2024, 12, 1),
-      icon: Icons.school,
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _eventsFuture = _loadEvents(); // Inicia o carregamento dos eventos
+  }
+
+  Future<List<EventCardDto>> _loadEvents() async {
+    final rawEvents = await widget.eventService.getEvents();
+    return rawEvents.map((data) => EventCardDto.fromFirestore(data)).toList();
+  }
 
   Future<void> _signOut() async {
     setState(() => _signingOut = true);
@@ -146,56 +133,69 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0), // Aumentado o padding horizontal
-        itemCount: mockEvents.length,
-        itemBuilder: (context, index) {
-          final event = mockEvents[index];
-          return Card(
-            margin: const EdgeInsets.symmetric(vertical: 4.0),
-            child: InkWell( // Adicionado InkWell para tornar o card clicável
-              onTap: () {
-                context.go('/group-details'); // Navega para a tela de detalhes do grupo
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: theme.colorScheme.primaryContainer,
-                      foregroundColor: theme.colorScheme.onPrimaryContainer,
-                      child: Icon(event.icon),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+      body: FutureBuilder<List<EventCardDto>>(
+        future: _eventsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Erro ao carregar eventos: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('Nenhum evento encontrado.'));
+          } else {
+            final events = snapshot.data!;
+            return ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              itemCount: events.length,
+              itemBuilder: (context, index) {
+                final event = events[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: InkWell(
+                    onTap: () {
+                      context.go('/group-details');
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Row(
                         children: [
-                          Text(
-                            event.name,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                          CircleAvatar(
+                            backgroundColor: theme.colorScheme.primaryContainer,
+                            foregroundColor: theme.colorScheme.onPrimaryContainer,
+                            child: Icon(event.icon),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Data: ${dateFormat.format(event.eventDate)} Data Sorteio: ${dateFormat.format(event.drawDate)}',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontStyle: FontStyle.italic,
-                              color: theme.colorScheme.onSurfaceVariant,
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  event.name,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Data: ${dateFormat.format(event.eventDate)} Data Sorteio: ${dateFormat.format(event.drawDate)}',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontStyle: FontStyle.italic,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-          );
+                  ),
+                );
+              },
+            );
+          }
         },
       ),
-      // FloatingActionButton removido
     );
   }
 }

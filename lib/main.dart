@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'app/secret_santa_app.dart';
 import 'features/auth/data/google_auth_service.dart';
+// import 'services/firestore/event_service.dart'; // Removendo a importação do EventService
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -13,6 +14,14 @@ Future<void> main() async {
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
     final authService = GoogleAuthService();
     await authService.init();
+
+    // Removendo o código de log de eventos
+    // final eventService = EventService();
+    // final events = await eventService.getEvents();
+    // if (kDebugMode) {
+    //   print('Eventos do Firestore: $events');
+    // }
+
     runApp(SecretSantaApp(auth: authService));
   } catch (e) {
     if (kDebugMode) {
