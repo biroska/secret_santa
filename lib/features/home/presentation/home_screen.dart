@@ -118,6 +118,39 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             ListTile(
+              leading: const Icon(Icons.add),
+              title: const Text('Novo Evento'),
+              onTap: () {
+                Navigator.pop(context); // Fecha o drawer
+                context.go('/create-event');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.group),
+              title: const Text('Meus Grupos'),
+              onTap: () {
+                Navigator.pop(context); // Fecha o drawer
+                // TODO: Implementar navegação para Meus Grupos
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Configurações'),
+              onTap: () {
+                Navigator.pop(context); // Fecha o drawer
+                // TODO: Implementar navegação para Configurações
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.info),
+              title: const Text('Sobre'),
+              onTap: () {
+                Navigator.pop(context); // Fecha o drawer
+                // TODO: Implementar navegação para Sobre
+              },
+            ),
+            const Divider(), // Adiciona um divisor antes do item Sair
+            ListTile(
               leading: const Icon(Icons.logout),
               title: _signingOut
                   ? const SizedBox(
@@ -195,6 +228,12 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           }
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          context.go('/create-event');
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }
