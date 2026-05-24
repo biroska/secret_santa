@@ -6,12 +6,17 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../../../core/config/google_auth_config.dart';
 import 'google_auth_api.dart';
 import 'google_auth_result.dart';
+import '../../../services/firestore/user_service.dart'; // Importando UserService
+import '../../../models/user.dart'; // Importando a classe Users
 
 /// Google Sign-In followed by [FirebaseAuth.signInWithCredential].
 class GoogleAuthService implements GoogleAuthApi {
+  final UserService _userService; // Adicionando UserService
+
   GoogleAuthService({
     GoogleSignIn? googleSignIn,
     FirebaseAuth? firebaseAuth,
+    UserService? userService, // Adicionando userService ao construtor
   })  : _googleSignIn = googleSignIn ??
             GoogleSignIn(
               clientId: GoogleAuthConfig.clientIdOrNull,
@@ -22,7 +27,8 @@ class GoogleAuthService implements GoogleAuthApi {
               ],
               serverClientId: GoogleAuthConfig.serverClientIdOrNull,
             ),
-        _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
+        _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
+        _userService = userService ?? UserService(); // Inicializando UserService
 
   final GoogleSignIn _googleSignIn;
   final FirebaseAuth _firebaseAuth;
@@ -68,6 +74,20 @@ class GoogleAuthService implements GoogleAuthApi {
           message: 'Firebase Auth returned no user after Google sign-in.',
         );
       }
+
+      // --- Nova lógica para verificar e criar usuário no Firestore ---
+      final userExistsInFirestore = await _userService.userExists(user.uid);
+      if (!userExistsInFirestore) {
+        final newUser = Users( // Usando a classe Users
+          id: user.uid,
+          name: user.displayName ?? user.email!, // Usando displayName ou email como name
+          email: user.email!,
+          photoUrl: user.photoURL ?? '', // photoURL pode ser null, então forneça um fallback
+          createdAt: DateTime.now(),
+        );
+        await _userService.createUser(newUser);
+      }
+      // --- Fim da nova lógica ---
 
       return GoogleAuthResult(
         firebaseUid: user.uid,
