@@ -2,17 +2,40 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart'; // Para debugPrint
 import 'package:firebase_auth/firebase_auth.dart'; // Para FirebaseAuth
 import '../../dtos/new_event_dto.dart'; // Importando o NewEventDto
+import '../../dtos/event_card_dto.dart'; // Importando o EventCardDto
+import 'user_service.dart'; // Importando o UserService
 
 class EventService {
   final FirebaseFirestore _firestore;
+  final UserService _userService; // Adicionando UserService como dependência
 
-  EventService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+  EventService({FirebaseFirestore? firestore, UserService? userService})
+      : _firestore = firestore ?? FirebaseFirestore.instance,
+        _userService = userService ?? UserService(); // Inicializando UserService
 
-  Future<List<Map<String, dynamic>>> getEvents() async {
+  Future<List<EventCardDto>> getEvents() async {
     try {
       final querySnapshot = await _firestore.collection('events').get();
-      final events = querySnapshot.docs.map((doc) => doc.data()).toList();
+      final List<EventCardDto> events = [];
+
+      for (var doc in querySnapshot.docs) {
+        final data = doc.data();
+        final String adminId = data['adminId'] as String;
+
+        // Buscar o nome do organizador usando UserService
+        String organizerName = 'Desconhecido';
+        try {
+          final user = await _userService.getUserById(adminId);
+          organizerName = user?.name ?? 'Desconhecido'; // Usando user.name
+        } catch (e) {
+          debugPrint('Erro ao buscar organizador $adminId: $e');
+        }
+
+        events.add(EventCardDto.fromFirestore(
+          data: data,
+          organizerName: organizerName,
+        ));
+      }
       return events;
     } catch (e) {
       debugPrint('Erro ao buscar eventos do Firestore: $e');

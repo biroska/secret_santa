@@ -36,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<List<EventCardDto>> _loadEvents() async {
     final rawEvents = await widget.eventService.getEvents();
-    return rawEvents.map((data) => EventCardDto.fromFirestore(data)).toList();
+    return rawEvents; // EventService já retorna List<EventCardDto>
   }
 
   Future<void> _signOut() async {
@@ -122,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
               title: const Text('Novo Evento'),
               onTap: () {
                 Navigator.pop(context); // Fecha o drawer
-                context.go('/create-event');
+                context.push('/create-event');
               },
             ),
             ListTile(
@@ -210,6 +210,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
+                                  'Organizador: ${event.organizerName}', // Nova linha para o organizador
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
                                   'Data: ${dateFormat.format(event.eventDate)} Data Sorteio: ${dateFormat.format(event.drawDate)}',
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     fontStyle: FontStyle.italic,
@@ -231,7 +238,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          context.go('/create-event');
+          context.push('/create-event');
         },
         child: const Icon(Icons.add),
       ),
