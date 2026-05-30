@@ -55,12 +55,13 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Evento criado com sucesso!')),
         );
-        context.pop(); // Volta para a tela anterior (HomeScreen)
+        context.pop(true); // Volta para a tela anterior (HomeScreen) e indica sucesso
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao criar evento: $e')),
         );
+        context.pop(false); // Volta para a tela anterior e indica falha
       } finally {
         if (!mounted) return;
         setState(() {

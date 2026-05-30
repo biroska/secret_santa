@@ -34,6 +34,13 @@ class _HomeScreenState extends State<HomeScreen> {
     _eventsFuture = _loadEvents(); // Inicia o carregamento dos eventos
   }
 
+  // Método para recarregar os eventos e atualizar o Future
+  void _refreshEvents() {
+    setState(() {
+      _eventsFuture = _loadEvents();
+    });
+  }
+
   Future<List<EventCardDto>> _loadEvents() async {
     final rawEvents = await widget.eventService.getEvents();
     return rawEvents; // EventService já retorna List<EventCardDto>
@@ -120,9 +127,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ListTile(
               leading: const Icon(Icons.add),
               title: const Text('Novo Evento'),
-              onTap: () {
+              onTap: () async { // Alterado para async
                 Navigator.pop(context); // Fecha o drawer
-                context.push('/create-event');
+                final result = await context.push('/create-event'); // Aguarda o resultado
+                if (result == true) { // Se o evento foi salvo com sucesso
+                  _refreshEvents(); // Recarrega a lista de eventos
+                }
               },
             ),
             ListTile(
@@ -237,8 +247,11 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          context.push('/create-event');
+        onPressed: () async { // Alterado para async
+          final result = await context.push('/create-event'); // Aguarda o resultado
+          if (result == true) { // Se o evento foi salvo com sucesso
+            _refreshEvents(); // Recarrega a lista de eventos
+          }
         },
         child: const Icon(Icons.add),
       ),
