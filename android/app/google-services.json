@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "786022998658-oj7sgfre711hf67rok58cnqhuqi9eab8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "br.com.galdino.secret_santa",
+            "certificate_hash": "af27a5543f1c149da0966fe146fd0b46cd317782"
+          }
+        },
+        {
           "client_id": "786022998658-5k93l3nmnovgn4sh8443n85ij501e9t9.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -29,6 +37,13 @@
             {
               "client_id": "786022998658-5k93l3nmnovgn4sh8443n85ij501e9t9.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "786022998658-duagrvlgg5nppp4tk0bnecu568kkbs4e.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.secretSanta"
+              }
             }
           ]
         }
