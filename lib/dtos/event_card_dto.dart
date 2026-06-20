@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Importar para Timestamp
 
 class EventCardDto {
+  final String id;
   final String name;
   final String organizerName; // Novo campo para o nome do organizador
   final DateTime eventDate;
@@ -9,6 +10,7 @@ class EventCardDto {
   final IconData icon;
 
   EventCardDto({
+    required this.id,
     required this.name,
     required this.organizerName, // Tornando obrigatório
     required this.eventDate,
@@ -19,6 +21,7 @@ class EventCardDto {
   // Construtor de fábrica para criar EventCardDto a partir de dados do Firestore
   // Este construtor será ajustado no EventService para incluir o organizerName
   factory EventCardDto.fromFirestore({
+    required String id,
     required Map<String, dynamic> data,
     required String organizerName, // Recebe o nome do organizador
   }) {
@@ -26,6 +29,7 @@ class EventCardDto {
     final Timestamp drawTimestamp = data['createdAt'] as Timestamp; // Assumindo que drawDate é createdAt
 
     return EventCardDto(
+      id: id,
       name: data['title'] as String,
       organizerName: organizerName,
       eventDate: eventTimestamp.toDate(),

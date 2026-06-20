@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../events/presentation/event_details_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart'; // Para formatação de data
 
@@ -196,7 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   margin: const EdgeInsets.symmetric(vertical: 4.0),
                   child: InkWell(
                     onTap: () {
-                      context.go('/group-details');
+                      context.push('/event-details/${event.id}');
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
