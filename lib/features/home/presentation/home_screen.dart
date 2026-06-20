@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../events/presentation/event_details_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart'; // Para formatação de data
 
@@ -177,75 +176,82 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      body: FutureBuilder<List<EventCardDto>>(
-        future: _eventsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Erro ao carregar eventos: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Nenhum evento encontrado.'));
-          } else {
-            final events = snapshot.data!;
-            return ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              itemCount: events.length,
-              itemBuilder: (context, index) {
-                final event = events[index];
-                return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 4.0),
-                  child: InkWell(
-                    onTap: () {
-                      context.push('/event-details/${event.id}');
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: theme.colorScheme.primaryContainer,
-                            foregroundColor: theme.colorScheme.onPrimaryContainer,
-                            child: Icon(event.icon),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+      body: Column( // Usando Column para o botão e a lista
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded( // Expanded para a lista ocupar o espaço restante
+            child: FutureBuilder<List<EventCardDto>>(
+              future: _eventsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Erro ao carregar eventos: ${snapshot.error}'));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('Nenhum evento encontrado.'));
+                } else {
+                  final events = snapshot.data!;
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    itemCount: events.length,
+                    itemBuilder: (context, index) {
+                      final event = events[index];
+                      return Card(
+                        margin: const EdgeInsets.symmetric(vertical: 4.0),
+                        child: InkWell(
+                          onTap: () {
+                            context.push('/event-details/${event.id}'); // Alterado para /event-details
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Row(
                               children: [
-                                Text(
-                                  event.name,
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                CircleAvatar(
+                                  backgroundColor: theme.colorScheme.primaryContainer,
+                                  foregroundColor: theme.colorScheme.onPrimaryContainer,
+                                  child: Icon(event.icon),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Organizador: ${event.organizerName}', // Nova linha para o organizador
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Data: ${dateFormat.format(event.eventDate)} Data Sorteio: ${dateFormat.format(event.drawDate)}',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    fontStyle: FontStyle.italic,
-                                    color: theme.colorScheme.onSurfaceVariant,
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        event.name,
+                                        style: theme.textTheme.titleMedium?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Organizador: ${event.organizerName}', // Nova linha para o organizador
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: theme.colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Data: ${dateFormat.format(event.eventDate)} Data Sorteio: ${dateFormat.format(event.drawDate)}',
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          fontStyle: FontStyle.italic,
+                                          color: theme.colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
+                        ),
+                      );
+                    },
+                  );
+                }
               },
-            );
-          }
-        },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async { // Alterado para async

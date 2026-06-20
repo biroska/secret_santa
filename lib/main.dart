@@ -15,13 +15,6 @@ Future<void> main() async {
     final authService = GoogleAuthService();
     await authService.init();
 
-    // Removendo o código de log de eventos
-    // final eventService = EventService();
-    // final events = await eventService.getEvents();
-    // if (kDebugMode) {
-    //   print('Eventos do Firestore: $events');
-    // }
-
     runApp(SecretSantaApp(auth: authService));
   } catch (e) {
     if (kDebugMode) {

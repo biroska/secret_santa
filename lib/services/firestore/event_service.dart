@@ -32,6 +32,7 @@ class EventService {
         }
 
         events.add(EventCardDto.fromFirestore(
+          id: doc.id, // Adicionando o ID do documento
           data: data,
           organizerName: organizerName,
         ));
@@ -40,6 +41,34 @@ class EventService {
     } catch (e) {
       debugPrint('Erro ao buscar eventos do Firestore: $e');
       return [];
+    }
+  }
+
+  Future<EventCardDto?> getEventById(String eventId) async {
+    try {
+      final docSnapshot = await _firestore.collection('events').doc(eventId).get();
+      if (docSnapshot.exists && docSnapshot.data() != null) {
+        final data = docSnapshot.data()!;
+        final String adminId = data['adminId'] as String;
+
+        String organizerName = 'Desconhecido';
+        try {
+          final user = await _userService.getUserById(adminId);
+          organizerName = user?.name ?? 'Desconhecido';
+        } catch (e) {
+          debugPrint('Erro ao buscar organizador $adminId para evento $eventId: $e');
+        }
+
+        return EventCardDto.fromFirestore(
+          id: docSnapshot.id,
+          data: data,
+          organizerName: organizerName,
+        );
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Erro ao buscar evento $eventId do Firestore: $e');
+      return null;
     }
   }
 

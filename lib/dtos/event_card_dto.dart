@@ -8,6 +8,7 @@ class EventCardDto {
   final DateTime eventDate;
   final DateTime drawDate;
   final IconData icon;
+  final String description; // Adicionando o campo de descrição
 
   EventCardDto({
     required this.id,
@@ -16,6 +17,7 @@ class EventCardDto {
     required this.eventDate,
     required this.drawDate,
     this.icon = Icons.event, // Ícone padrão
+    required this.description, // Tornando obrigatório
   });
 
   // Construtor de fábrica para criar EventCardDto a partir de dados do Firestore
@@ -35,6 +37,7 @@ class EventCardDto {
       eventDate: eventTimestamp.toDate(),
       drawDate: drawTimestamp.toDate(),
       icon: Icons.event, // Usando um ícone padrão por enquanto
+      description: data['description'] as String, // Obtendo a descrição do Firestore
     );
   }
 }
