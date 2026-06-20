@@ -6,7 +6,6 @@ import 'package:secret_santa/utils/app_routes.dart';
 
 import '../data/google_auth_api.dart';
 import '../data/google_auth_service.dart';
-import 'widgets/google_sign_in_button.dart';
 import 'package:sign_in_button/sign_in_button.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -118,7 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: supported ? _onGoogleSignIn : null,
                 isLoading: _loading,
               ),*/
-              Text( " Google login is supported? " + supported.toString() ),
+              Text( " Google login is supported? $supported" ),
               SignInButton(
                 Buttons.google,
                 onPressed: () {
