@@ -10,12 +10,15 @@ class EventService {
   final UserService _userService; // Adicionando UserService como dependência
 
   EventService({FirebaseFirestore? firestore, UserService? userService})
-      : _firestore = firestore ?? FirebaseFirestore.instance,
-        _userService = userService ?? UserService(); // Inicializando UserService
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _userService = userService ?? UserService(); // Inicializando UserService
 
   Future<List<EventCardDto>> getEvents() async {
     try {
-      final querySnapshot = await _firestore.collection('events').get();
+      final querySnapshot = await _firestore
+          .collection('events')
+          .orderBy('eventDate', descending: true)
+          .get();
       final List<EventCardDto> events = [];
 
       for (var doc in querySnapshot.docs) {
@@ -31,12 +34,16 @@ class EventService {
           debugPrint('Erro ao buscar organizador $adminId: $e');
         }
 
-        events.add(EventCardDto.fromFirestore(
-          id: doc.id, // Adicionando o ID do documento
-          data: data,
-          organizerName: organizerName,
-        ));
+        events.add(
+          EventCardDto.fromFirestore(
+            id: doc.id, // Adicionando o ID do documento
+            data: data,
+            organizerName: organizerName,
+          ),
+        );
       }
+
+      events.sort((a, b) => b.eventDate.compareTo(a.eventDate));
       return events;
     } catch (e) {
       debugPrint('Erro ao buscar eventos do Firestore: $e');
@@ -46,7 +53,10 @@ class EventService {
 
   Future<EventCardDto?> getEventById(String eventId) async {
     try {
-      final docSnapshot = await _firestore.collection('events').doc(eventId).get();
+      final docSnapshot = await _firestore
+          .collection('events')
+          .doc(eventId)
+          .get();
       if (docSnapshot.exists && docSnapshot.data() != null) {
         final data = docSnapshot.data()!;
         final String adminId = data['adminId'] as String;
@@ -56,7 +66,9 @@ class EventService {
           final user = await _userService.getUserById(adminId);
           organizerName = user?.name ?? 'Desconhecido';
         } catch (e) {
-          debugPrint('Erro ao buscar organizador $adminId para evento $eventId: $e');
+          debugPrint(
+            'Erro ao buscar organizador $adminId para evento $eventId: $e',
+          );
         }
 
         return EventCardDto.fromFirestore(
@@ -84,7 +96,16 @@ class EventService {
         newEvent.eventDate.year,
         newEvent.eventDate.month,
         newEvent.eventDate.day,
-        12, // 12:00:00 UTC
+        12,
+        0,
+        0,
+      );
+
+      final DateTime drawDateUtc = DateTime.utc(
+        newEvent.drawDate.year,
+        newEvent.drawDate.month,
+        newEvent.drawDate.day,
+        12,
         0,
         0,
       );
@@ -93,9 +114,10 @@ class EventService {
         'title': newEvent.title,
         'description': newEvent.description,
         'eventDate': Timestamp.fromDate(eventDateUtc),
-        'createdAt': Timestamp.now(), // Data e hora da gravação
+        'drawDate': Timestamp.fromDate(drawDateUtc),
+        'createdAt': Timestamp.now(),
         'adminId': user.uid,
-        'status': 'CREATING', // Status fixo
+        'status': 'CREATING',
       };
 
       await _firestore.collection('events').add(eventData);

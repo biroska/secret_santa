@@ -28,7 +28,9 @@ class EventCardDto {
     required String organizerName, // Recebe o nome do organizador
   }) {
     final Timestamp eventTimestamp = data['eventDate'] as Timestamp;
-    final Timestamp drawTimestamp = data['createdAt'] as Timestamp; // Assumindo que drawDate é createdAt
+    final Timestamp drawTimestamp =
+        (data['drawDate'] as Timestamp?) ??
+        (data['createdAt'] as Timestamp? ?? Timestamp.now());
 
     return EventCardDto(
       id: id,
@@ -37,7 +39,8 @@ class EventCardDto {
       eventDate: eventTimestamp.toDate(),
       drawDate: drawTimestamp.toDate(),
       icon: Icons.event, // Usando um ícone padrão por enquanto
-      description: data['description'] as String, // Obtendo a descrição do Firestore
+      description:
+          data['description'] as String, // Obtendo a descrição do Firestore
     );
   }
 }

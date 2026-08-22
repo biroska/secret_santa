@@ -6,7 +6,10 @@ import '../../../dtos/new_event_dto.dart'; // Importando o NewEventDto
 import '../../../services/firestore/event_service.dart'; // Importando o EventService
 
 class CreateEventScreen extends StatefulWidget {
-  const CreateEventScreen({super.key, required this.eventService}); // Adicionando eventService
+  const CreateEventScreen({
+    super.key,
+    required this.eventService,
+  }); // Adicionando eventService
 
   final EventService eventService; // Declarando eventService
 
@@ -19,20 +22,33 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _eventDateController = TextEditingController();
-  DateTime? _selectedDate;
+  final TextEditingController _drawDateController = TextEditingController();
+  DateTime? _selectedEventDate;
+  DateTime? _selectedDrawDate;
   bool _isSaving = false; // Estado para controlar o carregamento
 
-  Future<void> _selectDate(BuildContext context) async {
+  Future<void> _selectDate(
+    BuildContext context, {
+    required bool isDrawDate,
+  }) async {
+    final currentDate = isDrawDate
+        ? _selectedDrawDate ?? DateTime.now()
+        : _selectedEventDate ?? DateTime.now();
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
+      initialDate: currentDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
-    if (picked != null && picked != _selectedDate) {
+    if (picked != null) {
       setState(() {
-        _selectedDate = picked;
-        _eventDateController.text = DateFormat('dd/MM/yyyy').format(picked);
+        if (isDrawDate) {
+          _selectedDrawDate = picked;
+          _drawDateController.text = DateFormat('dd/MM/yyyy').format(picked);
+        } else {
+          _selectedEventDate = picked;
+          _eventDateController.text = DateFormat('dd/MM/yyyy').format(picked);
+        }
       });
     }
   }
@@ -46,7 +62,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         final newEventDto = NewEventDto(
           title: _titleController.text,
           description: _descriptionController.text,
-          eventDate: _selectedDate!,
+          eventDate: _selectedEventDate!,
+          drawDate: _selectedDrawDate!,
         );
 
         await widget.eventService.createEvent(newEventDto);
@@ -55,18 +72,21 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Evento criado com sucesso!')),
         );
-        context.pop(true); // Volta para a tela anterior (HomeScreen) e indica sucesso
+        context.pop(
+          true,
+        ); // Volta para a tela anterior (HomeScreen) e indica sucesso
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao criar evento: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro ao criar evento: $e')));
         context.pop(false); // Volta para a tela anterior e indica falha
       } finally {
-        if (!mounted) return;
-        setState(() {
-          _isSaving = false;
-        });
+        if (mounted) {
+          setState(() {
+            _isSaving = false;
+          });
+        }
       }
     }
   }
@@ -76,15 +96,14 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     _titleController.dispose();
     _descriptionController.dispose();
     _eventDateController.dispose();
+    _drawDateController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Novo Evento'),
-      ),
+      appBar: AppBar(title: const Text('Novo Evento')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -128,21 +147,42 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   suffixIcon: Icon(Icons.calendar_today),
                 ),
                 readOnly: true,
-                onTap: () => _selectDate(context),
+                onTap: () => _selectDate(context, isDrawDate: false),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Por favor, selecione a data do evento';
                   }
-                  // Verifica se _selectedDate não é nulo, pois é usado no DTO
-                  if (_selectedDate == null) {
+                  if (_selectedEventDate == null) {
                     return 'Data do evento inválida';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _drawDateController,
+                decoration: const InputDecoration(
+                  labelText: 'Data do Sorteio',
+                  border: OutlineInputBorder(),
+                  suffixIcon: Icon(Icons.card_giftcard),
+                ),
+                readOnly: true,
+                onTap: () => _selectDate(context, isDrawDate: true),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor, selecione a data do sorteio';
+                  }
+                  if (_selectedDrawDate == null) {
+                    return 'Data do sorteio inválida';
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: _isSaving ? null : _submitForm, // Desabilita o botão durante o salvamento
+                onPressed: _isSaving
+                    ? null
+                    : _submitForm, // Desabilita o botão durante o salvamento
                 child: _isSaving
                     ? const SizedBox(
                         width: 20,
