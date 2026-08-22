@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../../dtos/event_card_dto.dart';
 import '../../../services/firestore/event_service.dart';
@@ -15,7 +14,7 @@ class EventDetailsScreen extends StatefulWidget {
 
 class _EventDetailsScreenState extends State<EventDetailsScreen> {
   late final EventService _eventService;
-  Future<EventCardDto?>? _eventFuture; // Changed to nullable Future
+  Future<EventCardDto?>? _eventFuture;
 
   @override
   void initState() {
@@ -34,98 +33,489 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
   Future<void> _fetchEventDetails() async {
     setState(() {
-      _eventFuture = _eventService.getEventById(widget.eventId).then((event) {
-        return event; // This can now be null
-      });
+      _eventFuture = _eventService.getEventById(widget.eventId);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('dd-MM-yyyy');
+    return FutureBuilder<EventCardDto?>(
+      future: _eventFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detalhes do Evento'),
-      ),
-      body: FutureBuilder<EventCardDto?>( // Changed to nullable FutureBuilder
-        future: _eventFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Erro ao carregar evento: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data == null) { // Explicitly check for null
-            return const Center(child: Text('Nenhum evento encontrado.'));
-          } else {
-            final event = snapshot.data!;
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+        if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
+          return Scaffold(
+            body: Center(
+              child: Text(
+                'Erro ao carregar evento${snapshot.hasError ? ': ${snapshot.error}' : ''}',
+              ),
+            ),
+          );
+        }
+
+        final event = snapshot.data!;
+
+        return Scaffold(
+          backgroundColor: const Color(0xFFF2F3F5),
+          body: SafeArea(
+            child: SingleChildScrollView(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    event.name, // Usando o nome do evento real
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: Colors.deepPurple,
-                          fontWeight: FontWeight.bold,
+                  _buildHeader(context, event.organizerName),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSummaryCard(),
+                        const SizedBox(height: 18),
+                        _buildRevealBanner(),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Participantes',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1B1B1B),
+                              ),
+                            ),
+                            Text(
+                              '5',
+                              style: TextStyle(
+                                fontSize: 19,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[800],
+                              ),
+                            ),
+                            const Spacer(),
+                            TextButton.icon(
+                              onPressed: () {},
+                              icon: const Icon(Icons.add, size: 22),
+                              label: const Text('Convidar'),
+                              style: TextButton.styleFrom(
+                                foregroundColor: const Color(0xFF1D7B72),
+                                padding: EdgeInsets.zero,
+                                minimumSize: const Size(0, 0),
+                              ),
+                            ),
+                          ],
                         ),
-                  ),
-                  const Divider(height: 32),
-                  _buildInfoField("Título", event.name),
-                  _buildInfoField("Organizador", event.organizerName),
-                  _buildInfoField("Data do Evento", dateFormat.format(event.eventDate)),
-                  _buildInfoField("Data do Sorteio", dateFormat.format(event.drawDate)),
-                  _buildInfoField("ID Interno", event.id),
-                  const SizedBox(height: 24),
-                  const Text(
-                    "Descrição",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      event.description, // Usando a descrição real
-                      style: const TextStyle(fontSize: 16, height: 1.4),
+                        const SizedBox(height: 14),
+                        _buildSearchField(),
+                        const SizedBox(height: 14),
+                        _buildParticipantItem(
+                          name: '${event.organizerName} Silva (Você)',
+                          subtitle: '3 desejos cadastrados',
+                          badge: 'ORG',
+                          badgeColor: const Color(0xFFD9E9E6),
+                          badgeTextColor: const Color(0xFF1D7B72),
+                          showChevron: true,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildParticipantItem(
+                          name: 'Mariana Souza',
+                          subtitle: '3 desejos cadastrados',
+                          badge: 'Confirmado',
+                          badgeColor: const Color(0xFFE2F0E2),
+                          badgeTextColor: const Color(0xFF3D8F3D),
+                          showChevron: true,
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-            );
-          }
-        },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, String organizerName) {
+    final appBarBackgroundColor =
+        Theme.of(context).appBarTheme.backgroundColor ??
+        Theme.of(context).colorScheme.primary;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 22),
+      decoration: BoxDecoration(
+        color: appBarBackgroundColor,
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(18),
+          bottomRight: Radius.circular(18),
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const Text(
+                'DETALHES',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.7,
+                ),
+              ),
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.more_vert, color: Colors.white),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Amigo Secreto da Firma',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Container(
+                width: 18,
+                height: 18,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check,
+                  size: 14,
+                  color: Color(0xFF1D7B72),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Organizado por Você ($organizerName)',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 6),
+              const Text('🎄', style: TextStyle(fontSize: 18)),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildInfoField(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+  Widget _buildSummaryCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8E6C6),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.card_giftcard_rounded,
+                  color: Color(0xFFEB9F35),
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'ORÇAMENTO MÁXIMO',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF595959),
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          const Row(
+            children: [
+              Text(
+                'Até ',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Color(0xFF3D3D3D),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                'R\$ 80,00',
+                style: TextStyle(
+                  fontSize: 24,
+                  color: Color(0xFF1E1E1E),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: _infoChip(
+                  label: 'CRIADO EM',
+                  value: '30/05/2026',
+                  color: const Color(0xFFFDE9E9),
+                  textColor: const Color(0xFFBD3A3A),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _infoChip(
+                  label: 'SORTEIO',
+                  value: '10/12/2026',
+                  color: const Color(0xFFEAF5EC),
+                  textColor: const Color(0xFF2E8A4A),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _infoChip(
+                  label: 'FESTA',
+                  value: '24/12/2026',
+                  color: const Color(0xFFE9F3FA),
+                  textColor: const Color(0xFF2C6F9F),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoChip({
+    required String label,
+    required String value,
+    required Color color,
+    required Color textColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
         children: [
           Text(
             label,
             style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: textColor,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: textColor,
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRevealBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFDF3A4A),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: RichText(
+              text: const TextSpan(
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  height: 1.3,
+                ),
+                children: [
+                  TextSpan(text: 'O Sorteio Já Aconteceu!\n'),
+                  TextSpan(
+                    text:
+                        'Clique para revelar uma imagem mágica\nque m o seu amigo secreto.',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Container(
+            width: 56,
+            height: 56,
+            decoration: const BoxDecoration(
+              color: Color(0xFFF7C74B),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.card_giftcard_rounded,
+              color: Color(0xFFCB4A2A),
+              size: 32,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchField() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFDADADA)),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.search, color: Color(0xFF5C5C5C)),
+          SizedBox(width: 10),
+          Expanded(
+            child: TextField(
+              enabled: false,
+              decoration: InputDecoration(
+                hintText: 'Buscar participante...',
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(vertical: 16),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildParticipantItem({
+    required String name,
+    required String subtitle,
+    required String badge,
+    required Color badgeColor,
+    required Color badgeTextColor,
+    required bool showChevron,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE5E7EB),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.person, color: Color(0xFF667085)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    color: Color(0xFF1B1B1B),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: Color(0xFF667085),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: badgeColor,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              badge,
+              style: TextStyle(
+                color: badgeTextColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ),
+          if (showChevron) ...[
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right, color: Color(0xFF707070)),
+          ],
         ],
       ),
     );
