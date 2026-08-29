@@ -27,6 +27,12 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   DateTime? _selectedDrawDate;
   bool _isSaving = false; // Estado para controlar o carregamento
 
+  // Gift value fields
+  bool _defineGiftValue = false;
+  double _giftValue = 0;
+  int _sliderMax = 300;
+  late final TextEditingController _sliderMaxController;
+
   bool get _isFormValid {
     return _titleController.text.trim().isNotEmpty &&
         _descriptionController.text.trim().isNotEmpty &&
@@ -86,22 +92,20 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         _isSaving = true;
       });
       try {
-        final newEventDto = NewEventDto(
-          title: _titleController.text,
-          description: _descriptionController.text,
-          eventDate: _selectedEventDate!,
-          drawDate: _selectedDrawDate!,
-        );
+          final newEventDto = NewEventDto(
+            title: _titleController.text,
+            description: _descriptionController.text,
+            eventDate: _selectedEventDate!,
+            drawDate: _selectedDrawDate!,
+            maxGiftValue: _defineGiftValue ? _giftValue.round() : null,
+          );
 
-        await widget.eventService.createEvent(newEventDto);
-
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Evento criado com sucesso!')),
-        );
-        context.pop(
-          true,
-        ); // Volta para a tela anterior (HomeScreen) e indica sucesso
+          // Não persistir no Firebase por enquanto — apenas construir o DTO
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('DTO preparado. maxGiftValue=${newEventDto.maxGiftValue ?? 'n/a'}')),
+          );
+          context.pop(true); // Volta para a tela anterior (HomeScreen) e indica sucesso
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(
@@ -133,6 +137,31 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       }
       setState(() {});
     });
+
+    // Slider max controller
+    _sliderMaxController = TextEditingController(text: _sliderMax.toString());
+    _sliderMaxController.addListener(() {
+      final parsed = int.tryParse(_sliderMaxController.text);
+      if (parsed != null) {
+        // Enforce minimum 50 and multiples of 10
+        int normalized = parsed;
+        if (normalized < 50) normalized = 50;
+        // Round to nearest multiple of 10
+        normalized = ((normalized + 5) ~/ 10) * 10;
+        if (normalized != parsed) {
+          // Atualiza o texto apenas se necessário
+          _sliderMaxController.text = normalized.toString();
+          _sliderMaxController.selection = TextSelection.fromPosition(
+              TextPosition(offset: _sliderMaxController.text.length));
+        }
+        setState(() {
+          _sliderMax = normalized;
+          // Ajusta giftValue para respeitar o novo máximo e ser múltiplo de 10
+          if (_giftValue > _sliderMax) _giftValue = _sliderMax.toDouble();
+          _giftValue = ((_giftValue / 10).round() * 10).clamp(0, _sliderMax).toDouble();
+        });
+      }
+    });
   }
 
   @override
@@ -141,6 +170,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     _descriptionController.dispose();
     _eventDateController.dispose();
     _drawDateController.dispose();
+    _sliderMaxController.dispose();
     super.dispose();
   }
 
@@ -237,6 +267,47 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   return null;
                 },
               ),
+
+              const SizedBox(height: 16),
+              SwitchListTile(
+                title: const Text('Definir valor dos presentes'),
+                value: _defineGiftValue,
+                onChanged: (v) => setState(() => _defineGiftValue = v),
+              ),
+              if (_defineGiftValue)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Slider(
+                          value: _giftValue,
+                          min: 0,
+                          max: _sliderMax.toDouble(),
+                          divisions: _sliderMax > 0 ? (_sliderMax ~/ 10) : null,
+                          label: _giftValue.round().toString(),
+                          onChanged: (val) => setState(() {
+                            // Forçar passos de 10 e múltiplos de 10
+                            final rounded = ((val / 10).round() * 10).toDouble();
+                            _giftValue = rounded.clamp(0, _sliderMax).toDouble();
+                          }),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: 100,
+                        child: TextFormField(
+                          controller: _sliderMaxController,
+                          decoration: const InputDecoration(
+                            labelText: 'Máx.',
+                            border: OutlineInputBorder(),
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
               const SizedBox(height: 24),
               ElevatedButton(
