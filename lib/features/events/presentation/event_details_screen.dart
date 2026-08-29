@@ -160,59 +160,72 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         Theme.of(context).colorScheme.primary;
     final organizerFirstName = _getFirstName(event.organizerName);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 22),
-      decoration: BoxDecoration(
-        color: appBarBackgroundColor,
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(18),
-          bottomRight: Radius.circular(18),
-        ),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  color: Colors.white,
-                ),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-              Text(
-                event.name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.7,
-                ),
-              ),
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.more_vert, color: Colors.white),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-            ],
+    // Keep horizontal spacing consistent with other cards by applying outer padding
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 22),
+        decoration: BoxDecoration(
+          color: appBarBackgroundColor,
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(18),
+            bottomRight: Radius.circular(18),
           ),
-          const SizedBox(height: 18),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              event.description,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.5,
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    color: Colors.white,
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                const SizedBox(width: 8),
+                // Make title flexible to avoid overflow
+                Expanded(
+                  child: Text(
+                    event.name,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.7,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.more_vert, color: Colors.white),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                event.description,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                softWrap: true,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.5,
+                ),
               ),
             ),
-          ),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -281,10 +294,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'ORÇAMENTO MÁXIMO',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF595959),
@@ -295,27 +308,38 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             ],
           ),
           const SizedBox(height: 14),
-          const Row(
-            children: [
-              Text(
-                'Até ',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Color(0xFF3D3D3D),
-                  fontWeight: FontWeight.w500,
+          // Mostrar valor máximo do presente quando definido
+          if (event.maxGiftValue != null) ...[
+            Row(
+              children: [
+                const Text(
+                  'Valor do presente: ',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Color(0xFF3D3D3D),
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-              Text(
-                'R\$ 80,00',
-                style: TextStyle(
-                  fontSize: 24,
-                  color: Color(0xFF1E1E1E),
-                  fontWeight: FontWeight.bold,
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$')
+                        .format(event.maxGiftValue),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      color: Color(0xFF1E1E1E),
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
+              ],
+            ),
+            const SizedBox(height: 18),
+          ] else ...[
+            const SizedBox(height: 18),
+          ],
           Row(
             children: [
               Expanded(

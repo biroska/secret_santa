@@ -10,6 +10,7 @@ class EventCardDto {
   final DateTime drawDate;
   final IconData icon;
   final String description;
+  final int? maxGiftValue; // optional
 
   EventCardDto({
     required this.id,
@@ -20,6 +21,7 @@ class EventCardDto {
     required this.drawDate,
     this.icon = Icons.event,
     required this.description,
+    this.maxGiftValue,
   });
 
   factory EventCardDto.fromFirestore({
@@ -34,6 +36,15 @@ class EventCardDto {
     final Timestamp drawTimestamp =
         (data['drawDate'] as Timestamp?) ?? createdAtTimestamp;
 
+    // maxGiftValue may be stored as int or num
+    final dynamic rawMax = data['maxGiftValue'];
+    int? maxGift;
+    if (rawMax is int) {
+      maxGift = rawMax;
+    } else if (rawMax is num) {
+      maxGift = rawMax.toInt();
+    }
+
     return EventCardDto(
       id: id,
       name: data['title'] as String,
@@ -43,6 +54,7 @@ class EventCardDto {
       drawDate: drawTimestamp.toDate(),
       icon: Icons.event,
       description: data['description'] as String? ?? '',
+      maxGiftValue: maxGift,
     );
   }
 }
