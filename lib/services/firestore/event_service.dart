@@ -103,8 +103,9 @@ class EventService {
       final List<EventCardDto> events = [];
 
       for (var doc in querySnapshot.docs) {
-        final data = doc.data();
-        final String adminId = data['adminId'] as String;
+        final data = doc.data() as Map<String, dynamic>?;
+        if (data == null) continue; // pular documentos sem dados
+        final String adminId = (data['adminId'] ?? '') as String;
 
         String organizerName = 'Desconhecido';
         try {
