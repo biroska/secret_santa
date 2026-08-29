@@ -26,24 +26,76 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool _signingOut = false;
-  late Future<List<EventCardDto>> _eventsFuture; // Future para carregar os eventos
+  // Paginated events state
+  final List<EventCardDto> _events = [];
+  final ScrollController _scrollController = ScrollController();
+  bool _isLoadingInitial = true;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
+  final int _pageSize = 10;
 
   @override
   void initState() {
     super.initState();
-    _eventsFuture = _loadEvents(); // Inicia o carregamento dos eventos
+    _scrollController.addListener(_onScroll);
+    _loadInitial(); // Inicia o carregamento dos eventos
   }
 
-  // Método para recarregar os eventos e atualizar o Future
-  void _refreshEvents() {
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  // Método para recarregar os eventos (pull-to-refresh)
+  Future<void> _refreshEvents() async {
     setState(() {
-      _eventsFuture = _loadEvents();
+      _isLoadingInitial = true;
+      _hasMore = true;
+    });
+    try {
+      final fresh = await widget.eventService.getEvents();
+      setState(() {
+        _events
+          ..clear()
+          ..addAll(fresh);
+        _hasMore = fresh.length >= _pageSize;
+      });
+    } finally {
+      setState(() => _isLoadingInitial = false);
+    }
+  }
+
+  Future<void> _loadInitial() async {
+    setState(() => _isLoadingInitial = true);
+    final page = await widget.eventService.getEventsPage(limit: _pageSize);
+    setState(() {
+      _events.clear();
+      _events.addAll(page);
+      _hasMore = page.length >= _pageSize;
+      _isLoadingInitial = false;
     });
   }
 
-  Future<List<EventCardDto>> _loadEvents() async {
-    final rawEvents = await widget.eventService.getEvents();
-    return rawEvents; // EventService já retorna List<EventCardDto>
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
+        !_isLoadingMore &&
+        _hasMore) {
+      _loadMore();
+    }
+  }
+
+  Future<void> _loadMore() async {
+    if (_events.isEmpty) return;
+    setState(() => _isLoadingMore = true);
+    final last = _events.last;
+    final page = await widget.eventService.getEventsPage(startAfter: last.eventDate, limit: _pageSize);
+    setState(() {
+      _events.addAll(page);
+      _hasMore = page.length >= _pageSize;
+      _isLoadingMore = false;
+    });
   }
 
   Future<void> _signOut() async {
@@ -180,76 +232,75 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded( // Expanded para a lista ocupar o espaço restante
-            child: FutureBuilder<List<EventCardDto>>(
-              future: _eventsFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Erro ao carregar eventos: ${snapshot.error}'));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('Nenhum evento encontrado.'));
-                } else {
-                  final events = snapshot.data!;
-                  return ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                    itemCount: events.length,
-                    itemBuilder: (context, index) {
-                      final event = events[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 4.0),
-                        child: InkWell(
-                          onTap: () {
-                            context.push('/event-details/${event.id}'); // Alterado para /event-details
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Row(
-                              children: [
-                                CircleAvatar(
-                                  backgroundColor: theme.colorScheme.primaryContainer,
-                                  foregroundColor: theme.colorScheme.onPrimaryContainer,
-                                  child: Icon(event.icon),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        event.name,
-                                        style: theme.textTheme.titleMedium?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Organizador: ${event.organizerName}', // Nova linha para o organizador
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: theme.colorScheme.onSurfaceVariant,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Data: ${dateFormat.format(event.eventDate)} Data Sorteio: ${dateFormat.format(event.drawDate)}',
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          fontStyle: FontStyle.italic,
-                                          color: theme.colorScheme.onSurfaceVariant,
-                                        ),
-                                      ),
-                                    ],
+            child: _isLoadingInitial
+                ? const Center(child: CircularProgressIndicator())
+                : RefreshIndicator(
+                    onRefresh: _refreshEvents,
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      itemCount: _events.length + (_isLoadingMore ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index >= _events.length) {
+                          // loading more indicator
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12.0),
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
+                        final event = _events[index];
+                        return Card(
+                          margin: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: InkWell(
+                            onTap: () {
+                              context.push('/event-details/${event.id}'); // Alterado para /event-details
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: theme.colorScheme.primaryContainer,
+                                    foregroundColor: theme.colorScheme.onPrimaryContainer,
+                                    child: Icon(event.icon),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          event.name,
+                                          style: theme.textTheme.titleMedium?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Organizador: ${event.organizerName}', // Nova linha para o organizador
+                                          style: theme.textTheme.bodySmall?.copyWith(
+                                            color: theme.colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Data: ${dateFormat.format(event.eventDate)} Data Sorteio: ${dateFormat.format(event.drawDate)}',
+                                          style: theme.textTheme.bodySmall?.copyWith(
+                                            fontStyle: FontStyle.italic,
+                                            color: theme.colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  );
-                }
-              },
-            ),
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),

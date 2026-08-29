@@ -84,6 +84,52 @@ class EventService {
     }
   }
 
+  /// Busca uma página de eventos ordenados por eventDate desc.
+  /// Se [startAfter] for fornecido, retorna eventos com eventDate < startAfter (ou seja, mais antigos).
+  Future<List<EventCardDto>> getEventsPage({DateTime? startAfter, int limit = 10}) async {
+    try {
+      Query query = _firestore.collection('events').orderBy('eventDate', descending: true).limit(limit);
+      if (startAfter != null) {
+        // Filtra eventos mais antigos que startAfter (startAfter é DateTime local)
+        final Timestamp ts = Timestamp.fromDate(DateTime.utc(startAfter.year, startAfter.month, startAfter.day, 12));
+        query = _firestore
+            .collection('events')
+            .where('eventDate', isLessThan: ts)
+            .orderBy('eventDate', descending: true)
+            .limit(limit);
+      }
+
+      final querySnapshot = await query.get();
+      final List<EventCardDto> events = [];
+
+      for (var doc in querySnapshot.docs) {
+        final data = doc.data();
+        final String adminId = data['adminId'] as String;
+
+        String organizerName = 'Desconhecido';
+        try {
+          final user = await _userService.getUserById(adminId);
+          organizerName = user?.name ?? 'Desconhecido';
+        } catch (e) {
+          debugPrint('Erro ao buscar organizador $adminId: $e');
+        }
+
+        events.add(
+          EventCardDto.fromFirestore(
+            id: doc.id,
+            data: data,
+            organizerName: organizerName,
+          ),
+        );
+      }
+
+      return events;
+    } catch (e) {
+      debugPrint('Erro ao buscar página de eventos do Firestore: $e');
+      return [];
+    }
+  }
+
   Future<void> createEvent(NewEventDto newEvent) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
