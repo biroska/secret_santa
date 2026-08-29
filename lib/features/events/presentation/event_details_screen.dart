@@ -157,10 +157,9 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   Widget _buildHeader(BuildContext context, EventCardDto event) {
     final appBarBackgroundColor =
         Theme.of(context).appBarTheme.backgroundColor ??
-        Theme.of(context).colorScheme.primary;
+            Theme.of(context).colorScheme.primary;
     final organizerFirstName = _getFirstName(event.organizerName);
 
-    // Keep horizontal spacing consistent with other cards by applying outer padding
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
@@ -174,6 +173,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
           ),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
@@ -187,19 +187,18 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   constraints: const BoxConstraints(),
                 ),
                 const SizedBox(width: 8),
-                // Make title flexible to avoid overflow
                 Expanded(
                   child: Text(
                     event.name,
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
-                    textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.7,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -212,50 +211,50 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               ],
             ),
             const SizedBox(height: 18),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                event.description,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                softWrap: true,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: -0.5,
-                ),
-              ),
+            Text(
+              event.description,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.5,
+                  ),
             ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Container(
-                width: 18,
-                height: 18,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Container(
+                  width: 18,
+                  height: 18,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check,
+                    size: 14,
+                    color: Color(0xFF1D7B72),
+                  ),
                 ),
-                child: const Icon(
-                  Icons.check,
-                  size: 14,
-                  color: Color(0xFF1D7B72),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Organizado por Você ($organizerFirstName)',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                'Organizado por Você ($organizerFirstName)',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(width: 6),
-              const Text('🎄', style: TextStyle(fontSize: 18)),
-            ],
-          ),
-        ],
+                const SizedBox(width: 6),
+                const Text('🎄', style: TextStyle(fontSize: 18)),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
