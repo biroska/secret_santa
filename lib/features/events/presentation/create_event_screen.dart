@@ -100,10 +100,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
             maxGiftValue: _defineGiftValue ? _giftValue.round() : null,
           );
 
-          // Não persistir no Firebase por enquanto — apenas construir o DTO
+          await widget.eventService.createEvent(newEventDto);
+
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('DTO preparado. maxGiftValue=${newEventDto.maxGiftValue ?? 'n/a'}')),
+            const SnackBar(content: Text('Evento criado com sucesso!')),
           );
           context.pop(true); // Volta para a tela anterior (HomeScreen) e indica sucesso
       } catch (e) {

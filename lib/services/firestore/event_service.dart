@@ -120,6 +120,11 @@ class EventService {
         'status': 'CREATING',
       };
 
+      // Incluir maxGiftValue se estiver definido
+      if (newEvent.maxGiftValue != null) {
+        eventData['maxGiftValue'] = newEvent.maxGiftValue;
+      }
+
       await _firestore.collection('events').add(eventData);
       debugPrint('Evento "${newEvent.title}" criado com sucesso no Firestore.');
     } catch (e) {
