@@ -278,56 +278,31 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       ),
       child: Column(
         children: [
-          Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8E6C6),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.card_giftcard_rounded,
-                  color: Color(0xFFEB9F35),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'ORÇAMENTO MÁXIMO',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF595959),
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          // Mostrar valor máximo do presente quando definido
+          // Mostrar valor do presente com ícone quando definido; caso contrário não mostrar primeira linha
           if (event.maxGiftValue != null) ...[
             Row(
               children: [
-                const Text(
-                  'Valor do presente: ',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Color(0xFF3D3D3D),
-                    fontWeight: FontWeight.w500,
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8E6C6),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.card_giftcard_rounded,
+                    color: Color(0xFFEB9F35),
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$')
-                        .format(event.maxGiftValue),
+                    'Valor do presente: ${NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$').format(event.maxGiftValue)}',
                     style: const TextStyle(
-                      fontSize: 18,
-                      color: Color(0xFF1E1E1E),
-                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF595959),
+                      letterSpacing: 0.3,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -337,7 +312,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             ),
             const SizedBox(height: 18),
           ] else ...[
-            const SizedBox(height: 18),
+            // Não exibir a primeira linha quando maxGiftValue não estiver definido
+            const SizedBox(height: 0),
           ],
           Row(
             children: [
