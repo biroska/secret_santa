@@ -120,9 +120,10 @@ class EventService {
         'status': 'CREATING',
       };
 
-      // Incluir maxGiftValue se estiver definido
-      if (newEvent.maxGiftValue != null) {
-        eventData['maxGiftValue'] = newEvent.maxGiftValue;
+      // Incluir maxGiftValue se estiver definido (usar variável local para evitar problema de promoção de tipo)
+      final maxGift = newEvent.maxGiftValue;
+      if (maxGift != null) {
+        eventData['maxGiftValue'] = maxGift;
       }
 
       await _firestore.collection('events').add(eventData);
