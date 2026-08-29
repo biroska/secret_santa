@@ -184,6 +184,33 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               ),
               const SizedBox(height: 16),
               TextFormField(
+                controller: _drawDateController,
+                decoration: const InputDecoration(
+                  labelText: 'Data do Sorteio',
+                  border: OutlineInputBorder(),
+                  suffixIcon: Icon(Icons.card_giftcard),
+                ),
+                readOnly: true,
+                onTap: () => _selectDate(context, isDrawDate: true),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor, selecione a data do sorteio';
+                  }
+                  if (_selectedDrawDate == null) {
+                    return 'Data do sorteio inválida';
+                  }
+                  if (!_isDateOnOrAfterToday(_selectedDrawDate!)) {
+                    return 'A data do sorteio deve ser maior ou igual a hoje';
+                  }
+                  if (_selectedEventDate != null &&
+                      _selectedDrawDate!.isAfter(_selectedEventDate!)) {
+                    return 'A data do sorteio deve ser menor ou igual à data do evento';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
                 controller: _eventDateController,
                 decoration: const InputDecoration(
                   labelText: 'Data do Evento',
@@ -210,33 +237,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _drawDateController,
-                decoration: const InputDecoration(
-                  labelText: 'Data do Sorteio',
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons.card_giftcard),
-                ),
-                readOnly: true,
-                onTap: () => _selectDate(context, isDrawDate: true),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, selecione a data do sorteio';
-                  }
-                  if (_selectedDrawDate == null) {
-                    return 'Data do sorteio inválida';
-                  }
-                  if (!_isDateOnOrAfterToday(_selectedDrawDate!)) {
-                    return 'A data do sorteio deve ser maior ou igual a hoje';
-                  }
-                  if (_selectedEventDate != null &&
-                      _selectedDrawDate!.isAfter(_selectedEventDate!)) {
-                    return 'A data do sorteio deve ser menor ou igual à data do evento';
-                  }
-                  return null;
-                },
-              ),
+
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _isSaving || !_isFormValid ? null : _submitForm,

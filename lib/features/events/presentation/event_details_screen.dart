@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../../dtos/event_card_dto.dart';
 import '../../../services/firestore/event_service.dart';
@@ -59,6 +60,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         }
 
         final event = snapshot.data!;
+        final organizerFirstName = _getFirstName(event.organizerName);
+        final shouldShowRevealBanner = event.drawDate.isBefore(DateTime.now());
 
         return Scaffold(
           backgroundColor: const Color(0xFFF2F3F5),
@@ -66,16 +69,16 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  _buildHeader(context, event.organizerName),
+                  _buildHeader(context, event),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildSummaryCard(),
+                        _buildSummaryCard(event),
                         const SizedBox(height: 18),
-                        _buildRevealBanner(),
-                        const SizedBox(height: 24),
+                        if (shouldShowRevealBanner) _buildRevealBanner(),
+                        if (shouldShowRevealBanner) const SizedBox(height: 24),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -113,7 +116,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                         _buildSearchField(),
                         const SizedBox(height: 14),
                         _buildParticipantItem(
-                          name: '${event.organizerName} Silva (Você)',
+                          name: '$organizerFirstName (Você)',
                           subtitle: '3 desejos cadastrados',
                           badge: 'ORG',
                           badgeColor: const Color(0xFFD9E9E6),
@@ -141,10 +144,21 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, String organizerName) {
+  String _getFirstName(String value) {
+    final normalized = value.trim();
+    if (normalized.isEmpty) {
+      return 'Você';
+    }
+
+    final parts = normalized.split(RegExp(r'\s+'));
+    return parts.firstWhere((part) => part.isNotEmpty, orElse: () => normalized);
+  }
+
+  Widget _buildHeader(BuildContext context, EventCardDto event) {
     final appBarBackgroundColor =
         Theme.of(context).appBarTheme.backgroundColor ??
         Theme.of(context).colorScheme.primary;
+    final organizerFirstName = _getFirstName(event.organizerName);
 
     return Container(
       width: double.infinity,
@@ -170,9 +184,9 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
-              const Text(
-                'DETALHES',
-                style: TextStyle(
+              Text(
+                event.name,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -191,7 +205,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Amigo Secreto da Firma',
+              event.description,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -217,7 +231,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               ),
               const SizedBox(width: 10),
               Text(
-                'Organizado por Você ($organizerName)',
+                'Organizado por Você ($organizerFirstName)',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
@@ -233,7 +247,9 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     );
   }
 
-  Widget _buildSummaryCard() {
+  Widget _buildSummaryCard(EventCardDto event) {
+    final dateFormat = DateFormat('dd/MM/yyyy');
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
@@ -305,7 +321,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               Expanded(
                 child: _infoChip(
                   label: 'CRIADO EM',
-                  value: '30/05/2026',
+                  value: dateFormat.format(event.createdAt),
                   color: const Color(0xFFFDE9E9),
                   textColor: const Color(0xFFBD3A3A),
                 ),
@@ -314,7 +330,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               Expanded(
                 child: _infoChip(
                   label: 'SORTEIO',
-                  value: '10/12/2026',
+                  value: dateFormat.format(event.drawDate),
                   color: const Color(0xFFEAF5EC),
                   textColor: const Color(0xFF2E8A4A),
                 ),
@@ -323,7 +339,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               Expanded(
                 child: _infoChip(
                   label: 'FESTA',
-                  value: '24/12/2026',
+                  value: dateFormat.format(event.eventDate),
                   color: const Color(0xFFE9F3FA),
                   textColor: const Color(0xFF2C6F9F),
                 ),
@@ -394,7 +410,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   TextSpan(text: 'O Sorteio Já Aconteceu!\n'),
                   TextSpan(
                     text:
-                        'Clique para revelar uma imagem mágica\nque m o seu amigo secreto.',
+                        'Clique para revelar o seu amigo secreto.',
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
                   ),
                 ],

@@ -24,6 +24,7 @@ abstract final class DetalhesEventoMockData {
     id: 'mock-event-1',
     name: 'Amigo Secreto da Firma 🎄',
     organizerName: 'Lucas',
+    createdAt: DateTime(2026, 5, 30),
     eventDate: DateTime(2026, 12, 24),
     drawDate: DateTime(2026, 12, 10),
     description: 'Amigo secreto de fim de ano da equipe.',

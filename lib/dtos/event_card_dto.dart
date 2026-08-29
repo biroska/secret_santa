@@ -4,43 +4,45 @@ import 'package:cloud_firestore/cloud_firestore.dart'; // Importar para Timestam
 class EventCardDto {
   final String id;
   final String name;
-  final String organizerName; // Novo campo para o nome do organizador
+  final String organizerName;
+  final DateTime createdAt;
   final DateTime eventDate;
   final DateTime drawDate;
   final IconData icon;
-  final String description; // Adicionando o campo de descrição
+  final String description;
 
   EventCardDto({
     required this.id,
     required this.name,
-    required this.organizerName, // Tornando obrigatório
+    required this.organizerName,
+    required this.createdAt,
     required this.eventDate,
     required this.drawDate,
-    this.icon = Icons.event, // Ícone padrão
-    required this.description, // Tornando obrigatório
+    this.icon = Icons.event,
+    required this.description,
   });
 
-  // Construtor de fábrica para criar EventCardDto a partir de dados do Firestore
-  // Este construtor será ajustado no EventService para incluir o organizerName
   factory EventCardDto.fromFirestore({
     required String id,
     required Map<String, dynamic> data,
-    required String organizerName, // Recebe o nome do organizador
+    required String organizerName,
   }) {
-    final Timestamp eventTimestamp = data['eventDate'] as Timestamp;
+    final Timestamp createdAtTimestamp =
+        (data['createdAt'] as Timestamp?) ?? Timestamp.now();
+    final Timestamp eventTimestamp =
+        (data['eventDate'] as Timestamp?) ?? createdAtTimestamp;
     final Timestamp drawTimestamp =
-        (data['drawDate'] as Timestamp?) ??
-        (data['createdAt'] as Timestamp? ?? Timestamp.now());
+        (data['drawDate'] as Timestamp?) ?? createdAtTimestamp;
 
     return EventCardDto(
       id: id,
       name: data['title'] as String,
       organizerName: organizerName,
+      createdAt: createdAtTimestamp.toDate(),
       eventDate: eventTimestamp.toDate(),
       drawDate: drawTimestamp.toDate(),
-      icon: Icons.event, // Usando um ícone padrão por enquanto
-      description:
-          data['description'] as String, // Obtendo a descrição do Firestore
+      icon: Icons.event,
+      description: data['description'] as String? ?? '',
     );
   }
 }
