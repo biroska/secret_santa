@@ -252,8 +252,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         return Card(
                           margin: const EdgeInsets.symmetric(vertical: 4.0),
                           child: InkWell(
-                            onTap: () {
-                              context.push('/event-details/${event.id}'); // Alterado para /event-details
+                            onTap: () async {
+                              final result = await context.push('/event-details/${event.id}');
+                              if (result == true) {
+                                _refreshEvents();
+                              }
                             },
                             child: Padding(
                               padding: const EdgeInsets.all(12.0),

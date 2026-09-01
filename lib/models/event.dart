@@ -1,4 +1,6 @@
-/// Representa um evento com título, descrição, administrador e datas.
+/// Representa um evento com título, descrição, administrador, datas e participantes.
+import 'participants.dart';
+
 class Events {
   const Events({
     required this.title,
@@ -7,6 +9,7 @@ class Events {
     required this.status,
     required this.eventDate,
     required this.createdAt,
+    required this.participants,
   });
 
   final String title;
@@ -15,6 +18,7 @@ class Events {
   final String status;
   final DateTime eventDate;
   final DateTime createdAt;
+  final List<Participants> participants;
 
   factory Events.fromJson(Map<String, dynamic> json) {
     return Events(
@@ -24,6 +28,9 @@ class Events {
       status: json['status'] as String,
       eventDate: DateTime.parse(json['eventDate'] as String),
       createdAt: DateTime.parse(json['createdAt'] as String),
+      participants: (json['participants'] as List<dynamic>?)
+              ?.map((e) => Participants.fromJson(e as Map<String, dynamic>))
+              .toList() ?? [],
     );
   }
 
@@ -34,6 +41,7 @@ class Events {
         'status': status,
         'eventDate': _dateOnlyIso(eventDate),
         'createdAt': createdAt.toUtc().toIso8601String(),
+        'participants': participants.map((p) => p.toJson()).toList(),
       };
 
   static String _dateOnlyIso(DateTime d) {

@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../dtos/event_card_dto.dart';
 import '../../../services/firestore/event_service.dart';
@@ -38,6 +40,44 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     });
   }
 
+  Future<void> _confirmDeleteEvent(BuildContext context, EventCardDto event) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Excluir evento?'),
+        content: Text(
+          'Você está prestes a remover o evento "${event.name}". Essa ação não pode ser desfeita.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            icon: const Icon(Icons.delete_outline_rounded),
+            label: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    try {
+      await _eventService.deleteEvent(event.id);
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Não foi possível excluir o evento: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<EventCardDto?>(
@@ -62,6 +102,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         final event = snapshot.data!;
         final organizerFirstName = _getFirstName(event.organizerName);
         final shouldShowRevealBanner = event.drawDate.isBefore(DateTime.now());
+        final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
+        final isAdmin = currentUserId.isNotEmpty && currentUserId == event.adminId;
 
         return Scaffold(
           backgroundColor: const Color(0xFFF2F3F5),
@@ -69,7 +111,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  _buildHeader(context, event),
+                  _buildHeader(context, event, isAdmin),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
                     child: Column(
@@ -115,23 +157,50 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                         const SizedBox(height: 14),
                         _buildSearchField(),
                         const SizedBox(height: 14),
-                        _buildParticipantItem(
-                          name: '$organizerFirstName (Você)',
-                          subtitle: '3 desejos cadastrados',
-                          badge: 'ORG',
-                          badgeColor: const Color(0xFFD9E9E6),
-                          badgeTextColor: const Color(0xFF1D7B72),
-                          showChevron: true,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildParticipantItem(
-                          name: 'Mariana Souza',
-                          subtitle: '3 desejos cadastrados',
-                          badge: 'Confirmado',
-                          badgeColor: const Color(0xFFE2F0E2),
-                          badgeTextColor: const Color(0xFF3D8F3D),
-                          showChevron: true,
-                        ),
+                        if ((event.participants).isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8.0),
+                            child: Text('Nenhum participante ainda', style: TextStyle(color: Color(0xFF667085))),
+                          )
+                        else
+                          Column(
+                            children: event.participants.map((p) {
+                              final name = (p['name'] as String?)?.trim() ?? (p['userId'] as String? ?? 'Usuário');
+                              final role = ((p['role'] as String?) ?? '').toUpperCase();
+                              String badgeLabel;
+                              Color badgeColor;
+                              Color badgeTextColor;
+
+                              if (role == 'ADMIN') {
+                                badgeLabel = 'Organizador';
+                                badgeColor = const Color(0xFFD9E9E6);
+                                badgeTextColor = const Color(0xFF1D7B72);
+                              } else if (role == 'DEPENDENT' || role == 'DEPENDENT') {
+                                badgeLabel = 'Dependente';
+                                badgeColor = const Color(0xFFE9F3FA);
+                                badgeTextColor = const Color(0xFF2C6F9F);
+                              } else {
+                                badgeLabel = 'Participante';
+                                badgeColor = const Color(0xFFE2F0E2);
+                                badgeTextColor = const Color(0xFF3D8F3D);
+                              }
+
+                              final photoUrl = (p['photoUrl'] as String?) ?? '';
+
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: _buildParticipantItem(
+                                  name: name,
+                                  subtitle: '3 desejos cadastrados',
+                                  badge: badgeLabel,
+                                  badgeColor: badgeColor,
+                                  badgeTextColor: badgeTextColor,
+                                  showChevron: true,
+                                  avatarUrl: photoUrl.isNotEmpty ? photoUrl : null,
+                                ),
+                              );
+                            }).toList(),
+                          ),
                       ],
                     ),
                   ),
@@ -154,7 +223,47 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     return parts.firstWhere((part) => part.isNotEmpty, orElse: () => normalized);
   }
 
-  Widget _buildHeader(BuildContext context, EventCardDto event) {
+  // DEV helper: insere todos usuários da coleção 'users' como participantes do evento
+  // Usa EventService.addParticipantIfNotExists para evitar duplicatas.
+  Future<void> _devAddAllUsersToParticipants(BuildContext context) async {
+    try {
+      final firestore = FirebaseFirestore.instance;
+      final usersSnap = await firestore.collection('users').get();
+      if (usersSnap.docs.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Nenhum usuário encontrado na coleção users.')));
+        return;
+      }
+
+      int processed = 0;
+      for (var doc in usersSnap.docs) {
+        final uid = doc.id;
+        try {
+          await _eventService.addParticipantIfNotExists(widget.eventId, uid);
+          processed++;
+        } catch (e) {
+          debugPrint('Falha ao processar usuário $uid: $e');
+        }
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Processados ${usersSnap.docs.length} usuários.')),
+      );
+
+      // Recarregar detalhes do evento para refletir alterações
+      _fetchEventDetails();
+    } catch (e) {
+      debugPrint('Erro devAddAllUsers: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao adicionar usuários: $e')),
+      );
+    }
+  }
+
+  Widget _buildHeader(BuildContext context, EventCardDto event, bool isAdmin) {
     final appBarBackgroundColor =
         Theme.of(context).appBarTheme.backgroundColor ??
             Theme.of(context).colorScheme.primary;
@@ -167,10 +276,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         padding: const EdgeInsets.fromLTRB(12, 10, 12, 22),
         decoration: BoxDecoration(
           color: appBarBackgroundColor,
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(18),
-            bottomRight: Radius.circular(18),
-          ),
+          borderRadius: BorderRadius.circular(18),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,7 +300,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                     maxLines: 1,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 22,
+                      fontSize: 25,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.7,
                     ),
@@ -202,12 +308,28 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.more_vert, color: Colors.white),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
+                if (isAdmin)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // DEV-ONLY: bloco separado para inserir todos os usuários como participantes.
+                      // Remover facilmente em produção.
+                      IconButton(
+                        onPressed: () => _devAddAllUsersToParticipants(context),
+                        icon: const Icon(Icons.add, color: Colors.white),
+                        tooltip: 'DEV: adicionar todos usuários como participantes',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                      IconButton(
+                        onPressed: () => _confirmDeleteEvent(context, event),
+                        icon: const Icon(Icons.delete_outline_rounded, color: Colors.white),
+                        tooltip: 'Excluir evento',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
               ],
             ),
             const SizedBox(height: 18),
@@ -215,7 +337,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               event.description,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     letterSpacing: -0.5,
@@ -240,7 +362,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Organizado por Você ($organizerFirstName)',
+                    'Organizado por: $organizerFirstName',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
@@ -262,6 +384,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   Widget _buildSummaryCard(EventCardDto event) {
     final dateFormat = DateFormat('dd/MM/yyyy');
 
+    final giftValueLabel = event.maxGiftValue != null
+        ? NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$').format(event.maxGiftValue)
+        : 'Livre';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
@@ -278,43 +404,37 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       ),
       child: Column(
         children: [
-          // Mostrar valor do presente com ícone quando definido; caso contrário não mostrar primeira linha
-          if (event.maxGiftValue != null) ...[
-            Row(
-              children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8E6C6),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.card_giftcard_rounded,
-                    color: Color(0xFFEB9F35),
-                  ),
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8E6C6),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Valor do presente: ${NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$').format(event.maxGiftValue)}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF595959),
-                      letterSpacing: 0.3,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                child: const Icon(
+                  Icons.card_giftcard_rounded,
+                  color: Color(0xFFEB9F35),
                 ),
-              ],
-            ),
-            const SizedBox(height: 18),
-          ] else ...[
-            // Não exibir a primeira linha quando maxGiftValue não estiver definido
-            const SizedBox(height: 0),
-          ],
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Valor do presente: $giftValueLabel',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF595959),
+                    letterSpacing: 0.3,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
           Row(
             children: [
               Expanded(
@@ -470,6 +590,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     required Color badgeColor,
     required Color badgeTextColor,
     required bool showChevron,
+    String? avatarUrl,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -479,15 +600,22 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       ),
       child: Row(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE5E7EB),
-              borderRadius: BorderRadius.circular(12),
+          if (avatarUrl != null && avatarUrl.isNotEmpty)
+            CircleAvatar(
+              radius: 20,
+              backgroundImage: NetworkImage(avatarUrl),
+              backgroundColor: const Color(0xFFE5E7EB),
+            )
+          else
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE5E7EB),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.person, color: Color(0xFF667085)),
             ),
-            child: const Icon(Icons.person, color: Color(0xFF667085)),
-          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

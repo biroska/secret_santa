@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart'; // Importar para Timestam
 
 class EventCardDto {
   final String id;
+  final String adminId;
   final String name;
   final String organizerName;
   final DateTime createdAt;
@@ -11,9 +12,11 @@ class EventCardDto {
   final IconData icon;
   final String description;
   final int? maxGiftValue; // optional
+  final List<Map<String, dynamic>> participants; // cada participante tem: userId, role, joinedAt, name, photoUrl
 
   EventCardDto({
     required this.id,
+    required this.adminId,
     required this.name,
     required this.organizerName,
     required this.createdAt,
@@ -22,6 +25,7 @@ class EventCardDto {
     this.icon = Icons.event,
     required this.description,
     this.maxGiftValue,
+    this.participants = const [],
   });
 
   factory EventCardDto.fromFirestore({
@@ -45,8 +49,20 @@ class EventCardDto {
       maxGift = rawMax.toInt();
     }
 
+    final rawParticipants = data['participants'] as List<dynamic>? ?? [];
+    final participants = rawParticipants.map<Map<String, dynamic>>((p) {
+      final map = Map<String, dynamic>.from(p as Map<String, dynamic>);
+      // normalize joinedAt: if Timestamp -> toDate().toIso8601String(), if string keep
+      final joinedRaw = map['joinedAt'];
+      if (joinedRaw is Timestamp) {
+        map['joinedAt'] = joinedRaw.toDate().toUtc().toIso8601String();
+      }
+      return map;
+    }).toList();
+
     return EventCardDto(
       id: id,
+      adminId: (data['adminId'] as String?) ?? '',
       name: data['title'] as String,
       organizerName: organizerName,
       createdAt: createdAtTimestamp.toDate(),
@@ -55,6 +71,7 @@ class EventCardDto {
       icon: Icons.event,
       description: data['description'] as String? ?? '',
       maxGiftValue: maxGift,
+      participants: participants,
     );
   }
 }

@@ -13,6 +13,39 @@ class EventService {
     : _firestore = firestore ?? FirebaseFirestore.instance,
       _userService = userService ?? UserService(); // Inicializando UserService
 
+  /// Adiciona um participante ao evento se ele ainda não existir.
+  /// Usa uma transação para garantir consistência.
+  Future<void> addParticipantIfNotExists(String eventId, String userId, {String role = 'PARTICIPANT'}) async {
+    final docRef = _firestore.collection('events').doc(eventId);
+    try {
+      await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(docRef);
+        if (!snapshot.exists) throw Exception('Evento não encontrado');
+
+        final data = snapshot.data() as Map<String, dynamic>?;
+        final participants = (data?['participants'] as List<dynamic>?) ?? [];
+        final exists = participants.any((p) => (p['userId'] ?? '') == userId);
+        if (exists) return; // já existe, nada a fazer
+
+        final participantEntry = {
+          'userId': userId,
+          'role': role,
+          'isDependent': false,
+          'responsibleIds': <String>[],
+          'giftWish': <String>[],
+          'joinedAt': DateTime.now().toUtc().toIso8601String(),
+        };
+
+        transaction.update(docRef, {
+          'participants': FieldValue.arrayUnion([participantEntry]),
+        });
+      });
+    } catch (e) {
+      debugPrint('Erro ao adicionar participante $userId ao evento $eventId: $e');
+      rethrow;
+    }
+  }
+
   Future<List<EventCardDto>> getEvents() async {
     try {
       final querySnapshot = await _firestore
@@ -71,12 +104,42 @@ class EventService {
           );
         }
 
-        return EventCardDto.fromFirestore(
-          id: docSnapshot.id,
-          data: data,
-          organizerName: organizerName,
-        );
-      }
+          // Enriquecer participantes com nome e photoUrl quando possível
+          final rawParticipants = (data['participants'] as List<dynamic>?) ?? [];
+          final List<Map<String, dynamic>> enriched = [];
+          for (var p in rawParticipants) {
+            try {
+              final map = Map<String, dynamic>.from(p as Map<String, dynamic>);
+              final uid = (map['userId'] ?? '') as String;
+              String name = '';
+              String photoUrl = '';
+              try {
+                final user = await _userService.getUserById(uid);
+                if (user != null) {
+                  name = user.name;
+                  photoUrl = user.photoUrl;
+                }
+              } catch (e) {
+                debugPrint('Erro ao buscar info de usuário $uid: $e');
+              }
+              map['name'] = name;
+              map['photoUrl'] = photoUrl;
+              enriched.add(map);
+            } catch (e) {
+              debugPrint('Participante inválido no evento $eventId: $e');
+            }
+          }
+
+          // Substitui participants pelo enriquecido temporariamente para o DTO
+          final enrichedData = Map<String, dynamic>.from(data);
+          enrichedData['participants'] = enriched;
+
+          return EventCardDto.fromFirestore(
+            id: docSnapshot.id,
+            data: enrichedData,
+            organizerName: organizerName,
+          );
+        }
       return null;
     } catch (e) {
       debugPrint('Erro ao buscar evento $eventId do Firestore: $e');
@@ -157,14 +220,26 @@ class EventService {
         0,
       );
 
+      final createdAt = Timestamp.now();
+
+      final participantEntry = {
+        'userId': user.uid,
+        'role': 'ADMIN',
+        'isDependent': false,
+        'responsibleIds': <String>[],
+        'giftWish': <String>[],
+        'joinedAt': createdAt.toDate().toUtc().toIso8601String(),
+      };
+
       final eventData = {
         'title': newEvent.title,
         'description': newEvent.description,
         'eventDate': Timestamp.fromDate(eventDateUtc),
         'drawDate': Timestamp.fromDate(drawDateUtc),
-        'createdAt': Timestamp.now(),
+        'createdAt': createdAt,
         'adminId': user.uid,
         'status': 'CREATING',
+        'participants': [participantEntry],
       };
 
       // Incluir maxGiftValue se estiver definido (usar variável local para evitar problema de promoção de tipo)
@@ -178,6 +253,16 @@ class EventService {
     } catch (e) {
       debugPrint('Erro ao criar evento no Firestore: $e');
       rethrow; // Re-lança o erro para ser tratado na UI
+    }
+  }
+
+  Future<void> deleteEvent(String eventId) async {
+    try {
+      await _firestore.collection('events').doc(eventId).delete();
+      debugPrint('Evento $eventId removido do Firestore.');
+    } catch (e) {
+      debugPrint('Erro ao remover evento $eventId do Firestore: $e');
+      rethrow;
     }
   }
 }

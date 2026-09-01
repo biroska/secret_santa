@@ -125,10 +125,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => context.push('/detalhes-evento-mock'),
-                child: const Text('teste'),
-              ),
               const Spacer(),
             ],
           ),

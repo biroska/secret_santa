@@ -9,7 +9,6 @@ import '../features/group/presentation/create_group_screen.dart';
 import '../features/group/presentation/group_details_screen.dart';
 import '../features/events/presentation/create_event_screen.dart';
 import '../features/events/presentation/event_details_screen.dart';
-import '../features/events/presentation/detalhes_evento_mock_screen.dart';
 import '../theme/app_theme.dart';
 import '../services/firestore/event_service.dart';
 
@@ -73,10 +72,6 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
             final eventId = state.pathParameters['id']!;
             return EventDetailsScreen(eventId: eventId);
           },
-        ),
-        GoRoute(
-          path: '/detalhes-evento-mock',
-          builder: (context, state) => const DetalhesEventoMockScreen(),
         ),
       ],
     );
