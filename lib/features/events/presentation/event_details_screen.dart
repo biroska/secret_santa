@@ -18,12 +18,20 @@ class EventDetailsScreen extends StatefulWidget {
 class _EventDetailsScreenState extends State<EventDetailsScreen> {
   late final EventService _eventService;
   Future<EventCardDto?>? _eventFuture;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _eventService = EventService();
     _fetchEventDetails();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -68,10 +76,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
     try {
       await _eventService.deleteEvent(event.id);
-      if (!mounted) return;
+      if (!context.mounted) return;
       Navigator.of(context).pop(true);
     } catch (e) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Não foi possível excluir o evento: $e')),
       );
@@ -100,7 +108,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         }
 
         final event = snapshot.data!;
-        final organizerFirstName = _getFirstName(event.organizerName);
+        final filteredParticipants = _filteredParticipants(event);
+        final hasSearchQuery = _searchQuery.trim().isNotEmpty;
         final shouldShowRevealBanner = event.drawDate.isBefore(DateTime.now());
         final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
         final isAdmin = currentUserId.isNotEmpty && currentUserId == event.adminId;
@@ -134,7 +143,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                               ),
                             ),
                             Text(
-                              '5',
+                              '${event.participants.length}',
                               style: TextStyle(
                                 fontSize: 19,
                                 fontWeight: FontWeight.bold,
@@ -142,30 +151,35 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                               ),
                             ),
                             const Spacer(),
-                            TextButton.icon(
-                              onPressed: () {},
-                              icon: const Icon(Icons.add, size: 22),
-                              label: const Text('Convidar'),
-                              style: TextButton.styleFrom(
-                                foregroundColor: const Color(0xFF1D7B72),
-                                padding: EdgeInsets.zero,
-                                minimumSize: const Size(0, 0),
+                            if (!shouldShowRevealBanner)
+                              TextButton.icon(
+                                onPressed: () {},
+                                icon: const Icon(Icons.add, size: 22),
+                                label: const Text('Convidar'),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: const Color(0xFF1D7B72),
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: const Size(0, 0),
+                                ),
                               ),
-                            ),
                           ],
                         ),
                         const SizedBox(height: 14),
                         _buildSearchField(),
                         const SizedBox(height: 14),
-                        if ((event.participants).isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('Nenhum participante ainda', style: TextStyle(color: Color(0xFF667085))),
+                        if (filteredParticipants.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Text(
+                              hasSearchQuery ? 'Nenhum participante encontrado' : 'Nenhum participante ainda',
+                              style: const TextStyle(color: Color(0xFF667085)),
+                            ),
                           )
                         else
                           Column(
-                            children: event.participants.map((p) {
-                              final name = (p['name'] as String?)?.trim() ?? (p['userId'] as String? ?? 'Usuário');
+                            children: filteredParticipants.map((p) {
+                              final rawName = (p['name'] as String?)?.trim() ?? (p['userId'] as String? ?? 'Usuário');
+                              final name = _getFirstName(rawName);
                               final role = ((p['role'] as String?) ?? '').toUpperCase();
                               String badgeLabel;
                               Color badgeColor;
@@ -213,14 +227,34 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     );
   }
 
+  List<Map<String, dynamic>> _filteredParticipants(EventCardDto event) {
+    final query = _searchQuery.trim().toLowerCase();
+    if (query.isEmpty) {
+      return event.participants;
+    }
+
+    return event.participants.where((participant) {
+      final name = ((participant['name'] as String?) ?? (participant['userId'] as String?) ?? '').toString().trim();
+      final userId = ((participant['userId'] as String?) ?? '').toString().trim();
+      return name.toLowerCase().contains(query) || userId.toLowerCase().contains(query);
+    }).toList();
+  }
+
   String _getFirstName(String value) {
     final normalized = value.trim();
     if (normalized.isEmpty) {
       return 'Você';
     }
 
-    final parts = normalized.split(RegExp(r'\s+'));
-    return parts.firstWhere((part) => part.isNotEmpty, orElse: () => normalized);
+    final parts = normalized.split(RegExp(r'\s+')).where((part) => part.isNotEmpty).toList();
+    if (parts.isEmpty) {
+      return normalized;
+    }
+    if (parts.length == 1) {
+      return parts.first;
+    }
+
+    return '${parts[0]} ${parts[1]}';
   }
 
   // DEV helper: insere todos usuários da coleção 'users' como participantes do evento
@@ -230,24 +264,22 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       final firestore = FirebaseFirestore.instance;
       final usersSnap = await firestore.collection('users').get();
       if (usersSnap.docs.isEmpty) {
-        if (!mounted) return;
+        if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Nenhum usuário encontrado na coleção users.')));
         return;
       }
 
-      int processed = 0;
       for (var doc in usersSnap.docs) {
         final uid = doc.id;
         try {
           await _eventService.addParticipantIfNotExists(widget.eventId, uid);
-          processed++;
         } catch (e) {
           debugPrint('Falha ao processar usuário $uid: $e');
         }
       }
 
-      if (!mounted) return;
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Processados ${usersSnap.docs.length} usuários.')),
       );
@@ -256,7 +288,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       _fetchEventDetails();
     } catch (e) {
       debugPrint('Erro devAddAllUsers: $e');
-      if (!mounted) return;
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro ao adicionar usuários: $e')),
       );
@@ -563,14 +595,20 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFFDADADA)),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.search, color: Color(0xFF5C5C5C)),
-          SizedBox(width: 10),
+          const Icon(Icons.search, color: Color(0xFF5C5C5C)),
+          const SizedBox(width: 10),
           Expanded(
             child: TextField(
-              enabled: false,
-              decoration: InputDecoration(
+              controller: _searchController,
+              enabled: true,
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
+              decoration: const InputDecoration(
                 hintText: 'Buscar participante...',
                 border: InputBorder.none,
                 isDense: true,

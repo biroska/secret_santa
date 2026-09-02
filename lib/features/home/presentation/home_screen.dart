@@ -287,7 +287,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          'Data: ${dateFormat.format(event.eventDate)} Data Sorteio: ${dateFormat.format(event.drawDate)}',
+                                          'Data Evento: ${dateFormat.format(event.eventDate)}',
+                                          style: theme.textTheme.bodySmall?.copyWith(
+                                            fontStyle: FontStyle.italic,
+                                            color: theme.colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          'Data Sorteio: ${dateFormat.format(event.drawDate)}',
                                           style: theme.textTheme.bodySmall?.copyWith(
                                             fontStyle: FontStyle.italic,
                                             color: theme.colorScheme.onSurfaceVariant,
