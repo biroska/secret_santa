@@ -48,6 +48,28 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     });
   }
 
+  Future<void> _refreshEventDetails() async {
+    try {
+      final refreshedEvent = await _eventService.getEventById(widget.eventId);
+      if (!mounted) return;
+
+      setState(() {
+        _eventFuture = Future.value(refreshedEvent);
+      });
+
+      if (refreshedEvent == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível atualizar os participantes no momento.')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao atualizar os dados do evento: $e')),
+      );
+    }
+  }
+
   Future<void> _confirmDeleteEvent(BuildContext context, EventCardDto event) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -117,108 +139,112 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         return Scaffold(
           backgroundColor: const Color(0xFFF2F3F5),
           body: SafeArea(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  _buildHeader(context, event, isAdmin),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildSummaryCard(event),
-                        const SizedBox(height: 18),
-                        if (shouldShowRevealBanner) _buildRevealBanner(),
-                        if (shouldShowRevealBanner) const SizedBox(height: 24),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Text(
-                              'Participantes',
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF1B1B1B),
-                              ),
-                            ),
-                            Text(
-                              '${event.participants.length}',
-                              style: TextStyle(
-                                fontSize: 19,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey[800],
-                              ),
-                            ),
-                            const Spacer(),
-                            if (!shouldShowRevealBanner)
-                              TextButton.icon(
-                                onPressed: () {},
-                                icon: const Icon(Icons.add, size: 22),
-                                label: const Text('Convidar'),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: const Color(0xFF1D7B72),
-                                  padding: EdgeInsets.zero,
-                                  minimumSize: const Size(0, 0),
+            child: RefreshIndicator(
+              onRefresh: _refreshEventDetails,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  children: [
+                    _buildHeader(context, event, isAdmin),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildSummaryCard(event),
+                          const SizedBox(height: 18),
+                          if (shouldShowRevealBanner) _buildRevealBanner(),
+                          if (shouldShowRevealBanner) const SizedBox(height: 24),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Text(
+                                'Participantes',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1B1B1B),
                                 ),
                               ),
-                          ],
-                        ),
-                        const SizedBox(height: 14),
-                        _buildSearchField(),
-                        const SizedBox(height: 14),
-                        if (filteredParticipants.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(
-                              hasSearchQuery ? 'Nenhum participante encontrado' : 'Nenhum participante ainda',
-                              style: const TextStyle(color: Color(0xFF667085)),
-                            ),
-                          )
-                        else
-                          Column(
-                            children: filteredParticipants.map((p) {
-                              final rawName = (p['name'] as String?)?.trim() ?? (p['userId'] as String? ?? 'Usuário');
-                              final name = _getFirstName(rawName);
-                              final role = ((p['role'] as String?) ?? '').toUpperCase();
-                              String badgeLabel;
-                              Color badgeColor;
-                              Color badgeTextColor;
-
-                              if (role == 'ADMIN') {
-                                badgeLabel = 'Organizador';
-                                badgeColor = const Color(0xFFD9E9E6);
-                                badgeTextColor = const Color(0xFF1D7B72);
-                              } else if (role == 'DEPENDENT' || role == 'DEPENDENT') {
-                                badgeLabel = 'Dependente';
-                                badgeColor = const Color(0xFFE9F3FA);
-                                badgeTextColor = const Color(0xFF2C6F9F);
-                              } else {
-                                badgeLabel = 'Participante';
-                                badgeColor = const Color(0xFFE2F0E2);
-                                badgeTextColor = const Color(0xFF3D8F3D);
-                              }
-
-                              final photoUrl = (p['photoUrl'] as String?) ?? '';
-
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: _buildParticipantItem(
-                                  name: name,
-                                  subtitle: '3 desejos cadastrados',
-                                  badge: badgeLabel,
-                                  badgeColor: badgeColor,
-                                  badgeTextColor: badgeTextColor,
-                                  showChevron: true,
-                                  avatarUrl: photoUrl.isNotEmpty ? photoUrl : null,
+                              Text(
+                                '${event.participants.length}',
+                                style: TextStyle(
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey[800],
                                 ),
-                              );
-                            }).toList(),
+                              ),
+                              const Spacer(),
+                              if (!shouldShowRevealBanner)
+                                TextButton.icon(
+                                  onPressed: () {},
+                                  icon: const Icon(Icons.add, size: 22),
+                                  label: const Text('Convidar'),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: const Color(0xFF1D7B72),
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: const Size(0, 0),
+                                  ),
+                                ),
+                            ],
                           ),
-                      ],
+                          const SizedBox(height: 14),
+                          _buildSearchField(),
+                          const SizedBox(height: 14),
+                          if (filteredParticipants.isEmpty)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              child: Text(
+                                hasSearchQuery ? 'Nenhum participante encontrado' : 'Nenhum participante ainda',
+                                style: const TextStyle(color: Color(0xFF667085)),
+                              ),
+                            )
+                          else
+                            Column(
+                              children: filteredParticipants.map((p) {
+                                final rawName = (p['name'] as String?)?.trim() ?? (p['userId'] as String? ?? 'Usuário');
+                                final name = _getFirstName(rawName);
+                                final role = ((p['role'] as String?) ?? '').toUpperCase();
+                                String badgeLabel;
+                                Color badgeColor;
+                                Color badgeTextColor;
+
+                                if (role == 'ADMIN') {
+                                  badgeLabel = 'Organizador';
+                                  badgeColor = const Color(0xFFD9E9E6);
+                                  badgeTextColor = const Color(0xFF1D7B72);
+                                } else if (role == 'DEPENDENT' || role == 'DEPENDENT') {
+                                  badgeLabel = 'Dependente';
+                                  badgeColor = const Color(0xFFE9F3FA);
+                                  badgeTextColor = const Color(0xFF2C6F9F);
+                                } else {
+                                  badgeLabel = 'Participante';
+                                  badgeColor = const Color(0xFFE2F0E2);
+                                  badgeTextColor = const Color(0xFF3D8F3D);
+                                }
+
+                                final photoUrl = (p['photoUrl'] as String?) ?? '';
+
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: _buildParticipantItem(
+                                    name: name,
+                                    subtitle: '3 desejos cadastrados',
+                                    badge: badgeLabel,
+                                    badgeColor: badgeColor,
+                                    badgeTextColor: badgeTextColor,
+                                    showChevron: true,
+                                    avatarUrl: photoUrl.isNotEmpty ? photoUrl : null,
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

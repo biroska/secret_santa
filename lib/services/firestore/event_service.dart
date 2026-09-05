@@ -13,6 +13,49 @@ class EventService {
     : _firestore = firestore ?? FirebaseFirestore.instance,
       _userService = userService ?? UserService(); // Inicializando UserService
 
+  String? _currentUserId() => FirebaseAuth.instance.currentUser?.uid;
+
+  bool _isUserParticipant(Map<String, dynamic> data, String userId) {
+    final adminId = (data['adminId'] ?? '').toString();
+    if (adminId == userId) return true;
+
+    final participants = (data['participants'] as List<dynamic>?) ?? const [];
+    for (final entry in participants) {
+      if (entry is! Map) continue;
+      final participantMap = Map<String, dynamic>.from(entry);
+      final participantUserId = (participantMap['userId'] ?? '').toString();
+      if (participantUserId == userId) return true;
+    }
+
+    return false;
+  }
+
+  List<Map<String, dynamic>> _filterEventsForCurrentUser(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+  ) {
+    final currentUserId = _currentUserId();
+    if (currentUserId == null || currentUserId.isEmpty) {
+      return const [];
+    }
+
+    final filtered = <Map<String, dynamic>>[];
+    for (final doc in docs) {
+      final data = doc.data();
+      if (data.isEmpty) continue;
+      if (_isUserParticipant(data, currentUserId)) {
+        filtered.add({'id': doc.id, ...data});
+      }
+    }
+
+    filtered.sort((a, b) {
+      final left = (a['eventDate'] as Timestamp?)?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final right = (b['eventDate'] as Timestamp?)?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return right.compareTo(left);
+    });
+
+    return filtered;
+  }
+
   /// Adiciona um participante ao evento se ele ainda não existir.
   /// Usa uma transação para garantir consistência.
   Future<void> addParticipantIfNotExists(String eventId, String userId, {String role = 'PARTICIPANT'}) async {
@@ -22,7 +65,7 @@ class EventService {
         final snapshot = await transaction.get(docRef);
         if (!snapshot.exists) throw Exception('Evento não encontrado');
 
-        final data = snapshot.data() as Map<String, dynamic>?;
+        final data = snapshot.data();
         final participants = (data?['participants'] as List<dynamic>?) ?? [];
         final exists = participants.any((p) => (p['userId'] ?? '') == userId);
         if (exists) return; // já existe, nada a fazer
@@ -52,25 +95,25 @@ class EventService {
           .collection('events')
           .orderBy('eventDate', descending: true)
           .get();
+
+      final filteredDocs = _filterEventsForCurrentUser(querySnapshot.docs);
       final List<EventCardDto> events = [];
 
-      for (var doc in querySnapshot.docs) {
-        final data = doc.data();
-        final String adminId = data['adminId'] as String;
+      for (final docData in filteredDocs) {
+        final String adminId = (docData['adminId'] ?? '').toString();
 
-        // Buscar o nome do organizador usando UserService
         String organizerName = 'Desconhecido';
         try {
           final user = await _userService.getUserById(adminId);
-          organizerName = user?.name ?? 'Desconhecido'; // Usando user.name
+          organizerName = user?.name ?? 'Desconhecido';
         } catch (e) {
           debugPrint('Erro ao buscar organizador $adminId: $e');
         }
 
         events.add(
           EventCardDto.fromFirestore(
-            id: doc.id, // Adicionando o ID do documento
-            data: data,
+            id: docData['id'] as String,
+            data: docData,
             organizerName: organizerName,
           ),
         );
@@ -151,24 +194,29 @@ class EventService {
   /// Se [startAfter] for fornecido, retorna eventos com eventDate < startAfter (ou seja, mais antigos).
   Future<List<EventCardDto>> getEventsPage({DateTime? startAfter, int limit = 10}) async {
     try {
-      Query query = _firestore.collection('events').orderBy('eventDate', descending: true).limit(limit);
+      final querySnapshot = await _firestore
+          .collection('events')
+          .orderBy('eventDate', descending: true)
+          .get();
+
+      final filteredDocs = _filterEventsForCurrentUser(querySnapshot.docs);
+      final List<Map<String, dynamic>> ordered = [...filteredDocs];
+
       if (startAfter != null) {
-        // Filtra eventos mais antigos que startAfter (startAfter é DateTime local)
-        final Timestamp ts = Timestamp.fromDate(DateTime.utc(startAfter.year, startAfter.month, startAfter.day, 12));
-        query = _firestore
-            .collection('events')
-            .where('eventDate', isLessThan: ts)
-            .orderBy('eventDate', descending: true)
-            .limit(limit);
+        ordered.removeWhere((item) {
+          final value = (item['eventDate'] as Timestamp?)?.toDate();
+          return value == null || !value.isBefore(startAfter);
+        });
       }
 
-      final querySnapshot = await query.get();
+      final paginated = ordered.length > limit
+          ? ordered.sublist(0, limit)
+          : ordered;
+
       final List<EventCardDto> events = [];
 
-      for (var doc in querySnapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>?;
-        if (data == null) continue; // pular documentos sem dados
-        final String adminId = (data['adminId'] ?? '') as String;
+      for (final docData in paginated) {
+        final String adminId = (docData['adminId'] ?? '').toString();
 
         String organizerName = 'Desconhecido';
         try {
@@ -180,8 +228,8 @@ class EventService {
 
         events.add(
           EventCardDto.fromFirestore(
-            id: doc.id,
-            data: data,
+            id: docData['id'] as String,
+            data: docData,
             organizerName: organizerName,
           ),
         );
