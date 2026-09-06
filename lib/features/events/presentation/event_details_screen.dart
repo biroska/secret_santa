@@ -66,7 +66,11 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
       if (refreshedEvent == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Não foi possível atualizar os participantes no momento.')),
+          const SnackBar(
+            content: Text(
+              'Não foi possível atualizar os participantes no momento.',
+            ),
+          ),
         );
       }
     } catch (e) {
@@ -77,7 +81,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     }
   }
 
-  Future<void> _confirmDeleteEvent(BuildContext context, EventCardDto event) async {
+  Future<void> _confirmDeleteEvent(
+    BuildContext context,
+    EventCardDto event,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -139,11 +146,14 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         final event = snapshot.data!;
         final filteredParticipants = _filteredParticipants(event);
         final hasSearchQuery = _searchQuery.trim().isNotEmpty;
-        final shouldShowRevealBanner = event.drawDate.isBefore(DateTime.now());
+        final shouldShowRevealBanner =
+            event.drawDate != null && event.drawDate!.isBefore(DateTime.now());
         final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
-        final isAdmin = currentUserId.isNotEmpty && currentUserId == event.adminId;
+        final isAdmin =
+            currentUserId.isNotEmpty && currentUserId == event.adminId;
         final revealedParticipant = _getLastParticipant(event.participants);
-        final shouldShowRevealedParticipantCard = shouldShowRevealBanner && _isFriendRevealVisible;
+        final shouldShowRevealedParticipantCard =
+            shouldShowRevealBanner && _isFriendRevealVisible;
 
         return Scaffold(
           backgroundColor: const Color(0xFFF2F3F5),
@@ -162,13 +172,22 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                         children: [
                           _buildSummaryCard(event),
                           const SizedBox(height: 18),
-                          if (isAdmin && !shouldShowRevealBanner && event.participants.length >= 3) _buildAdminDrawCard(),
-                          if (isAdmin && !shouldShowRevealBanner && event.participants.length >= 3) const SizedBox(height: 24),
-                          if (shouldShowRevealBanner && !shouldShowRevealedParticipantCard)
+                          if (isAdmin &&
+                              !shouldShowRevealBanner &&
+                              event.participants.length >= 3)
+                            _buildAdminDrawCard(),
+                          if (isAdmin &&
+                              !shouldShowRevealBanner &&
+                              event.participants.length >= 3)
+                            const SizedBox(height: 24),
+                          if (shouldShowRevealBanner &&
+                              !shouldShowRevealedParticipantCard)
                             _buildRevealBanner(),
-                          if (shouldShowRevealBanner && shouldShowRevealedParticipantCard)
+                          if (shouldShowRevealBanner &&
+                              shouldShowRevealedParticipantCard)
                             _buildRevealedParticipantCard(revealedParticipant),
-                          if (shouldShowRevealBanner) const SizedBox(height: 24),
+                          if (shouldShowRevealBanner)
+                            const SizedBox(height: 24),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.center,
@@ -194,7 +213,9 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                                 TextButton.icon(
                                   onPressed: () => Navigator.of(context).push(
                                     MaterialPageRoute(
-                                      builder: (_) => AdicionarPessoaScreen(eventId: widget.eventId),
+                                      builder: (_) => AdicionarPessoaScreen(
+                                        eventId: widget.eventId,
+                                      ),
                                     ),
                                   ),
                                   icon: const Icon(Icons.add, size: 22),
@@ -212,18 +233,27 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                           const SizedBox(height: 14),
                           if (filteredParticipants.isEmpty)
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
                               child: Text(
-                                hasSearchQuery ? 'Nenhum participante encontrado' : 'Nenhum participante ainda',
-                                style: const TextStyle(color: Color(0xFF667085)),
+                                hasSearchQuery
+                                    ? 'Nenhum participante encontrado'
+                                    : 'Nenhum participante ainda',
+                                style: const TextStyle(
+                                  color: Color(0xFF667085),
+                                ),
                               ),
                             )
                           else
                             Column(
                               children: filteredParticipants.map((p) {
-                                final rawName = (p['name'] as String?)?.trim() ?? (p['userId'] as String? ?? 'Usuário');
+                                final rawName =
+                                    (p['name'] as String?)?.trim() ??
+                                    (p['userId'] as String? ?? 'Usuário');
                                 final name = _getFirstName(rawName);
-                                final role = ((p['role'] as String?) ?? '').toUpperCase();
+                                final role = ((p['role'] as String?) ?? '')
+                                    .toUpperCase();
                                 String badgeLabel;
                                 Color badgeColor;
                                 Color badgeTextColor;
@@ -232,7 +262,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                                   badgeLabel = 'Organizador';
                                   badgeColor = const Color(0xFFD9E9E6);
                                   badgeTextColor = const Color(0xFF1D7B72);
-                                } else if (role == 'DEPENDENT' || role == 'DEPENDENT') {
+                                } else if (role == 'DEPENDENT' ||
+                                    role == 'DEPENDENT') {
                                   badgeLabel = 'Dependente';
                                   badgeColor = const Color(0xFFE9F3FA);
                                   badgeTextColor = const Color(0xFF2C6F9F);
@@ -242,7 +273,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                                   badgeTextColor = const Color(0xFF3D8F3D);
                                 }
 
-                                final photoUrl = (p['photoUrl'] as String?) ?? '';
+                                final photoUrl =
+                                    (p['photoUrl'] as String?) ?? '';
 
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 12),
@@ -253,7 +285,9 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                                     badgeColor: badgeColor,
                                     badgeTextColor: badgeTextColor,
                                     showBadge: true,
-                                    avatarUrl: photoUrl.isNotEmpty ? photoUrl : null,
+                                    avatarUrl: photoUrl.isNotEmpty
+                                        ? photoUrl
+                                        : null,
                                   ),
                                 );
                               }).toList(),
@@ -278,13 +312,23 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     }
 
     return event.participants.where((participant) {
-      final name = ((participant['name'] as String?) ?? (participant['userId'] as String?) ?? '').toString().trim();
-      final userId = ((participant['userId'] as String?) ?? '').toString().trim();
-      return name.toLowerCase().contains(query) || userId.toLowerCase().contains(query);
+      final name =
+          ((participant['name'] as String?) ??
+                  (participant['userId'] as String?) ??
+                  '')
+              .toString()
+              .trim();
+      final userId = ((participant['userId'] as String?) ?? '')
+          .toString()
+          .trim();
+      return name.toLowerCase().contains(query) ||
+          userId.toLowerCase().contains(query);
     }).toList();
   }
 
-  Map<String, dynamic>? _getLastParticipant(List<Map<String, dynamic>> participants) {
+  Map<String, dynamic>? _getLastParticipant(
+    List<Map<String, dynamic>> participants,
+  ) {
     if (participants.isEmpty) {
       return null;
     }
@@ -298,7 +342,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       return 'Você';
     }
 
-    final parts = normalized.split(RegExp(r'\s+')).where((part) => part.isNotEmpty).toList();
+    final parts = normalized
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
     if (parts.isEmpty) {
       return normalized;
     }
@@ -318,7 +365,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       if (usersSnap.docs.isEmpty) {
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Nenhum usuário encontrado na coleção users.')));
+          const SnackBar(
+            content: Text('Nenhum usuário encontrado na coleção users.'),
+          ),
+        );
         return;
       }
 
@@ -333,7 +383,9 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Processados ${usersSnap.docs.length} usuários.')),
+        SnackBar(
+          content: Text('Processados ${usersSnap.docs.length} usuários.'),
+        ),
       );
 
       // Recarregar detalhes do evento para refletir alterações
@@ -341,16 +393,16 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     } catch (e) {
       debugPrint('Erro devAddAllUsers: $e');
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao adicionar usuários: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao adicionar usuários: $e')));
     }
   }
 
   Widget _buildHeader(BuildContext context, EventCardDto event, bool isAdmin) {
     final appBarBackgroundColor =
         Theme.of(context).appBarTheme.backgroundColor ??
-            Theme.of(context).colorScheme.primary;
+        Theme.of(context).colorScheme.primary;
 
     return EventTitleCard(
       event: event,
@@ -366,8 +418,17 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     final dateFormat = DateFormat('dd/MM/yyyy');
 
     final giftValueLabel = event.maxGiftValue != null
-        ? NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$').format(event.maxGiftValue)
+        ? NumberFormat.currency(
+            locale: 'pt_BR',
+            symbol: 'R\$',
+          ).format(event.maxGiftValue)
         : 'Livre';
+    final drawDateLabel = event.drawDate != null
+        ? dateFormat.format(event.drawDate!)
+        : 'Não realizado';
+    final eventDateLabel = event.eventDate != null
+        ? dateFormat.format(event.eventDate!)
+        : 'A definir';
 
     return Container(
       width: double.infinity,
@@ -430,7 +491,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               Expanded(
                 child: _infoChip(
                   label: 'SORTEIO',
-                  value: dateFormat.format(event.drawDate),
+                  value: drawDateLabel,
                   color: const Color(0xFFEAF5EC),
                   textColor: const Color(0xFF2E8A4A),
                 ),
@@ -439,7 +500,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               Expanded(
                 child: _infoChip(
                   label: 'FESTA',
-                  value: dateFormat.format(event.eventDate),
+                  value: eventDateLabel,
                   color: const Color(0xFFE9F3FA),
                   textColor: const Color(0xFF2C6F9F),
                 ),
@@ -586,8 +647,12 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   children: [
                     TextSpan(text: 'Realizar sorteio\n'),
                     TextSpan(
-                      text: 'Atenção: após confirmar, o evento não poderá ser alterado.',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
+                      text:
+                          'Atenção: após confirmar, o evento não poderá ser alterado.',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
                   ],
                 ),
@@ -643,7 +708,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                     TextSpan(text: 'O Sorteio Já Aconteceu!\n'),
                     TextSpan(
                       text: 'Revele o seu amigo secreto',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
                   ],
                 ),
@@ -674,7 +742,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       return const SizedBox.shrink();
     }
 
-    final name = _getFirstName((participant['name'] as String?)?.trim() ?? (participant['userId'] as String? ?? 'Usuário'));
+    final name = _getFirstName(
+      (participant['name'] as String?)?.trim() ??
+          (participant['userId'] as String? ?? 'Usuário'),
+    );
     final photoUrl = (participant['photoUrl'] as String?) ?? '';
 
     return InkWell(

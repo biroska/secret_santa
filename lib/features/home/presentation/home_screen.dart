@@ -26,76 +26,34 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool _signingOut = false;
-  // Paginated events state
+  bool _isLoading = true;
   final List<EventCardDto> _events = [];
-  final ScrollController _scrollController = ScrollController();
-  bool _isLoadingInitial = true;
-  bool _isLoadingMore = false;
-  bool _hasMore = true;
-  final int _pageSize = 10;
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
-    _loadInitial(); // Inicia o carregamento dos eventos
+    _refreshEvents();
   }
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  // Método para recarregar os eventos (pull-to-refresh)
   Future<void> _refreshEvents() async {
-    setState(() {
-      _isLoadingInitial = true;
-      _hasMore = true;
-    });
+    if (!mounted) return;
+
+    setState(() => _isLoading = true);
+
     try {
       final fresh = await widget.eventService.getEvents();
+      if (!mounted) return;
+
       setState(() {
         _events
           ..clear()
           ..addAll(fresh);
-        _hasMore = fresh.length >= _pageSize;
       });
     } finally {
-      setState(() => _isLoadingInitial = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
-  }
-
-  Future<void> _loadInitial() async {
-    setState(() => _isLoadingInitial = true);
-    final page = await widget.eventService.getEventsPage(limit: _pageSize);
-    setState(() {
-      _events.clear();
-      _events.addAll(page);
-      _hasMore = page.length >= _pageSize;
-      _isLoadingInitial = false;
-    });
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent - 200 &&
-        !_isLoadingMore &&
-        _hasMore) {
-      _loadMore();
-    }
-  }
-
-  Future<void> _loadMore() async {
-    if (_events.isEmpty) return;
-    setState(() => _isLoadingMore = true);
-    final last = _events.last;
-    final page = await widget.eventService.getEventsPage(startAfter: last.eventDate, limit: _pageSize);
-    setState(() {
-      _events.addAll(page);
-      _hasMore = page.length >= _pageSize;
-      _isLoadingMore = false;
-    });
   }
 
   Future<void> _signOut() async {
@@ -109,6 +67,77 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Widget _buildInfoRow(
+    String label,
+    String value, {
+    TextStyle? labelStyle,
+    TextStyle? valueStyle,
+  }) {
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 4,
+      runSpacing: 2,
+      children: [
+        Text(
+          label,
+          style:
+              labelStyle ??
+              const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+        ),
+        Text(
+          value,
+          style:
+              valueStyle ??
+              const TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.event_busy_outlined,
+                    size: 56,
+                    color: theme.colorScheme.primary.withValues(alpha: 0.7),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Nenhum evento encontrado',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Você ainda não participa de nenhum evento.',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -119,12 +148,10 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text('Bem vindo ${name.split(' ')[0]}'),
         leading: Builder(
-          builder: (BuildContext context) {
+          builder: (context) {
             return IconButton(
               icon: const Icon(Icons.menu),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
+              onPressed: () => Scaffold.of(context).openDrawer(),
               tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
             );
           },
@@ -149,9 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: EdgeInsets.zero,
           children: <Widget>[
             DrawerHeader(
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary,
-              ),
+              decoration: BoxDecoration(color: theme.colorScheme.primary),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -161,17 +186,25 @@ class _HomeScreenState extends State<HomeScreen> {
                         ? NetworkImage(widget.session.photoUrl!)
                         : null,
                     child: widget.session.photoUrl == null
-                        ? const Icon(Icons.person, size: 36, color: Colors.white)
+                        ? const Icon(
+                            Icons.person,
+                            size: 36,
+                            color: Colors.white,
+                          )
                         : null,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     name,
-                    style: theme.textTheme.titleMedium?.copyWith(color: Colors.white),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: Colors.white,
+                    ),
                   ),
                   Text(
                     widget.session.email,
-                    style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white70),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.white70,
+                    ),
                   ),
                 ],
               ),
@@ -179,11 +212,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ListTile(
               leading: const Icon(Icons.add),
               title: const Text('Novo Evento'),
-              onTap: () async { // Alterado para async
-                Navigator.pop(context); // Fecha o drawer
-                final result = await context.push('/create-event'); // Aguarda o resultado
-                if (result == true) { // Se o evento foi salvo com sucesso
-                  _refreshEvents(); // Recarrega a lista de eventos
+              onTap: () async {
+                Navigator.pop(context);
+                final result = await context.push('/create-event');
+                if (result == true) {
+                  await _refreshEvents();
                 }
               },
             ),
@@ -191,36 +224,31 @@ class _HomeScreenState extends State<HomeScreen> {
               leading: const Icon(Icons.group),
               title: const Text('Meus Grupos'),
               onTap: () {
-                Navigator.pop(context); // Fecha o drawer
-                // TODO: Implementar navegação para Meus Grupos
+                Navigator.pop(context);
               },
             ),
             ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Configurações'),
               onTap: () {
-                Navigator.pop(context); // Fecha o drawer
-                // TODO: Implementar navegação para Configurações
+                Navigator.pop(context);
               },
             ),
             ListTile(
               leading: const Icon(Icons.info),
               title: const Text('Sobre'),
               onTap: () {
-                Navigator.pop(context); // Fecha o drawer
-                // TODO: Implementar navegação para Sobre
+                Navigator.pop(context);
               },
             ),
-            const Divider(), // Adiciona um divisor antes do item Sair
+            const Divider(),
             ListTile(
               leading: const Icon(Icons.logout),
               title: _signingOut
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                      ),
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Text('Sair'),
               onTap: _signingOut ? null : _signOut,
@@ -228,98 +256,123 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      body: Column( // Usando Column para o botão e a lista
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded( // Expanded para a lista ocupar o espaço restante
-            child: _isLoadingInitial
-                ? const Center(child: CircularProgressIndicator())
-                : RefreshIndicator(
-                    onRefresh: _refreshEvents,
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                      itemCount: _events.length + (_isLoadingMore ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index >= _events.length) {
-                          // loading more indicator
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 12.0),
-                            child: Center(child: CircularProgressIndicator()),
-                          );
+      body: RefreshIndicator(
+        onRefresh: _refreshEvents,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _events.isEmpty
+            ? _buildEmptyState(context)
+            : ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: _events.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final event = _events[index];
+                  final eventDateText = event.eventDate != null
+                      ? dateFormat.format(event.eventDate!)
+                      : 'A definir';
+                  final drawDateText = event.drawDate != null
+                      ? dateFormat.format(event.drawDate!)
+                      : 'Não realizado';
+
+                  return Card(
+                    margin: EdgeInsets.zero,
+                    child: InkWell(
+                      onTap: () async {
+                        final result = await context.push(
+                          '/event-details/${event.id}',
+                        );
+                        if (result == true) {
+                          await _refreshEvents();
                         }
-                        final event = _events[index];
-                        return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 4.0),
-                          child: InkWell(
-                            onTap: () async {
-                              final result = await context.push('/event-details/${event.id}');
-                              if (result == true) {
-                                _refreshEvents();
-                              }
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.all(12.0),
-                              child: Row(
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CircleAvatar(
+                              radius: 22,
+                              backgroundColor:
+                                  theme.colorScheme.primaryContainer,
+                              foregroundColor:
+                                  theme.colorScheme.onPrimaryContainer,
+                              child: Icon(event.icon),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  CircleAvatar(
-                                    backgroundColor: theme.colorScheme.primaryContainer,
-                                    foregroundColor: theme.colorScheme.onPrimaryContainer,
-                                    child: Icon(event.icon),
+                                  Text(
+                                    event.name,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.bold),
                                   ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          event.name,
-                                          style: theme.textTheme.titleMedium?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'Organizador: ${event.organizerName}', // Nova linha para o organizador
-                                          style: theme.textTheme.bodySmall?.copyWith(
-                                            color: theme.colorScheme.onSurfaceVariant,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'Data Evento: ${dateFormat.format(event.eventDate)}',
-                                          style: theme.textTheme.bodySmall?.copyWith(
-                                            fontStyle: FontStyle.italic,
-                                            color: theme.colorScheme.onSurfaceVariant,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          'Data Sorteio: ${dateFormat.format(event.drawDate)}',
-                                          style: theme.textTheme.bodySmall?.copyWith(
-                                            fontStyle: FontStyle.italic,
-                                            color: theme.colorScheme.onSurfaceVariant,
-                                          ),
-                                        ),
-                                      ],
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Organizador: ${event.organizerName}',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
                                     ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  _buildInfoRow(
+                                    'Data Evento:',
+                                    eventDateText,
+                                    labelStyle: theme.textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: theme
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                    valueStyle: theme.textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: theme
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                        ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  _buildInfoRow(
+                                    'Data Sorteio:',
+                                    drawDateText,
+                                    labelStyle: theme.textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: theme
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                    valueStyle: theme.textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: theme
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                        ),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                        );
-                      },
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-          ),
-        ],
+                  );
+                },
+              ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async { // Alterado para async
-          final result = await context.push('/create-event'); // Aguarda o resultado
-          if (result == true) { // Se o evento foi salvo com sucesso
-            _refreshEvents(); // Recarrega a lista de eventos
+        onPressed: () async {
+          final result = await context.push('/create-event');
+          if (result == true) {
+            await _refreshEvents();
           }
         },
         child: const Icon(Icons.add),

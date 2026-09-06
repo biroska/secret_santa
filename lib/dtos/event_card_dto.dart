@@ -7,12 +7,13 @@ class EventCardDto {
   final String name;
   final String organizerName;
   final DateTime createdAt;
-  final DateTime eventDate;
-  final DateTime drawDate;
+  final DateTime? eventDate;
+  final DateTime? drawDate;
   final IconData icon;
   final String description;
   final int? maxGiftValue; // optional
-  final List<Map<String, dynamic>> participants; // cada participante tem: userId, role, joinedAt, name, photoUrl
+  final List<Map<String, dynamic>>
+  participants; // cada participante tem: userId, role, joinedAt, name, photoUrl
 
   EventCardDto({
     required this.id,
@@ -20,8 +21,8 @@ class EventCardDto {
     required this.name,
     required this.organizerName,
     required this.createdAt,
-    required this.eventDate,
-    required this.drawDate,
+    this.eventDate,
+    this.drawDate,
     this.icon = Icons.event,
     required this.description,
     this.maxGiftValue,
@@ -35,10 +36,8 @@ class EventCardDto {
   }) {
     final Timestamp createdAtTimestamp =
         (data['createdAt'] as Timestamp?) ?? Timestamp.now();
-    final Timestamp eventTimestamp =
-        (data['eventDate'] as Timestamp?) ?? createdAtTimestamp;
-    final Timestamp drawTimestamp =
-        (data['drawDate'] as Timestamp?) ?? createdAtTimestamp;
+    final Timestamp? eventTimestamp = data['eventDate'] as Timestamp?;
+    final Timestamp? drawTimestamp = data['drawDate'] as Timestamp?;
 
     // maxGiftValue may be stored as int or num
     final dynamic rawMax = data['maxGiftValue'];
@@ -63,11 +62,11 @@ class EventCardDto {
     return EventCardDto(
       id: id,
       adminId: (data['adminId'] as String?) ?? '',
-      name: data['title'] as String,
+      name: data['title'] as String? ?? 'Evento sem título',
       organizerName: organizerName,
       createdAt: createdAtTimestamp.toDate(),
-      eventDate: eventTimestamp.toDate(),
-      drawDate: drawTimestamp.toDate(),
+      eventDate: eventTimestamp?.toDate(),
+      drawDate: drawTimestamp?.toDate(),
       icon: Icons.event,
       description: data['description'] as String? ?? '',
       maxGiftValue: maxGift,

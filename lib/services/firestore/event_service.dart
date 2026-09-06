@@ -30,6 +30,26 @@ class EventService {
     return false;
   }
 
+  int _compareEventDatesForDisplay(
+    Map<String, dynamic> left,
+    Map<String, dynamic> right,
+  ) {
+    final leftDate = (left['eventDate'] as Timestamp?)?.toDate();
+    final rightDate = (right['eventDate'] as Timestamp?)?.toDate();
+
+    if (leftDate == null && rightDate == null) {
+      final leftCreated = (left['createdAt'] as Timestamp?)?.toDate();
+      final rightCreated = (right['createdAt'] as Timestamp?)?.toDate();
+      if (leftCreated == null || rightCreated == null) return 0;
+      return rightCreated.compareTo(leftCreated);
+    }
+
+    if (leftDate == null) return 1;
+    if (rightDate == null) return -1;
+
+    return rightDate.compareTo(leftDate);
+  }
+
   List<Map<String, dynamic>> _filterEventsForCurrentUser(
     List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
   ) {
@@ -47,18 +67,18 @@ class EventService {
       }
     }
 
-    filtered.sort((a, b) {
-      final left = (a['eventDate'] as Timestamp?)?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
-      final right = (b['eventDate'] as Timestamp?)?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
-      return right.compareTo(left);
-    });
+    filtered.sort(_compareEventDatesForDisplay);
 
     return filtered;
   }
 
   /// Adiciona um participante ao evento se ele ainda não existir.
   /// Usa uma transação para garantir consistência.
-  Future<void> addParticipantIfNotExists(String eventId, String userId, {String role = 'PARTICIPANT'}) async {
+  Future<void> addParticipantIfNotExists(
+    String eventId,
+    String userId, {
+    String role = 'PARTICIPANT',
+  }) async {
     final docRef = _firestore.collection('events').doc(eventId);
     try {
       await _firestore.runTransaction((transaction) async {
@@ -84,7 +104,9 @@ class EventService {
         });
       });
     } catch (e) {
-      debugPrint('Erro ao adicionar participante $userId ao evento $eventId: $e');
+      debugPrint(
+        'Erro ao adicionar participante $userId ao evento $eventId: $e',
+      );
       rethrow;
     }
   }
@@ -119,7 +141,14 @@ class EventService {
         );
       }
 
-      events.sort((a, b) => b.eventDate.compareTo(a.eventDate));
+      events.sort((a, b) {
+        final left = a.eventDate ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final right = b.eventDate ?? DateTime.fromMillisecondsSinceEpoch(0);
+        if (a.eventDate == null && b.eventDate == null) return 0;
+        if (a.eventDate == null) return 1;
+        if (b.eventDate == null) return -1;
+        return right.compareTo(left);
+      });
       return events;
     } catch (e) {
       debugPrint('Erro ao buscar eventos do Firestore: $e');
@@ -147,42 +176,42 @@ class EventService {
           );
         }
 
-          // Enriquecer participantes com nome e photoUrl quando possível
-          final rawParticipants = (data['participants'] as List<dynamic>?) ?? [];
-          final List<Map<String, dynamic>> enriched = [];
-          for (var p in rawParticipants) {
+        // Enriquecer participantes com nome e photoUrl quando possível
+        final rawParticipants = (data['participants'] as List<dynamic>?) ?? [];
+        final List<Map<String, dynamic>> enriched = [];
+        for (var p in rawParticipants) {
+          try {
+            final map = Map<String, dynamic>.from(p as Map<String, dynamic>);
+            final uid = (map['userId'] ?? '') as String;
+            String name = '';
+            String photoUrl = '';
             try {
-              final map = Map<String, dynamic>.from(p as Map<String, dynamic>);
-              final uid = (map['userId'] ?? '') as String;
-              String name = '';
-              String photoUrl = '';
-              try {
-                final user = await _userService.getUserById(uid);
-                if (user != null) {
-                  name = user.name;
-                  photoUrl = user.photoUrl;
-                }
-              } catch (e) {
-                debugPrint('Erro ao buscar info de usuário $uid: $e');
+              final user = await _userService.getUserById(uid);
+              if (user != null) {
+                name = user.name;
+                photoUrl = user.photoUrl;
               }
-              map['name'] = name;
-              map['photoUrl'] = photoUrl;
-              enriched.add(map);
             } catch (e) {
-              debugPrint('Participante inválido no evento $eventId: $e');
+              debugPrint('Erro ao buscar info de usuário $uid: $e');
             }
+            map['name'] = name;
+            map['photoUrl'] = photoUrl;
+            enriched.add(map);
+          } catch (e) {
+            debugPrint('Participante inválido no evento $eventId: $e');
           }
-
-          // Substitui participants pelo enriquecido temporariamente para o DTO
-          final enrichedData = Map<String, dynamic>.from(data);
-          enrichedData['participants'] = enriched;
-
-          return EventCardDto.fromFirestore(
-            id: docSnapshot.id,
-            data: enrichedData,
-            organizerName: organizerName,
-          );
         }
+
+        // Substitui participants pelo enriquecido temporariamente para o DTO
+        final enrichedData = Map<String, dynamic>.from(data);
+        enrichedData['participants'] = enriched;
+
+        return EventCardDto.fromFirestore(
+          id: docSnapshot.id,
+          data: enrichedData,
+          organizerName: organizerName,
+        );
+      }
       return null;
     } catch (e) {
       debugPrint('Erro ao buscar evento $eventId do Firestore: $e');
@@ -192,7 +221,10 @@ class EventService {
 
   /// Busca uma página de eventos ordenados por eventDate desc.
   /// Se [startAfter] for fornecido, retorna eventos com eventDate < startAfter (ou seja, mais antigos).
-  Future<List<EventCardDto>> getEventsPage({DateTime? startAfter, int limit = 10}) async {
+  Future<List<EventCardDto>> getEventsPage({
+    DateTime? startAfter,
+    int limit = 10,
+  }) async {
     try {
       final querySnapshot = await _firestore
           .collection('events')
@@ -259,7 +291,9 @@ class EventService {
         'status': 'CREATED',
       });
 
-      debugPrint('Data de sorteio atualizada para $eventId em ${normalized.toIso8601String()} e status definido como CREATED.');
+      debugPrint(
+        'Data de sorteio atualizada para $eventId em ${normalized.toIso8601String()} e status definido como CREATED.',
+      );
     } catch (e) {
       debugPrint('Erro ao atualizar a data de sorteio do evento $eventId: $e');
       rethrow;
@@ -326,7 +360,9 @@ class EventService {
       }
 
       await docRef.set(eventData);
-      debugPrint('Evento "${newEvent.title}" criado com sucesso no Firestore com id $id.');
+      debugPrint(
+        'Evento "${newEvent.title}" criado com sucesso no Firestore com id $id.',
+      );
       return id;
     } catch (e) {
       debugPrint('Erro ao criar evento no Firestore: $e');
