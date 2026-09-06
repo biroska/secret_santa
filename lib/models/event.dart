@@ -3,6 +3,7 @@ import 'participants.dart';
 
 class Events {
   const Events({
+    required this.id,
     required this.title,
     required this.description,
     required this.adminId,
@@ -12,6 +13,7 @@ class Events {
     required this.participants,
   });
 
+  final String id;
   final String title;
   final String description;
   final String adminId;
@@ -22,6 +24,7 @@ class Events {
 
   factory Events.fromJson(Map<String, dynamic> json) {
     return Events(
+      id: json['id'] as String? ?? '',
       title: json['title'] as String,
       description: json['description'] as String,
       adminId: json['adminId'] as String,
@@ -35,6 +38,7 @@ class Events {
   }
 
   Map<String, dynamic> toJson() => {
+        'id': id,
         'title': title,
         'description': description,
         'adminId': adminId,

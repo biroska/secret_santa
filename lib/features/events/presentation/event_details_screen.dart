@@ -5,6 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../dtos/event_card_dto.dart';
 import '../../../services/firestore/event_service.dart';
+import 'adicionar_pessoa_screen.dart';
+import 'event_title_card.dart';
 
 class EventDetailsScreen extends StatefulWidget {
   final String eventId;
@@ -20,6 +22,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   Future<EventCardDto?>? _eventFuture;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  bool _isFriendRevealVisible = false;
 
   @override
   void initState() {
@@ -44,12 +47,16 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
   Future<void> _fetchEventDetails() async {
     setState(() {
+      _isFriendRevealVisible = false;
       _eventFuture = _eventService.getEventById(widget.eventId);
     });
   }
 
   Future<void> _refreshEventDetails() async {
     try {
+      setState(() {
+        _isFriendRevealVisible = false;
+      });
       final refreshedEvent = await _eventService.getEventById(widget.eventId);
       if (!mounted) return;
 
@@ -135,6 +142,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         final shouldShowRevealBanner = event.drawDate.isBefore(DateTime.now());
         final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
         final isAdmin = currentUserId.isNotEmpty && currentUserId == event.adminId;
+        final revealedParticipant = _getLastParticipant(event.participants);
+        final shouldShowRevealedParticipantCard = shouldShowRevealBanner && _isFriendRevealVisible;
 
         return Scaffold(
           backgroundColor: const Color(0xFFF2F3F5),
@@ -153,7 +162,12 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                         children: [
                           _buildSummaryCard(event),
                           const SizedBox(height: 18),
-                          if (shouldShowRevealBanner) _buildRevealBanner(),
+                          if (isAdmin && !shouldShowRevealBanner && event.participants.length >= 3) _buildAdminDrawCard(),
+                          if (isAdmin && !shouldShowRevealBanner && event.participants.length >= 3) const SizedBox(height: 24),
+                          if (shouldShowRevealBanner && !shouldShowRevealedParticipantCard)
+                            _buildRevealBanner(),
+                          if (shouldShowRevealBanner && shouldShowRevealedParticipantCard)
+                            _buildRevealedParticipantCard(revealedParticipant),
                           if (shouldShowRevealBanner) const SizedBox(height: 24),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -178,7 +192,11 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                               const Spacer(),
                               if (!shouldShowRevealBanner)
                                 TextButton.icon(
-                                  onPressed: () {},
+                                  onPressed: () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => AdicionarPessoaScreen(eventId: widget.eventId),
+                                    ),
+                                  ),
                                   icon: const Icon(Icons.add, size: 22),
                                   label: const Text('Convidar'),
                                   style: TextButton.styleFrom(
@@ -234,7 +252,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                                     badge: badgeLabel,
                                     badgeColor: badgeColor,
                                     badgeTextColor: badgeTextColor,
-                                    showChevron: true,
+                                    showBadge: true,
                                     avatarUrl: photoUrl.isNotEmpty ? photoUrl : null,
                                   ),
                                 );
@@ -264,6 +282,14 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       final userId = ((participant['userId'] as String?) ?? '').toString().trim();
       return name.toLowerCase().contains(query) || userId.toLowerCase().contains(query);
     }).toList();
+  }
+
+  Map<String, dynamic>? _getLastParticipant(List<Map<String, dynamic>> participants) {
+    if (participants.isEmpty) {
+      return null;
+    }
+
+    return participants.last;
   }
 
   String _getFirstName(String value) {
@@ -325,117 +351,14 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     final appBarBackgroundColor =
         Theme.of(context).appBarTheme.backgroundColor ??
             Theme.of(context).colorScheme.primary;
-    final organizerFirstName = _getFirstName(event.organizerName);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 22),
-        decoration: BoxDecoration(
-          color: appBarBackgroundColor,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    color: Colors.white,
-                  ),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    event.name,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.7,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                if (isAdmin)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // DEV-ONLY: bloco separado para inserir todos os usuários como participantes.
-                      // Remover facilmente em produção.
-                      IconButton(
-                        onPressed: () => _devAddAllUsersToParticipants(context),
-                        icon: const Icon(Icons.add, color: Colors.white),
-                        tooltip: 'DEV: adicionar todos usuários como participantes',
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                      IconButton(
-                        onPressed: () => _confirmDeleteEvent(context, event),
-                        icon: const Icon(Icons.delete_outline_rounded, color: Colors.white),
-                        tooltip: 'Excluir evento',
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            Text(
-              event.description,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: -0.5,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Container(
-                  width: 18,
-                  height: 18,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.check,
-                    size: 14,
-                    color: Color(0xFF1D7B72),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Organizado por: $organizerFirstName',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                const Text('🎄', style: TextStyle(fontSize: 18)),
-              ],
-            ),
-          ],
-        ),
-      ),
+    return EventTitleCard(
+      event: event,
+      isAdmin: isAdmin,
+      onBack: () => Navigator.of(context).pop(),
+      onDelete: () => _confirmDeleteEvent(context, event),
+      onDevAddAll: () => _devAddAllUsersToParticipants(context),
+      backgroundColor: appBarBackgroundColor,
     );
   }
 
@@ -564,51 +487,210 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     );
   }
 
-  Widget _buildRevealBanner() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFDF3A4A),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: RichText(
-              text: const TextSpan(
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  height: 1.3,
-                ),
-                children: [
-                  TextSpan(text: 'O Sorteio Já Aconteceu!\n'),
-                  TextSpan(
-                    text:
-                        'Clique para revelar o seu amigo secreto.',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
-                  ),
-                ],
-              ),
-            ),
+  Future<void> _showDrawConfirmationDialog() async {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final shouldContinue = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Realizar sorteio?'),
+        content: const Text(
+          'Após confirmar o sorteio, o evento não poderá ser alterado. Deseja continuar?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancelar'),
           ),
-          const SizedBox(width: 12),
-          Container(
-            width: 56,
-            height: 56,
-            decoration: const BoxDecoration(
-              color: Color(0xFFF7C74B),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.card_giftcard_rounded,
-              color: Color(0xFFCB4A2A),
-              size: 32,
-            ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Confirmar'),
           ),
         ],
+      ),
+    );
+
+    if (shouldContinue != true || !mounted) return;
+
+    try {
+      await _eventService.updateDrawDate(widget.eventId);
+      if (!mounted) return;
+      await _refreshEventDetails();
+      messenger?.showSnackBar(
+        const SnackBar(content: Text('Sorteio confirmado com sucesso.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      messenger?.showSnackBar(
+        SnackBar(content: Text('Não foi possível confirmar o sorteio: $e')),
+      );
+    }
+  }
+
+  Future<bool> _confirmRevealWithPassword() async {
+    final passwordController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Confirmação de senha'),
+        content: TextField(
+          controller: passwordController,
+          obscureText: true,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Senha do celular',
+            hintText: 'Digite sua senha',
+          ),
+          keyboardType: TextInputType.visiblePassword,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = passwordController.text.trim();
+              Navigator.of(dialogContext).pop(value.isNotEmpty);
+            },
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
+
+    return confirmed == true;
+  }
+
+  Widget _buildAdminDrawCard() {
+    return InkWell(
+      onTap: _showDrawConfirmationDialog,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEAF5EC),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: RichText(
+                text: const TextSpan(
+                  style: TextStyle(
+                    color: Color(0xFF2E8A4A),
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    height: 1.3,
+                  ),
+                  children: [
+                    TextSpan(text: 'Realizar sorteio\n'),
+                    TextSpan(
+                      text: 'Atenção: após confirmar, o evento não poderá ser alterado.',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              width: 56,
+              height: 56,
+              decoration: const BoxDecoration(
+                color: Color(0xFF2E8A4A),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.card_giftcard_rounded,
+                color: Colors.white,
+                size: 32,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRevealBanner() {
+    return InkWell(
+      onTap: () async {
+        final confirmed = await _confirmRevealWithPassword();
+        if (!mounted || !confirmed) return;
+        setState(() => _isFriendRevealVisible = true);
+      },
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFDF3A4A),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: RichText(
+                text: const TextSpan(
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    height: 1.3,
+                  ),
+                  children: [
+                    TextSpan(text: 'O Sorteio Já Aconteceu!\n'),
+                    TextSpan(
+                      text: 'Revele o seu amigo secreto',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              width: 56,
+              height: 56,
+              decoration: const BoxDecoration(
+                color: Color(0xFFF7C74B),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.card_giftcard_rounded,
+                color: Color(0xFFCB4A2A),
+                size: 32,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRevealedParticipantCard(Map<String, dynamic>? participant) {
+    if (participant == null) {
+      return const SizedBox.shrink();
+    }
+
+    final name = _getFirstName((participant['name'] as String?)?.trim() ?? (participant['userId'] as String? ?? 'Usuário'));
+    final photoUrl = (participant['photoUrl'] as String?) ?? '';
+
+    return InkWell(
+      onTap: () => setState(() => _isFriendRevealVisible = false),
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: _buildParticipantItem(
+          name: name,
+          subtitle: 'Seu amigo secreto',
+          badge: '',
+          badgeColor: Colors.transparent,
+          badgeTextColor: Colors.transparent,
+          showBadge: false,
+          avatarUrl: photoUrl.isNotEmpty ? photoUrl : null,
+        ),
       ),
     );
   }
@@ -653,7 +735,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     required String badge,
     required Color badgeColor,
     required Color badgeTextColor,
-    required bool showChevron,
+    required bool showBadge,
     String? avatarUrl,
   }) {
     return Container(
@@ -704,25 +786,22 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: badgeColor,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              badge,
-              style: TextStyle(
-                color: badgeTextColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
+          if (showBadge)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: badgeColor,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                badge,
+                style: TextStyle(
+                  color: badgeTextColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
               ),
             ),
-          ),
-          if (showChevron) ...[
-            const SizedBox(width: 8),
-            const Icon(Icons.chevron_right, color: Color(0xFF707070)),
-          ],
         ],
       ),
     );

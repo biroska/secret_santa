@@ -100,19 +100,21 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
             maxGiftValue: _defineGiftValue ? _giftValue.round() : null,
           );
 
-          await widget.eventService.createEvent(newEventDto);
+          final String newEventId = await widget.eventService.createEvent(newEventDto);
 
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Evento criado com sucesso!')),
           );
-          context.pop(true); // Volta para a tela anterior (HomeScreen) e indica sucesso
+          // Retorna o id do evento para o chamador
+          context.pop(newEventId);
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Erro ao criar evento: $e')));
-        context.pop(false); // Volta para a tela anterior e indica falha
+        // Em caso de erro, retorna null para o chamador
+        context.pop(null);
       } finally {
         if (mounted) {
           setState(() {

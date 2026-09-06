@@ -242,7 +242,31 @@ class EventService {
     }
   }
 
-  Future<void> createEvent(NewEventDto newEvent) async {
+  Future<void> updateDrawDate(String eventId, {DateTime? drawDate}) async {
+    try {
+      final targetDate = drawDate ?? DateTime.now();
+      final normalized = DateTime.utc(
+        targetDate.year,
+        targetDate.month,
+        targetDate.day,
+        12,
+        0,
+        0,
+      );
+
+      await _firestore.collection('events').doc(eventId).update({
+        'drawDate': Timestamp.fromDate(normalized),
+        'status': 'CREATED',
+      });
+
+      debugPrint('Data de sorteio atualizada para $eventId em ${normalized.toIso8601String()} e status definido como CREATED.');
+    } catch (e) {
+      debugPrint('Erro ao atualizar a data de sorteio do evento $eventId: $e');
+      rethrow;
+    }
+  }
+
+  Future<String> createEvent(NewEventDto newEvent) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
@@ -279,7 +303,12 @@ class EventService {
         'joinedAt': createdAt.toDate().toUtc().toIso8601String(),
       };
 
+      // Gerar documento com ID e usar docRef.set para garantir que o id esteja disponível
+      final docRef = _firestore.collection('events').doc();
+      final id = docRef.id;
+
       final eventData = {
+        'id': id,
         'title': newEvent.title,
         'description': newEvent.description,
         'eventDate': Timestamp.fromDate(eventDateUtc),
@@ -296,8 +325,9 @@ class EventService {
         eventData['maxGiftValue'] = maxGift;
       }
 
-      await _firestore.collection('events').add(eventData);
-      debugPrint('Evento "${newEvent.title}" criado com sucesso no Firestore.');
+      await docRef.set(eventData);
+      debugPrint('Evento "${newEvent.title}" criado com sucesso no Firestore com id $id.');
+      return id;
     } catch (e) {
       debugPrint('Erro ao criar evento no Firestore: $e');
       rethrow; // Re-lança o erro para ser tratado na UI
