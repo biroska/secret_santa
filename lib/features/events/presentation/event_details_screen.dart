@@ -157,6 +157,14 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
         return Scaffold(
           backgroundColor: const Color(0xFFF2F3F5),
+          appBar: AppBar(
+            title: const Text('Evento'),
+            centerTitle: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
           body: SafeArea(
             child: RefreshIndicator(
               onRefresh: _refreshEventDetails,
@@ -164,6 +172,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 child: Column(
                   children: [
+                    const SizedBox(height: 18),
                     _buildHeader(context, event, isAdmin),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),

@@ -317,15 +317,6 @@ class EventService {
         0,
       );
 
-      final DateTime drawDateUtc = DateTime.utc(
-        newEvent.drawDate.year,
-        newEvent.drawDate.month,
-        newEvent.drawDate.day,
-        12,
-        0,
-        0,
-      );
-
       final createdAt = Timestamp.now();
 
       final participantEntry = {
@@ -346,7 +337,6 @@ class EventService {
         'title': newEvent.title,
         'description': newEvent.description,
         'eventDate': Timestamp.fromDate(eventDateUtc),
-        'drawDate': Timestamp.fromDate(drawDateUtc),
         'createdAt': createdAt,
         'adminId': user.uid,
         'status': 'CREATING',

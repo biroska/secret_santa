@@ -39,16 +39,6 @@ class EventTitleCard extends StatelessWidget {
         children: [
             Row(
               children: [
-                IconButton(
-                  onPressed: onBack ?? () => Navigator.of(context).pop(),
-                  icon: const Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    color: Colors.white,
-                  ),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     event.name,
@@ -86,7 +76,7 @@ class EventTitleCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 8),
             Text(
               event.description,
               maxLines: 3,
