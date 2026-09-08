@@ -6,6 +6,7 @@ import '../../../services/mock_invite_service.dart';
 import '../../../dtos/event_card_dto.dart';
 import '../../../services/firestore/event_service.dart';
 import 'event_title_card.dart';
+import 'incluir_dependente_screen.dart';
 
 class AdicionarPessoaScreen extends StatefulWidget {
   final String eventId;
@@ -185,8 +186,13 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                         subtitle: const Text('Informe o nome e vincule pelo menos um responsável.'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () {
-                          // Placeholder: futura navegação para cadastro de dependente
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cadastro de dependente (não implementado)')));
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => IncluirDependenteScreen(
+                                eventParticipants: _event?.participants ?? const [],
+                              ),
+                            ),
+                          );
                         },
                       ),
                     ),
