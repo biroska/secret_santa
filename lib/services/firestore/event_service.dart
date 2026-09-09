@@ -90,7 +90,9 @@ class EventService {
         final exists = participants.any((p) => (p['userId'] ?? '') == userId);
         if (exists) return; // já existe, nada a fazer
 
+        final participantIndex = participants.length + 1;
         final participantEntry = {
+          'participantId': 'P$participantIndex',
           'userId': userId,
           'role': role,
           'isDependent': false,
@@ -106,6 +108,59 @@ class EventService {
     } catch (e) {
       debugPrint(
         'Erro ao adicionar participante $userId ao evento $eventId: $e',
+      );
+      rethrow;
+    }
+  }
+
+  Future<void> addDependentParticipant(
+    String eventId, {
+    required String dependentName,
+    required List<String> responsibleIds,
+    bool canSortResponsible = false,
+  }) async {
+    final docRef = _firestore.collection('events').doc(eventId);
+    try {
+      await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(docRef);
+        if (!snapshot.exists) {
+          throw Exception('Evento não encontrado');
+        }
+
+        final data = snapshot.data() ?? {};
+        final participants = (data['participants'] as List<dynamic>?) ?? const [];
+        final dependentCount = participants.where((participant) {
+          if (participant is! Map) return false;
+          final map = Map<String, dynamic>.from(participant);
+          return (map['isDependent'] as bool? ?? false) == true;
+        }).length;
+
+        final participantId = 'D${dependentCount + 1}';
+        final cleanName = dependentName.trim();
+        final sanitizedResponsibleIds = responsibleIds
+            .map((id) => id.trim())
+            .where((id) => id.isNotEmpty)
+            .toList();
+
+        final participantEntry = {
+          'participantId': participantId,
+          'userId': 'dependent-$participantId',
+          'name': cleanName,
+          'role': 'DEPENDENT',
+          'isDependent': true,
+          'responsibleIds': sanitizedResponsibleIds,
+          'canSortResponsible': canSortResponsible,
+          'giftWish': <String>[],
+          'joinedAt': DateTime.now().toUtc().toIso8601String(),
+        };
+
+        transaction.update(docRef, {
+          'participants': [...participants, participantEntry],
+        });
+      });
+    } catch (e) {
+      debugPrint(
+        'Erro ao adicionar dependente ao evento $eventId: $e',
       );
       rethrow;
     }
@@ -182,14 +237,20 @@ class EventService {
         for (var p in rawParticipants) {
           try {
             final map = Map<String, dynamic>.from(p as Map<String, dynamic>);
-            final uid = (map['userId'] ?? '') as String;
-            String name = '';
-            String photoUrl = '';
+            final uid = (map['userId'] ?? '').toString();
+            final existingName = (map['name'] as String?)?.trim();
+            final existingPhotoUrl = (map['photoUrl'] as String?)?.trim();
+            String name = existingName ?? '';
+            String photoUrl = existingPhotoUrl ?? '';
             try {
               final user = await _userService.getUserById(uid);
               if (user != null) {
-                name = user.name;
-                photoUrl = user.photoUrl;
+                if (name.isEmpty) {
+                  name = user.name;
+                }
+                if (photoUrl.isEmpty) {
+                  photoUrl = user.photoUrl;
+                }
               }
             } catch (e) {
               debugPrint('Erro ao buscar info de usuário $uid: $e');
@@ -320,6 +381,7 @@ class EventService {
       final createdAt = Timestamp.now();
 
       final participantEntry = {
+        'participantId': 'P1',
         'userId': user.uid,
         'role': 'ADMIN',
         'isDependent': false,

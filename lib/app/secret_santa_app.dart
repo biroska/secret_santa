@@ -80,7 +80,12 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
             final participants = state.extra is List<Map<String, dynamic>>
                 ? state.extra as List<Map<String, dynamic>>
                 : const <Map<String, dynamic>>[];
-            return IncluirDependenteScreen(eventParticipants: participants);
+            final eventId = state.pathParameters['id'] ??
+                (state.extra is Map ? (state.extra as Map)['eventId']?.toString() ?? '' : '');
+            return IncluirDependenteScreen(
+              eventId: eventId,
+              eventParticipants: participants,
+            );
           },
         ),
       ],

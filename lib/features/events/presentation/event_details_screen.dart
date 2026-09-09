@@ -271,8 +271,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                                   badgeLabel = 'Organizador';
                                   badgeColor = const Color(0xFFD9E9E6);
                                   badgeTextColor = const Color(0xFF1D7B72);
-                                } else if (role == 'DEPENDENT' ||
-                                    role == 'DEPENDENT') {
+                                } else if (role == 'DEPENDENT') {
                                   badgeLabel = 'Dependente';
                                   badgeColor = const Color(0xFFE9F3FA);
                                   badgeTextColor = const Color(0xFF2C6F9F);
@@ -284,16 +283,24 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
                                 final photoUrl =
                                     (p['photoUrl'] as String?) ?? '';
+                                final isDependent =
+                                    (p['isDependent'] as bool? ?? false) == true;
+                                final canSortResponsible =
+                                    (p['canSortResponsible'] as bool? ?? false) == true;
+                                final warningText =
+                                    isDependent && !canSortResponsible
+                                        ? 'Não pode sortear os responsáveis'
+                                        : null;
 
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 12),
                                   child: _buildParticipantItem(
                                     name: name,
-                                    subtitle: '3 desejos cadastrados',
                                     badge: badgeLabel,
                                     badgeColor: badgeColor,
                                     badgeTextColor: badgeTextColor,
                                     showBadge: true,
+                                    warningText: warningText,
                                     avatarUrl: photoUrl.isNotEmpty
                                         ? photoUrl
                                         : null,
@@ -764,11 +771,6 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         padding: const EdgeInsets.only(bottom: 12),
         child: _buildParticipantItem(
           name: name,
-          subtitle: 'Seu amigo secreto',
-          badge: '',
-          badgeColor: Colors.transparent,
-          badgeTextColor: Colors.transparent,
-          showBadge: false,
           avatarUrl: photoUrl.isNotEmpty ? photoUrl : null,
         ),
       ),
@@ -811,11 +813,12 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
   Widget _buildParticipantItem({
     required String name,
-    required String subtitle,
-    required String badge,
-    required Color badgeColor,
-    required Color badgeTextColor,
-    required bool showBadge,
+    String? subtitle,
+    String? badge,
+    Color badgeColor = Colors.transparent,
+    Color badgeTextColor = const Color(0xFF3D8F3D),
+    bool showBadge = false,
+    String? warningText,
     String? avatarUrl,
   }) {
     return Container(
@@ -847,41 +850,65 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    color: Color(0xFF1B1B1B),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        name,
+                        style: const TextStyle(
+                          color: Color(0xFF1B1B1B),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    if (showBadge && badge != null && badge.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: badgeColor,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          badge,
+                          style: TextStyle(
+                            color: badgeTextColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: Color(0xFF667085),
-                    fontSize: 12,
+                if (subtitle != null && subtitle.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: Color(0xFF667085),
+                        fontSize: 12,
+                      ),
+                    ),
                   ),
-                ),
+                if (warningText != null && warningText.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      warningText,
+                      style: const TextStyle(
+                        color: Color(0xFFCF2A2A),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
-          if (showBadge)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: badgeColor,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                badge,
-                style: TextStyle(
-                  color: badgeTextColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-            ),
         ],
       ),
     );

@@ -2,6 +2,8 @@
 class Participants {
   const Participants({
     required this.userId,
+    this.participantId,
+    this.canSortResponsible = false,
     required this.role,
     required this.isDependent,
     required this.responsibleIds,
@@ -10,6 +12,8 @@ class Participants {
   });
 
   final String userId;
+  final String? participantId;
+  final bool canSortResponsible;
   final String role;
   final bool isDependent;
   final List<String> responsibleIds;
@@ -18,18 +22,27 @@ class Participants {
 
   factory Participants.fromJson(Map<String, dynamic> json) {
     return Participants(
-      userId: json['userId'] as String,
-      role: json['role'] as String,
-      isDependent: json['isDependent'] as bool,
-      responsibleIds:
-          List<String>.from(json['responsibleIds'] as List<dynamic>),
-      giftWish: List<String>.from(json['giftWish'] as List<dynamic>),
-      joinedAt: DateTime.parse(json['joinedAt'] as String),
+      userId: json['userId'] as String? ?? '',
+      participantId: json['participantId'] as String?,
+      canSortResponsible: json['canSortResponsible'] as bool? ?? false,
+      role: json['role'] as String? ?? 'PARTICIPANT',
+      isDependent: json['isDependent'] as bool? ?? false,
+      responsibleIds: List<String>.from(
+        (json['responsibleIds'] as List<dynamic>? ?? const []),
+      ),
+      giftWish: List<String>.from(
+        (json['giftWish'] as List<dynamic>? ?? const []),
+      ),
+      joinedAt: DateTime.parse(
+        (json['joinedAt'] as String?) ?? DateTime.now().toUtc().toIso8601String(),
+      ),
     );
   }
 
   Map<String, dynamic> toJson() => {
         'userId': userId,
+        if (participantId != null) 'participantId': participantId,
+        'canSortResponsible': canSortResponsible,
         'role': role,
         'isDependent': isDependent,
         'responsibleIds': responsibleIds,

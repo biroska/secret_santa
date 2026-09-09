@@ -183,12 +183,13 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                       child: ListTile(
                         leading: const CircleAvatar(child: Icon(Icons.person_outline, color: Color(0xFF8A5B00))),
                         title: const Text('Dependente'),
-                        subtitle: const Text('Informe o nome e vincule pelo menos um responsável.'),
+                        subtitle: const Text('Inclua um dependente'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) => IncluirDependenteScreen(
+                                eventId: widget.eventId,
                                 eventParticipants: _event?.participants ?? const [],
                               ),
                             ),

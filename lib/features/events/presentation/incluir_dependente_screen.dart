@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../services/firestore/event_service.dart';
 
 class IncluirDependenteScreen extends StatefulWidget {
+  final String eventId;
   final List<Map<String, dynamic>> eventParticipants;
 
   const IncluirDependenteScreen({
     super.key,
+    this.eventId = '',
     this.eventParticipants = const [],
   });
 
@@ -18,6 +23,23 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
   final TextEditingController _searchController = TextEditingController();
   final List<Map<String, dynamic>> _responsaveisSelecionados = [];
   bool _permitirSortearResponsaveis = false;
+  final EventService _eventService = EventService();
+
+  String _formatDisplayName(String value) {
+    final normalized = value.trim();
+    if (normalized.isEmpty) return '';
+
+    final parts = normalized
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
+
+    if (parts.length <= 2) {
+      return parts.join(' ');
+    }
+
+    return '${parts[0]} ${parts[1]}';
+  }
 
   List<Map<String, dynamic>> get _responsaveisDisponiveis {
     final query = _searchController.text.trim().toLowerCase();
@@ -33,15 +55,13 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
 
   String _getParticipantName(Map<String, dynamic> participant) {
     final rawName = (participant['name'] as String?)?.trim();
-    if (rawName != null && rawName.isNotEmpty) return rawName;
+    if (rawName != null && rawName.isNotEmpty) {
+      return _formatDisplayName(rawName);
+    }
     final userId = (participant['userId'] as String?)?.trim();
-    if (userId != null && userId.isNotEmpty) return userId;
-    return 'Participante';
-  }
-
-  String _getParticipantRole(Map<String, dynamic> participant) {
-    final role = ((participant['role'] as String?) ?? '').toUpperCase();
-    if (role == 'ADMIN') return 'Organizador';
+    if (userId != null && userId.isNotEmpty) {
+      return _formatDisplayName(userId);
+    }
     return 'Participante';
   }
 
@@ -63,20 +83,13 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
 
   Widget _buildResponsibleItem({
     required String name,
-    required String role,
     required bool selected,
+    required String? avatarUrl,
     required VoidCallback onToggle,
   }) {
-    final badgeColor = role == 'Organizador'
-        ? const Color(0xFFD9E9E6)
-        : const Color(0xFFE2F0E2);
-    final badgeTextColor = role == 'Organizador'
-        ? const Color(0xFF1D7B72)
-        : const Color(0xFF3D8F3D);
-
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.only(left: 8, right: 12, top: 10, bottom: 10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
@@ -86,18 +99,26 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
           Checkbox(
             value: selected,
             onChanged: (_) => onToggle(),
+            visualDensity: VisualDensity.compact,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
           ),
-          const SizedBox(width: 8),
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE5E7EB),
-              borderRadius: BorderRadius.circular(12),
+          const SizedBox(width: 4),
+          if (avatarUrl != null && avatarUrl.isNotEmpty)
+            CircleAvatar(
+              radius: 20,
+              backgroundImage: NetworkImage(avatarUrl),
+              backgroundColor: const Color(0xFFE5E7EB),
+            )
+          else
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE5E7EB),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.person, color: Color(0xFF667085)),
             ),
-            child: const Icon(Icons.person, color: Color(0xFF667085)),
-          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -109,27 +130,12 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
               ),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: badgeColor,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              role,
-              style: TextStyle(
-                color: badgeTextColor,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
 
-  void _saveDependente() {
+  Future<void> _saveDependente() async {
     if (_formKey.currentState == null || !_formKey.currentState!.validate()) {
       return;
     }
@@ -141,10 +147,46 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Dependente salvo com sucesso.')),
-    );
-    Navigator.of(context).pop(true);
+    if (widget.eventId.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Evento inválido para salvar o dependente.')),
+      );
+      return;
+    }
+
+    final responsibleIds = _responsaveisSelecionados
+        .map((participant) => (participant['userId'] as String?) ?? '')
+        .where((userId) => userId.trim().isNotEmpty)
+        .toList();
+
+    try {
+      await _eventService.addDependentParticipant(
+        widget.eventId,
+        dependentName: _nomeController.text,
+        responsibleIds: responsibleIds,
+        canSortResponsible: _permitirSortearResponsaveis,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Dependente salvo com sucesso.')),
+      );
+
+      final router = GoRouter.maybeOf(context);
+      if (router != null && widget.eventId.trim().isNotEmpty) {
+        router.go('/event-details/${widget.eventId}');
+        return;
+      }
+
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop(true);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Não foi possível salvar o dependente: $e')),
+      );
+    }
   }
 
   @override
@@ -294,12 +336,12 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                            itemBuilder: (context, index) {
                              final participant = _responsaveisDisponiveis[index];
                              final name = _getParticipantName(participant);
-                             final role = _getParticipantRole(participant);
+                             final avatarUrl = (participant['photoUrl'] as String?) ?? '';
 
                              return _buildResponsibleItem(
                                name: name,
-                               role: role,
                                selected: _isSelected(participant),
+                               avatarUrl: avatarUrl,
                                onToggle: () => _toggleResponsavel(participant),
                              );
                            },
