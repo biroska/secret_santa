@@ -221,24 +221,11 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.group),
-              title: const Text('Meus Grupos'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Configurações'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
               leading: const Icon(Icons.info),
               title: const Text('Sobre'),
               onTap: () {
                 Navigator.pop(context);
+                context.push('/about');
               },
             ),
             const Divider(),

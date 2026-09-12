@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/about/presentation/about_screen.dart';
 import '../features/auth/data/google_auth_api.dart';
 import '../features/auth/data/google_auth_result.dart';
 import '../features/auth/presentation/login_screen.dart';
@@ -54,6 +55,10 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
               eventService: _eventService,
             );
           },
+        ),
+        GoRoute(
+          path: '/about',
+          builder: (context, state) => const AboutScreen(),
         ),
         GoRoute(
           path: '/create-group',

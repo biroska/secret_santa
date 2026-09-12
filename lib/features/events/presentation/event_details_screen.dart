@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:local_auth/local_auth.dart';
 
 import '../../../dtos/event_card_dto.dart';
 import '../../../services/firestore/event_service.dart';
@@ -564,6 +565,54 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     );
   }
 
+  Future<bool> _confirmDrawUnlock() async {
+    final localAuth = LocalAuthentication();
+
+    try {
+      final deviceSupported = await localAuth.isDeviceSupported();
+      final canCheckBiometrics = await localAuth.canCheckBiometrics;
+
+      if (!deviceSupported && !canCheckBiometrics) {
+        if (!mounted) return false;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Este dispositivo não suporta confirmação de desbloqueio.',
+            ),
+          ),
+        );
+        return false;
+      }
+
+      final authenticated = await localAuth.authenticate(
+        localizedReason:
+            'Confirme o desbloqueio do seu celular para realizar o sorteio.',
+        biometricOnly: false,
+        persistAcrossBackgrounding: true,
+      );
+
+      if (!authenticated && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Confirmação de desbloqueio cancelada.'),
+          ),
+        );
+      }
+
+      return authenticated;
+    } catch (e) {
+      if (!mounted) return false;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Não foi possível confirmar o desbloqueio do celular: $e',
+          ),
+        ),
+      );
+      return false;
+    }
+  }
+
   Future<void> _showDrawConfirmationDialog() async {
     final messenger = ScaffoldMessenger.maybeOf(context);
     final shouldContinue = await showDialog<bool>(
@@ -588,6 +637,9 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
     if (shouldContinue != true || !mounted) return;
 
+    final isUnlockConfirmed = await _confirmDrawUnlock();
+    if (!mounted || !isUnlockConfirmed) return;
+
     try {
       await _eventService.updateDrawDate(widget.eventId);
       if (!mounted) return;
@@ -603,39 +655,52 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     }
   }
 
-  Future<bool> _confirmRevealWithPassword() async {
-    final passwordController = TextEditingController();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Confirmação de senha'),
-        content: TextField(
-          controller: passwordController,
-          obscureText: true,
-          autofocus: true,
-          decoration: const InputDecoration(
-            labelText: 'Senha do celular',
-            hintText: 'Digite sua senha',
-          ),
-          keyboardType: TextInputType.visiblePassword,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final value = passwordController.text.trim();
-              Navigator.of(dialogContext).pop(value.isNotEmpty);
-            },
-            child: const Text('Confirmar'),
-          ),
-        ],
-      ),
-    );
+  Future<bool> _confirmRevealWithDeviceUnlock() async {
+    final localAuth = LocalAuthentication();
 
-    return confirmed == true;
+    try {
+      final isDeviceSupported = await localAuth.isDeviceSupported();
+      final canCheckBiometrics = await localAuth.canCheckBiometrics;
+
+      if (!isDeviceSupported && !canCheckBiometrics) {
+        if (!mounted) return false;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Este dispositivo não suporta confirmação de desbloqueio.',
+            ),
+          ),
+        );
+        return false;
+      }
+
+      final authenticated = await localAuth.authenticate(
+        localizedReason:
+            'Confirme o desbloqueio do seu celular para revelar o seu amigo secreto.',
+        biometricOnly: false,
+        persistAcrossBackgrounding: true,
+      );
+
+      if (!authenticated && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Confirmação de desbloqueio cancelada.'),
+          ),
+        );
+      }
+
+      return authenticated;
+    } catch (e) {
+      if (!mounted) return false;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Não foi possível confirmar o desbloqueio do celular: $e',
+          ),
+        ),
+      );
+      return false;
+    }
   }
 
   Widget _buildAdminDrawCard() {
@@ -697,7 +762,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   Widget _buildRevealBanner() {
     return InkWell(
       onTap: () async {
-        final confirmed = await _confirmRevealWithPassword();
+        final confirmed = await _confirmRevealWithDeviceUnlock();
         if (!mounted || !confirmed) return;
         setState(() => _isFriendRevealVisible = true);
       },
