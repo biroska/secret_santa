@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,6 +10,8 @@ import '../features/home/presentation/home_screen.dart';
 import '../features/group/presentation/create_group_screen.dart';
 import '../features/group/presentation/group_details_screen.dart';
 import '../features/events/presentation/create_event_screen.dart';
+import '../features/events/presentation/join_event_screen.dart';
+import '../features/events/presentation/scan_invite_screen.dart';
 import '../features/events/presentation/event_details_screen.dart';
 import '../features/events/presentation/incluir_dependente_screen.dart';
 import '../theme/app_theme.dart';
@@ -42,13 +45,27 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
         GoRoute(
           path: '/home',
           redirect: (context, state) {
-            if (state.extra is! GoogleAuthResult) {
+            if (state.extra is GoogleAuthResult) {
+              return null;
+            }
+
+            final firebaseUser = FirebaseAuth.instance.currentUser;
+            if (firebaseUser == null) {
               return '/login';
             }
+
             return null;
           },
           builder: (context, state) {
-            final session = state.extra! as GoogleAuthResult;
+            final session = state.extra is GoogleAuthResult
+                ? state.extra as GoogleAuthResult
+                : GoogleAuthResult(
+                    firebaseUid: FirebaseAuth.instance.currentUser?.uid ?? '',
+                    email: FirebaseAuth.instance.currentUser?.email ?? '',
+                    displayName: FirebaseAuth.instance.currentUser?.displayName,
+                    photoUrl: FirebaseAuth.instance.currentUser?.photoURL,
+                  );
+
             return HomeScreen(
               auth: auth,
               session: session,
@@ -71,6 +88,14 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
         GoRoute(
           path: '/create-event',
           builder: (context, state) => CreateEventScreen(eventService: _eventService), // Passando o eventService
+        ),
+        GoRoute(
+          path: '/join-event',
+          builder: (context, state) => const JoinEventScreen(),
+        ),
+        GoRoute(
+          path: '/scan-invite',
+          builder: (context, state) => const ScanInviteScreen(),
         ),
         GoRoute(
           path: '/event-details/:id',

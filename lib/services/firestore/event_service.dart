@@ -113,6 +113,22 @@ class EventService {
     }
   }
 
+  Future<bool> joinEventByCode(String eventCode, String userId) async {
+    final docRef = _firestore.collection('events').doc(eventCode);
+    try {
+      final snapshot = await docRef.get();
+      if (!snapshot.exists || snapshot.data() == null) {
+        return false;
+      }
+
+      await addParticipantIfNotExists(eventCode, userId);
+      return true;
+    } catch (e) {
+      debugPrint('Erro ao entrar no evento $eventCode: $e');
+      return false;
+    }
+  }
+
   Future<void> addDependentParticipant(
     String eventId, {
     required String dependentName,

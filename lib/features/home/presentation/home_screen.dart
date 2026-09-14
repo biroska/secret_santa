@@ -357,10 +357,46 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          final result = await context.push('/create-event');
-          if (result == true) {
-            await _refreshEvents();
-          }
+          await showModalBottomSheet(
+            context: context,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            builder: (BuildContext ctx) {
+              return SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: const CircleAvatar(child: Icon(Icons.add)),
+                        title: const Text('Criar novo evento'),
+                        subtitle: const Text('Organize um amigo secreto'),
+                        onTap: () async {
+                          Navigator.of(ctx).pop();
+                          final result = await context.push('/create-event');
+                          if (result == true) {
+                            await _refreshEvents();
+                          }
+                        },
+                      ),
+                      ListTile(
+                        leading: const CircleAvatar(child: Icon(Icons.qr_code)),
+                        title: const Text('Entrar em evento'),
+                        subtitle: const Text('Escaneie um convite'),
+                        onTap: () {
+                          Navigator.of(ctx).pop();
+                          context.push('/join-event');
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
         },
         child: const Icon(Icons.add),
       ),
