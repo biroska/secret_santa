@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../models/participant_invite_model.dart';
 import '../../../services/mock_invite_service.dart';
@@ -58,10 +60,40 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado')));
   }
 
-  void _shareLink() {
-    // Implementar compartilhamento real futuramente; por ora mostra snackbar
-    if (_model == null) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Compartilhar: ${_model!.inviteLink}')));
+  Future<void> _shareLink() async {
+    if (_model == null) {
+      return;
+    }
+
+    final inviteLink = _model!.inviteLink;
+    final message = 'Participe do meu amigo secreto: $inviteLink';
+    final whatsappUri = Uri.parse(
+      'whatsapp://send?text=${Uri.encodeComponent(message)}',
+    );
+
+    try {
+      final canOpenWhatsapp = await canLaunchUrl(whatsappUri);
+      if (canOpenWhatsapp) {
+        final opened = await launchUrl(
+          whatsappUri,
+          mode: LaunchMode.externalApplication,
+        );
+        if (opened) {
+          return;
+        }
+      }
+
+      await Share.share(message);
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Não foi possível compartilhar o convite: $e'),
+        ),
+      );
+    }
   }
 
   @override
@@ -166,7 +198,7 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: ElevatedButton.icon(
-                                    onPressed: _shareLink,
+                                    onPressed: () => _shareLink(),
                                     icon: const Icon(Icons.share_outlined),
                                     label: const Text('Compartilhar'),
                                   ),
