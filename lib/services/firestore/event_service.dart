@@ -5,6 +5,19 @@ import '../../dtos/new_event_dto.dart'; // Importando o NewEventDto
 import '../../dtos/event_card_dto.dart'; // Importando o EventCardDto
 import 'user_service.dart'; // Importando o UserService
 
+/// Resultado da tentativa de vincular um usuário a um evento a partir de um
+/// link de convite (deep link).
+enum EventInviteJoinStatus {
+  /// O eventId informado não corresponde a nenhum evento no Firestore.
+  notFound,
+
+  /// O usuário já era participante (ou admin) do evento; nada foi alterado.
+  alreadyParticipant,
+
+  /// O usuário foi adicionado agora como participante do evento.
+  joinedNow,
+}
+
 class EventService {
   final FirebaseFirestore _firestore;
   final UserService _userService; // Adicionando UserService como dependência
@@ -126,6 +139,31 @@ class EventService {
     } catch (e) {
       debugPrint('Erro ao entrar no evento $eventCode: $e');
       return false;
+    }
+  }
+
+  /// Resultado da tentativa de entrar em um evento a partir de um link de convite.
+  Future<EventInviteJoinStatus> joinEventForInvite(
+    String eventId,
+    String userId,
+  ) async {
+    final docRef = _firestore.collection('events').doc(eventId);
+    try {
+      final snapshot = await docRef.get();
+      if (!snapshot.exists || snapshot.data() == null) {
+        return EventInviteJoinStatus.notFound;
+      }
+
+      final data = snapshot.data()!;
+      if (_isUserParticipant(data, userId)) {
+        return EventInviteJoinStatus.alreadyParticipant;
+      }
+
+      await addParticipantIfNotExists(eventId, userId);
+      return EventInviteJoinStatus.joinedNow;
+    } catch (e) {
+      debugPrint('Erro ao processar convite do evento $eventId: $e');
+      rethrow;
     }
   }
 

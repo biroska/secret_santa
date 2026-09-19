@@ -9,9 +9,14 @@ import '../data/google_auth_service.dart';
 import 'package:sign_in_button/sign_in_button.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, required this.auth});
+  const LoginScreen({super.key, required this.auth, this.pendingEventId});
 
   final GoogleAuthApi auth;
+
+  /// Id do evento de um convite pendente (deep link) recebido antes do login.
+  /// Quando presente, após o login o usuário é levado direto para o fluxo de
+  /// entrada no evento, em vez da Home.
+  final String? pendingEventId;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -32,6 +37,11 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       if (result == null) {
         setState(() => _loading = false);
+        return;
+      }
+      final pendingEventId = widget.pendingEventId?.trim();
+      if (pendingEventId != null && pendingEventId.isNotEmpty) {
+        context.go('/event/$pendingEventId', extra: result);
         return;
       }
       context.go( AppRoutes.HOME, extra: result);

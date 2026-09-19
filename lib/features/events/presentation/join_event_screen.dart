@@ -6,10 +6,7 @@ import '../../auth/data/google_auth_result.dart';
 import '../../../services/firestore/event_service.dart';
 
 class JoinEventScreen extends StatefulWidget {
-  /// Código do evento recebido via deep link (ex.: `secretsanta://invite/eventId`).
-  final String? initialEventId;
-
-  const JoinEventScreen({super.key, this.initialEventId});
+  const JoinEventScreen({super.key});
 
   @override
   State<JoinEventScreen> createState() => _JoinEventScreenState();
@@ -20,27 +17,6 @@ class _JoinEventScreenState extends State<JoinEventScreen> {
   final _eventService = EventService();
   bool _showCodeError = false;
   bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final initialCode = _extractEventCode(widget.initialEventId ?? '');
-    if (initialCode.isNotEmpty) {
-      _controller.text = initialCode;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        if (FirebaseAuth.instance.currentUser != null) {
-          _joinEventCode(initialCode);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Faça login e toque em "Entrar" para participar do evento.'),
-            ),
-          );
-        }
-      });
-    }
-  }
 
   @override
   void dispose() {

@@ -13,9 +13,11 @@ import '../features/events/presentation/create_event_screen.dart';
 import '../features/events/presentation/join_event_screen.dart';
 import '../features/events/presentation/scan_invite_screen.dart';
 import '../features/events/presentation/event_details_screen.dart';
+import '../features/events/presentation/event_invite_screen.dart';
 import '../features/events/presentation/incluir_dependente_screen.dart';
 import '../theme/app_theme.dart';
 import '../services/firestore/event_service.dart';
+import 'app_keys.dart';
 
 class SecretSantaApp extends StatefulWidget {
   const SecretSantaApp({super.key, required this.auth});
@@ -40,7 +42,10 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
       routes: [
         GoRoute(
           path: '/login',
-          builder: (context, state) => LoginScreen(auth: auth),
+          builder: (context, state) {
+            final pendingEventId = state.uri.queryParameters['invite'];
+            return LoginScreen(auth: auth, pendingEventId: pendingEventId);
+          },
         ),
         GoRoute(
           path: '/home',
@@ -96,18 +101,32 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
         GoRoute(
           // Deep link de convite: secretsanta://invite/<eventId>
           path: '/invite/:eventId',
+          redirect: (context, state) {
+            if (FirebaseAuth.instance.currentUser == null) {
+              final eventId = state.pathParameters['eventId'] ?? '';
+              return '/login?invite=${Uri.encodeComponent(eventId)}';
+            }
+            return null;
+          },
           builder: (context, state) {
             final eventId = state.pathParameters['eventId'] ?? '';
-            return JoinEventScreen(initialEventId: eventId);
+            return EventInviteScreen(eventId: eventId, eventService: _eventService);
           },
         ),
         GoRoute(
           // Android App Link: https://galdinos-secret-santa.web.app/event/<eventId>
           // e fallback custom scheme: secretsanta://event/<eventId>
           path: '/event/:eventId',
+          redirect: (context, state) {
+            if (FirebaseAuth.instance.currentUser == null) {
+              final eventId = state.pathParameters['eventId'] ?? '';
+              return '/login?invite=${Uri.encodeComponent(eventId)}';
+            }
+            return null;
+          },
           builder: (context, state) {
             final eventId = state.pathParameters['eventId'] ?? '';
-            return JoinEventScreen(initialEventId: eventId);
+            return EventInviteScreen(eventId: eventId, eventService: _eventService);
           },
         ),
         GoRoute(
@@ -136,6 +155,9 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
           },
         ),
       ],
+      // Cobre deep links malformados/rotas desconhecidas (ex.: link de convite
+      // com path inexistente), redirecionando para a Home com uma notificação.
+      errorBuilder: (context, state) => const _UnknownDeepLinkScreen(),
     );
   }
 
@@ -152,7 +174,39 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
+      scaffoldMessengerKey: rootScaffoldMessengerKey,
       routerConfig: _router,
+    );
+  }
+}
+
+/// Tela exibida quando o GoRouter não encontra nenhuma rota compatível com o
+/// deep link recebido (ex.: path inexistente/mal formado). Redireciona para a
+/// Home e notifica o usuário assim que o primeiro frame é renderizado.
+class _UnknownDeepLinkScreen extends StatefulWidget {
+  const _UnknownDeepLinkScreen();
+
+  @override
+  State<_UnknownDeepLinkScreen> createState() => _UnknownDeepLinkScreenState();
+}
+
+class _UnknownDeepLinkScreenState extends State<_UnknownDeepLinkScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.go('/home');
+      rootScaffoldMessengerKey.currentState?.showSnackBar(
+        const SnackBar(content: Text('Evento não encontrado.')),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
     );
   }
 }
