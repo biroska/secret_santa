@@ -107,6 +107,9 @@ unlinked_spec.ds
 # Coverage
 coverage/
 
+# APK de release publicado como asset do GitHub Release, não deve ir pro repo
+public/downloads/*.apk
+
 # Symbols
 app.*.symbols
 
