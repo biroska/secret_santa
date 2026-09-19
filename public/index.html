@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Abrindo o SecretSanta...</title>
+  <style>
+    body {
+      font-family: -apple-system, Roboto, Arial, sans-serif;
+      background: #0f2027;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255, 255, 255, 0.25);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 16px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    p { opacity: 0.85; max-width: 320px; }
+    a { color: #9ad; }
+  </style>
+</head>
+<body>
+  <div class="spinner"></div>
+  <p>Abrindo o convite no SecretSanta&hellip;</p>
+  <p id="fallback-text" style="display:none">
+    Se o app não abrir automaticamente, <a id="fallback-link" href="/install.html">toque aqui</a>.
+  </p>
+
+  <script>
+    // Constantes centralizadas do fluxo de deep link.
+    var CUSTOM_SCHEME = 'secretsanta';
+    var CUSTOM_HOST = 'event';
+    var FALLBACK_PATH = '/install.html';
+    var FALLBACK_DELAY_MS = 1500;
+    var EVENT_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
+
+    /**
+     * Extrai o eventId a partir do caminho "/event/<eventId>".
+     * Retorna null quando o path não segue o formato esperado.
+     */
+    function extractEventId() {
+      var match = window.location.pathname.match(/\/event\/([^/]+)\/?$/);
+      if (!match) {
+        console.debug('[SecretSanta] Nenhum eventId encontrado no path:', window.location.pathname);
+        return null;
+      }
+
+      var rawEventId = decodeURIComponent(match[1]);
+      if (!EVENT_ID_PATTERN.test(rawEventId)) {
+        console.debug('[SecretSanta] eventId com formato inválido:', rawEventId);
+        return null;
+      }
+
+      return rawEventId;
+    }
+
+    function buildFallbackUrl(eventId) {
+      if (!eventId) {
+        return FALLBACK_PATH;
+      }
+      return FALLBACK_PATH + '?eventId=' + encodeURIComponent(eventId);
+    }
+
+    function goToFallback(eventId) {
+      var url = buildFallbackUrl(eventId);
+      console.debug('[SecretSanta] Redirecionando para fallback de instalação:', url);
+      window.location.replace(url);
+    }
+
+    (function init() {
+      var eventId = extractEventId();
+      var fallbackLink = document.getElementById('fallback-link');
+      var fallbackText = document.getElementById('fallback-text');
+
+      if (fallbackLink) {
+        fallbackLink.setAttribute('href', buildFallbackUrl(eventId));
+      }
+      if (fallbackText) {
+        fallbackText.style.display = 'block';
+      }
+
+      if (!eventId) {
+        // Sem eventId válido, não há o que abrir no app: vai direto para instalação.
+        goToFallback(null);
+        return;
+      }
+
+      var deepLinkUrl = CUSTOM_SCHEME + '://' + CUSTOM_HOST + '/' + encodeURIComponent(eventId);
+      console.debug('[SecretSanta] Tentando abrir deep link:', deepLinkUrl);
+
+      // Se o Android App Link já tiver aberto o app diretamente (autoVerify),
+      // este script sequer chega a executar em outra aba/contexto. Este fallback
+      // cobre o caso do app não estar instalado ou não estar verificado ainda.
+      var fallbackTimer = window.setTimeout(function () {
+        goToFallback(eventId);
+      }, FALLBACK_DELAY_MS);
+
+      // Se o usuário sair da aba (o app assumiu o primeiro plano), cancela o fallback.
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+          console.debug('[SecretSanta] Página perdeu foco, assumindo que o app abriu.');
+          window.clearTimeout(fallbackTimer);
+        }
+      });
+
+      window.location.href = deepLinkUrl;
+    })();
+  </script>
+</body>
+</html>

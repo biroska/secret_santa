@@ -54,9 +54,26 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
     });
   }
 
+  /// Domínio do Firebase Hosting que responde por Android App Links
+  /// (`https://galdinos-secret-santa.web.app/event/eventId`).
+  static const String _appLinkHost = 'galdinos-secret-santa.web.app';
+
+  /// Link de convite compartilhável. Usa uma URL https (clicável em
+  /// WhatsApp/SMS) que abre o app diretamente via Android App Link verificado
+  /// e cai para a página de instalação (`public/install.html`) quando o app
+  /// não está instalado, com fallback ao link mock caso o evento real ainda
+  /// não tenha sido carregado.
+  String get _inviteLink {
+    final eventId = _event?.id;
+    if (eventId != null && eventId.isNotEmpty) {
+      return 'https://$_appLinkHost/event/$eventId';
+    }
+    return _model?.inviteLink ?? '';
+  }
+
   void _copyLink() {
     if (_model == null) return;
-    Clipboard.setData(ClipboardData(text: _model!.inviteLink));
+    Clipboard.setData(ClipboardData(text: _inviteLink));
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado')));
   }
 
@@ -65,7 +82,7 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
       return;
     }
 
-    final inviteLink = _model!.inviteLink;
+    final inviteLink = _inviteLink;
     final message = 'Participe do meu amigo secreto: $inviteLink';
     final whatsappUri = Uri.parse(
       'whatsapp://send?text=${Uri.encodeComponent(message)}',
@@ -172,7 +189,7 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                                 padding: const EdgeInsets.all(8),
                                 child: _event != null
                                                                     ? Image.network(
-                                                                        'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${Uri.encodeComponent(_event!.id)}',
+                                                                        'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${Uri.encodeComponent(_inviteLink)}',
                                                                         width: 200,
                                                                         height: 200,
                                                                         fit: BoxFit.cover,

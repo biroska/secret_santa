@@ -94,6 +94,23 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
           builder: (context, state) => const JoinEventScreen(),
         ),
         GoRoute(
+          // Deep link de convite: secretsanta://invite/<eventId>
+          path: '/invite/:eventId',
+          builder: (context, state) {
+            final eventId = state.pathParameters['eventId'] ?? '';
+            return JoinEventScreen(initialEventId: eventId);
+          },
+        ),
+        GoRoute(
+          // Android App Link: https://galdinos-secret-santa.web.app/event/<eventId>
+          // e fallback custom scheme: secretsanta://event/<eventId>
+          path: '/event/:eventId',
+          builder: (context, state) {
+            final eventId = state.pathParameters['eventId'] ?? '';
+            return JoinEventScreen(initialEventId: eventId);
+          },
+        ),
+        GoRoute(
           path: '/scan-invite',
           builder: (context, state) => const ScanInviteScreen(),
         ),

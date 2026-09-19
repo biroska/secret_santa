@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Instalar o SecretSanta</title>
+  <style>
+    body {
+      font-family: -apple-system, Roboto, Arial, sans-serif;
+      background: #0f2027;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      text-align: center;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+    .logo {
+      font-size: 42px;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-size: 22px;
+      margin: 0 0 8px;
+    }
+    p {
+      opacity: 0.85;
+      max-width: 360px;
+      line-height: 1.4;
+    }
+    .download-btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 14px 28px;
+      background: #2c6f9f;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    .download-btn:active {
+      background: #24597f;
+    }
+    .steps {
+      text-align: left;
+      max-width: 360px;
+      margin-top: 24px;
+      opacity: 0.85;
+      font-size: 14px;
+    }
+    .steps li {
+      margin-bottom: 8px;
+    }
+    .event-hint {
+      margin-top: 24px;
+      font-size: 13px;
+      opacity: 0.6;
+      max-width: 360px;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">🎁</div>
+  <h1>SecretSanta</h1>
+  <p>
+    Para participar do seu Amigo Secreto, instale o aplicativo SecretSanta.
+    Depois de instalar, abra novamente o link do convite que você recebeu.
+  </p>
+
+  <a id="download-link" class="download-btn" href="/downloads/secretsanta.apk" download>
+    Baixar SecretSanta (APK)
+  </a>
+
+  <ol class="steps">
+    <li>Toque em "Baixar SecretSanta (APK)" acima.</li>
+    <li>
+      Se o Android pedir permissão para instalar apps de fontes desconhecidas,
+      toque em "Configurações" e permita a instalação para o seu navegador.
+    </li>
+    <li>Abra o arquivo baixado para instalar o app.</li>
+    <li>Após instalar, toque novamente no link do convite que você recebeu.</li>
+  </ol>
+
+  <p class="event-hint" id="event-hint" style="display:none"></p>
+
+  <script>
+    // Repassa o eventId (se houver) para orientar o usuário após a instalação.
+    (function showEventHint() {
+      var params = new URLSearchParams(window.location.search);
+      var eventId = params.get('eventId');
+      var hintEl = document.getElementById('event-hint');
+      if (!hintEl) {
+        return;
+      }
+      if (eventId) {
+        console.debug('[SecretSanta] eventId recebido na tela de instalação:', eventId);
+        hintEl.textContent = 'Código do convite: ' + eventId;
+        hintEl.style.display = 'block';
+      }
+    })();
+  </script>
+</body>
+</html>

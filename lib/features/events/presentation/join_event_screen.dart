@@ -6,7 +6,10 @@ import '../../auth/data/google_auth_result.dart';
 import '../../../services/firestore/event_service.dart';
 
 class JoinEventScreen extends StatefulWidget {
-  const JoinEventScreen({super.key});
+  /// Código do evento recebido via deep link (ex.: `secretsanta://invite/eventId`).
+  final String? initialEventId;
+
+  const JoinEventScreen({super.key, this.initialEventId});
 
   @override
   State<JoinEventScreen> createState() => _JoinEventScreenState();
@@ -19,9 +22,55 @@ class _JoinEventScreenState extends State<JoinEventScreen> {
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    final initialCode = _extractEventCode(widget.initialEventId ?? '');
+    if (initialCode.isNotEmpty) {
+      _controller.text = initialCode;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (FirebaseAuth.instance.currentUser != null) {
+          _joinEventCode(initialCode);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Faça login e toque em "Entrar" para participar do evento.'),
+            ),
+          );
+        }
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  /// Aceita tanto o código puro quanto um link colado
+  /// (ex.: `secretsanta://invite/id` ou `https://.../invite/id`),
+  /// extraindo apenas o identificador do evento.
+  String _extractEventCode(String rawInput) {
+    final input = rawInput.trim();
+    if (input.isEmpty) return '';
+
+    final uri = Uri.tryParse(input);
+    if (uri != null && (uri.hasScheme && uri.pathSegments.isNotEmpty)) {
+      final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
+      final inviteIndex = segments.indexOf('invite');
+      if (inviteIndex != -1 && inviteIndex + 1 < segments.length) {
+        return segments[inviteIndex + 1];
+      }
+      if (uri.host == 'invite' && segments.isNotEmpty) {
+        return segments.first;
+      }
+      if (segments.isNotEmpty) {
+        return segments.last;
+      }
+    }
+
+    return input;
   }
 
   void _resetCodeError() {
@@ -31,7 +80,7 @@ class _JoinEventScreenState extends State<JoinEventScreen> {
   }
 
   Future<void> _joinEventCode(String code) async {
-    final normalizedCode = code.trim();
+    final normalizedCode = _extractEventCode(code);
     if (normalizedCode.isEmpty) {
       setState(() => _showCodeError = true);
       ScaffoldMessenger.of(context).showSnackBar(

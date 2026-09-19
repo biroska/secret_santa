@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "br.com.galdino.secret_santa",
+      "sha256_cert_fingerprints": [
+        "CF:55:B5:9F:1C:69:F0:EF:7B:1A:EE:E4:77:55:4C:E9:D3:E8:E6:B1:82:A9:DF:55:63:70:D5:85:C5:41:00:4B"
+      ]
+    }
+  }
+]
