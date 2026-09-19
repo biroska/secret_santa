@@ -270,12 +270,12 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
                                 if (role == 'ADMIN') {
                                   badgeLabel = 'Organizador';
-                                  badgeColor = const Color(0xFFD9E9E6);
-                                  badgeTextColor = const Color(0xFF1D7B72);
-                                } else if (role == 'DEPENDENT') {
-                                  badgeLabel = 'Dependente';
                                   badgeColor = const Color(0xFFE9F3FA);
                                   badgeTextColor = const Color(0xFF2C6F9F);
+                                } else if (role == 'DEPENDENT') {
+                                  badgeLabel = 'Dependente';
+                                  badgeColor = const Color(0xFFFCEFD9);
+                                  badgeTextColor = const Color(0xFFB07A1E);
                                 } else {
                                   badgeLabel = 'Participante';
                                   badgeColor = const Color(0xFFE2F0E2);
@@ -936,12 +936,15 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                         decoration: BoxDecoration(
                           color: badgeColor,
                           borderRadius: BorderRadius.circular(999),
+                          border: Border.all(
+                            color: badgeTextColor.withValues(alpha: 0.4),
+                          ),
                         ),
                         child: Text(
                           badge,
                           style: TextStyle(
                             color: badgeTextColor,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             fontSize: 12,
                           ),
                         ),

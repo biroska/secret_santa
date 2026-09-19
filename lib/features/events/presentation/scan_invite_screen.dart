@@ -1,7 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+
+import '../../auth/data/google_auth_result.dart';
+import '../../../services/firestore/event_service.dart';
 
 class ScanInviteScreen extends StatefulWidget {
   const ScanInviteScreen({super.key});
@@ -12,12 +16,105 @@ class ScanInviteScreen extends StatefulWidget {
 
 class _ScanInviteScreenState extends State<ScanInviteScreen> {
   final MobileScannerController _controller = MobileScannerController();
+  final _eventService = EventService();
   bool _scanned = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  /// Aceita tanto o código puro quanto um link escaneado/colado
+  /// (ex.: `secretsanta://invite/id` ou `https://.../invite/id`),
+  /// extraindo apenas o identificador do evento.
+  String _extractEventCode(String rawInput) {
+    final input = rawInput.trim();
+    if (input.isEmpty) return '';
+
+    final uri = Uri.tryParse(input);
+    if (uri != null && (uri.hasScheme && uri.pathSegments.isNotEmpty)) {
+      final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
+      final inviteIndex = segments.indexOf('invite');
+      if (inviteIndex != -1 && inviteIndex + 1 < segments.length) {
+        return segments[inviteIndex + 1];
+      }
+      if (uri.host == 'invite' && segments.isNotEmpty) {
+        return segments.first;
+      }
+      if (segments.isNotEmpty) {
+        return segments.last;
+      }
+    }
+
+    return input;
+  }
+
+  Future<void> _joinEventCode(String rawCode) async {
+    final normalizedCode = _extractEventCode(rawCode);
+    if (normalizedCode.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Código do evento não foi encontrado')),
+      );
+      return;
+    }
+
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Usuário não autenticado.')),
+        );
+        return;
+      }
+
+      final joined = await _eventService.joinEventByCode(normalizedCode, user.uid);
+
+      if (!mounted) return;
+
+      if (!joined) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Código do evento não foi encontrado')),
+        );
+        // Permite tentar escanear novamente.
+        _scanned = false;
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Você entrou no evento com sucesso!')),
+      );
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        context.go(
+          '/home',
+          extra: GoogleAuthResult(
+            firebaseUid: currentUser.uid,
+            email: currentUser.email ?? '',
+            displayName: currentUser.displayName,
+            photoUrl: currentUser.photoURL,
+          ),
+        );
+      } else {
+        context.go('/home');
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível entrar no evento.')),
+      );
+      _scanned = false;
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   void _onDetect(dynamic capture) {
@@ -52,12 +149,7 @@ class _ScanInviteScreenState extends State<ScanInviteScreen> {
       _controller.stop();
     } catch (_) {}
 
-    // Return payload to previous screen
-    try {
-      context.pop(raw);
-    } catch (_) {
-      Navigator.of(context).pop(raw);
-    }
+    _joinEventCode(raw);
   }
 
   @override
@@ -73,13 +165,10 @@ class _ScanInviteScreenState extends State<ScanInviteScreen> {
             children: [
               const Text('Scanner indisponível nesta plataforma. Cole o conteúdo do QR abaixo:'),
               const SizedBox(height: 12),
-              _PasteFallback(onSubmit: (value) {
-                try {
-                  context.pop(value);
-                } catch (_) {
-                  Navigator.of(context).pop(value);
-                }
-              }),
+              _PasteFallback(
+                isLoading: _isLoading,
+                onSubmit: (value) => _joinEventCode(value),
+              ),
             ],
           ),
         ),
@@ -96,9 +185,18 @@ class _ScanInviteScreenState extends State<ScanInviteScreen> {
           ),
         ],
       ),
-      body: MobileScanner(
-        controller: _controller,
-        onDetect: _onDetect,
+      body: Stack(
+        children: [
+          MobileScanner(
+            controller: _controller,
+            onDetect: _onDetect,
+          ),
+          if (_isLoading)
+            const ColoredBox(
+              color: Colors.black45,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }
@@ -106,14 +204,14 @@ class _ScanInviteScreenState extends State<ScanInviteScreen> {
 
 class _PasteFallback extends StatefulWidget {
   final void Function(String) onSubmit;
-  const _PasteFallback({required this.onSubmit});
+  final bool isLoading;
+  const _PasteFallback({required this.onSubmit, this.isLoading = false});
   @override
   State<_PasteFallback> createState() => _PasteFallbackState();
 }
 
 class _PasteFallbackState extends State<_PasteFallback> {
   final _controller = TextEditingController();
-  bool _processing = false;
 
   @override
   void dispose() {
@@ -124,7 +222,6 @@ class _PasteFallbackState extends State<_PasteFallback> {
   void _submit() {
     final value = _controller.text.trim();
     if (value.isEmpty) return;
-    setState(() => _processing = true);
     widget.onSubmit(value);
   }
 
@@ -139,7 +236,16 @@ class _PasteFallbackState extends State<_PasteFallback> {
           maxLines: 3,
         ),
         const SizedBox(height: 12),
-        ElevatedButton(onPressed: _processing ? null : _submit, child: const Text('Usar conteúdo')),
+        ElevatedButton(
+          onPressed: widget.isLoading ? null : _submit,
+          child: widget.isLoading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Usar conteúdo'),
+        ),
       ],
     );
   }

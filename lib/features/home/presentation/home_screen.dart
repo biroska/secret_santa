@@ -35,6 +35,16 @@ class _HomeScreenState extends State<HomeScreen> {
     _refreshEvents();
   }
 
+  @override
+  void didUpdateWidget(covariant HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // O GoRouter reconstrói a rota /home reaproveitando este State (sem
+    // chamar initState) ao navegar de volta para cá, por exemplo após
+    // entrar em um evento pelo scanner de QR Code (context.go('/home', ...)).
+    // Buscar a lista novamente garante que ela reflita o Firestore mais atual.
+    _refreshEvents();
+  }
+
   Future<void> _refreshEvents() async {
     if (!mounted) return;
 
@@ -355,7 +365,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
+        icon: const Icon(Icons.add),
+        label: const Text('Novo evento'),
         onPressed: () async {
           await showModalBottomSheet(
             context: context,
@@ -387,7 +399,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         subtitle: const Text('Escaneie um convite'),
                         onTap: () {
                           Navigator.of(ctx).pop();
-                          context.push('/join-event');
+                          context.push('/scan-invite');
                         },
                       ),
                       const SizedBox(height: 8),
@@ -398,7 +410,6 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           );
         },
-        child: const Icon(Icons.add),
       ),
     );
   }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -69,12 +68,6 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
       return 'https://$_appLinkHost/event/$eventId';
     }
     return _model?.inviteLink ?? '';
-  }
-
-  void _copyLink() {
-    if (_model == null) return;
-    Clipboard.setData(ClipboardData(text: _inviteLink));
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado')));
   }
 
   Future<void> _shareLink() async {
@@ -182,34 +175,56 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                               ],
                             ),
                             const SizedBox(height: 12),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: Container(
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
                                 color: Colors.white,
-                                padding: const EdgeInsets.all(8),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: const Color(0xFFE5E7EB)),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.06),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
                                 child: _event != null
-                                                                    ? Image.network(
-                                                                        'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${Uri.encodeComponent(_inviteLink)}',
-                                                                        width: 200,
-                                                                        height: 200,
-                                                                        fit: BoxFit.cover,
-                                                                      )
-                                                                    : Image.asset(
-                                                                        _model!.qrAsset,
-                                                                        height: 200,
-                                                                        width: 200,
-                                                                        fit: BoxFit.cover,
-                                                                      ),
+                                    ? Image.network(
+                                        'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${Uri.encodeComponent(_inviteLink)}',
+                                        width: 200,
+                                        height: 200,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : Image.asset(
+                                        _model!.qrAsset,
+                                        height: 200,
+                                        width: 200,
+                                        fit: BoxFit.cover,
+                                      ),
                               ),
                             ),
+                            if (_event?.name.isNotEmpty ?? false) ...[
+                              const SizedBox(height: 10),
+                              Text(
+                                _event!.name,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Color(0xFF667085),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
                             const SizedBox(height: 12),
                             Row(
                               children: [
                                 Expanded(
-                                  child: OutlinedButton.icon(
-                                    onPressed: _copyLink,
-                                    icon: const Icon(Icons.copy_outlined),
-                                    label: const Text('Copiar link'),
+                                  child: OutlinedButton(
+                                    onPressed: () => Navigator.of(context).pop(),
+                                    child: const Text('Cancelar'),
                                   ),
                                 ),
                                 const SizedBox(width: 12),

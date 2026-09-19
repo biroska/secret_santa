@@ -10,7 +10,6 @@ import '../features/home/presentation/home_screen.dart';
 import '../features/group/presentation/create_group_screen.dart';
 import '../features/group/presentation/group_details_screen.dart';
 import '../features/events/presentation/create_event_screen.dart';
-import '../features/events/presentation/join_event_screen.dart';
 import '../features/events/presentation/scan_invite_screen.dart';
 import '../features/events/presentation/event_details_screen.dart';
 import '../features/events/presentation/event_invite_screen.dart';
@@ -93,10 +92,6 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
         GoRoute(
           path: '/create-event',
           builder: (context, state) => CreateEventScreen(eventService: _eventService), // Passando o eventService
-        ),
-        GoRoute(
-          path: '/join-event',
-          builder: (context, state) => const JoinEventScreen(),
         ),
         GoRoute(
           // Deep link de convite: secretsanta://invite/<eventId>
