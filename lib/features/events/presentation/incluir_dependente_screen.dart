@@ -66,15 +66,19 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
   }
 
   bool _isSelected(Map<String, dynamic> participant) {
-    final userId = (participant['userId'] as String?) ?? '';
-    return _responsaveisSelecionados.any((item) => (item['userId'] as String? ?? '') == userId);
+    final participantId = (participant['participantId'] as String?) ?? '';
+    return _responsaveisSelecionados.any(
+      (item) => (item['participantId'] as String? ?? '') == participantId,
+    );
   }
 
   void _toggleResponsavel(Map<String, dynamic> participant) {
-    final userId = (participant['userId'] as String?) ?? '';
+    final participantId = (participant['participantId'] as String?) ?? '';
     setState(() {
       if (_isSelected(participant)) {
-        _responsaveisSelecionados.removeWhere((item) => (item['userId'] as String? ?? '') == userId);
+        _responsaveisSelecionados.removeWhere(
+          (item) => (item['participantId'] as String? ?? '') == participantId,
+        );
       } else {
         _responsaveisSelecionados.add(participant);
       }
@@ -155,9 +159,17 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
     }
 
     final responsibleIds = _responsaveisSelecionados
-        .map((participant) => (participant['userId'] as String?) ?? '')
-        .where((userId) => userId.trim().isNotEmpty)
+        .map((participant) => (participant['participantId'] as String?) ?? '')
+        .where((participantId) => participantId.trim().isNotEmpty)
         .toList();
+    if (responsibleIds.length != _responsaveisSelecionados.length) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Não foi possível identificar um dos responsáveis.'),
+        ),
+      );
+      return;
+    }
 
     try {
       await _eventService.addDependentParticipant(
@@ -317,34 +329,34 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                         const SizedBox(height: 12),
                         if (_responsaveisDisponiveis.isEmpty)
                           Container(
-                           width: double.infinity,
-                           padding: const EdgeInsets.all(16),
-                           decoration: BoxDecoration(
-                             color: Colors.white,
-                             borderRadius: BorderRadius.circular(14),
-                           ),
-                           child: const Text(
-                             'Nenhum participante disponível para ser responsável.',
-                             style: TextStyle(color: Color(0xFF667085)),
-                           ),
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Text(
+                              'Nenhum participante disponível para ser responsável.',
+                              style: TextStyle(color: Color(0xFF667085)),
+                            ),
                           )
                         else
                           ListView.builder(
-                           shrinkWrap: true,
-                           physics: const NeverScrollableScrollPhysics(),
-                           itemCount: _responsaveisDisponiveis.length,
-                           itemBuilder: (context, index) {
-                             final participant = _responsaveisDisponiveis[index];
-                             final name = _getParticipantName(participant);
-                             final avatarUrl = (participant['photoUrl'] as String?) ?? '';
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: _responsaveisDisponiveis.length,
+                            itemBuilder: (context, index) {
+                              final participant = _responsaveisDisponiveis[index];
+                              final name = _getParticipantName(participant);
+                              final avatarUrl = (participant['photoUrl'] as String?) ?? '';
 
-                             return _buildResponsibleItem(
-                               name: name,
-                               selected: _isSelected(participant),
-                               avatarUrl: avatarUrl,
-                               onToggle: () => _toggleResponsavel(participant),
-                             );
-                           },
+                              return _buildResponsibleItem(
+                                name: name,
+                                selected: _isSelected(participant),
+                                avatarUrl: avatarUrl,
+                                onToggle: () => _toggleResponsavel(participant),
+                              );
+                            },
                           ),
                         const SizedBox(height: 18),
                         Container(

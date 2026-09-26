@@ -6,6 +6,8 @@ import 'package:local_auth/local_auth.dart';
 
 import '../../../dtos/event_card_dto.dart';
 import '../../../services/firestore/event_service.dart';
+import '../../../services/firestore/draw_service.dart';
+import '../../../services/draw/draw_feasibility_validator.dart';
 import 'adicionar_pessoa_screen.dart';
 import 'event_title_card.dart';
 
@@ -20,15 +22,19 @@ class EventDetailsScreen extends StatefulWidget {
 
 class _EventDetailsScreenState extends State<EventDetailsScreen> {
   late final EventService _eventService;
+  late final DrawService _drawService;
   Future<EventCardDto?>? _eventFuture;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   bool _isFriendRevealVisible = false;
+  bool _isFriendRevealLoading = false;
+  Map<String, dynamic>? _revealedParticipant;
 
   @override
   void initState() {
     super.initState();
     _eventService = EventService();
+    _drawService = DrawService();
     _fetchEventDetails();
   }
 
@@ -49,6 +55,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   Future<void> _fetchEventDetails() async {
     setState(() {
       _isFriendRevealVisible = false;
+      _isFriendRevealLoading = false;
+      _revealedParticipant = null;
       _eventFuture = _eventService.getEventById(widget.eventId);
     });
   }
@@ -57,6 +65,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     try {
       setState(() {
         _isFriendRevealVisible = false;
+        _isFriendRevealLoading = false;
+        _revealedParticipant = null;
       });
       final refreshedEvent = await _eventService.getEventById(widget.eventId);
       if (!mounted) return;
@@ -152,7 +162,6 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
         final isAdmin =
             currentUserId.isNotEmpty && currentUserId == event.adminId;
-        final revealedParticipant = _getLastParticipant(event.participants);
         final shouldShowRevealedParticipantCard =
             shouldShowRevealBanner && _isFriendRevealVisible;
 
@@ -195,7 +204,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                             _buildRevealBanner(),
                           if (shouldShowRevealBanner &&
                               shouldShowRevealedParticipantCard)
-                            _buildRevealedParticipantCard(revealedParticipant),
+                            _buildRevealedParticipantCard(_revealedParticipant),
                           if (shouldShowRevealBanner)
                             const SizedBox(height: 24),
                           Row(
@@ -285,13 +294,16 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                                 final photoUrl =
                                     (p['photoUrl'] as String?) ?? '';
                                 final isDependent =
-                                    (p['isDependent'] as bool? ?? false) == true;
+                                    (p['isDependent'] as bool? ?? false) ==
+                                    true;
                                 final canSortResponsible =
-                                    (p['canSortResponsible'] as bool? ?? false) == true;
+                                    (p['canSortResponsible'] as bool? ??
+                                        false) ==
+                                    true;
                                 final warningText =
                                     isDependent && !canSortResponsible
-                                        ? 'Não pode sortear os responsáveis'
-                                        : null;
+                                    ? 'Não pode sortear os responsáveis'
+                                    : null;
 
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 12),
@@ -341,16 +353,6 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       return name.toLowerCase().contains(query) ||
           userId.toLowerCase().contains(query);
     }).toList();
-  }
-
-  Map<String, dynamic>? _getLastParticipant(
-    List<Map<String, dynamic>> participants,
-  ) {
-    if (participants.isEmpty) {
-      return null;
-    }
-
-    return participants.last;
   }
 
   String _getFirstName(String value) {
@@ -559,6 +561,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               fontWeight: FontWeight.w700,
               color: textColor,
             ),
+            maxLines: 1,
+            softWrap: false,
           ),
         ],
       ),
@@ -637,21 +641,79 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
     if (shouldContinue != true || !mounted) return;
 
+    final currentEvent = await _eventFuture;
+    if (!mounted || currentEvent == null) return;
+
+    // Validação local (sem chamar a Cloud Function) garantindo que existe
+    // uma atribuição giver->receiver possível, evitando acionar o backend
+    // com uma configuração de participantes/dependentes inviável.
+    final feasibility = DrawFeasibilityValidator.validateRawParticipants(
+      currentEvent.participants,
+    );
+    if (!feasibility.isFeasible) {
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Sorteio inviável'),
+          content: Text(feasibility.message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Entendi'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     final isUnlockConfirmed = await _confirmDrawUnlock();
     if (!mounted || !isUnlockConfirmed) return;
 
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final loadingDialog = showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => PopScope(
+        canPop: false,
+        child: const AlertDialog(
+          content: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 20),
+              Flexible(child: Text('Realizando sorteio...')),
+            ],
+          ),
+        ),
+      ),
+    );
     try {
       await _eventService.updateDrawDate(widget.eventId);
+      // O sorteio em si (definição de quem presenteia quem) é executado no
+      // backend (Cloud Function), respeitando as regras de negócio.
+      await _drawService.performDraw(widget.eventId);
       if (!mounted) return;
       await _refreshEventDetails();
       messenger?.showSnackBar(
-        const SnackBar(content: Text('Sorteio confirmado com sucesso.')),
+        const SnackBar(content: Text('Sorteio realizado com sucesso.')),
+      );
+    } on DrawException catch (e) {
+      if (!mounted) return;
+      messenger?.showSnackBar(
+        SnackBar(
+          content: Text('Não foi possível realizar o sorteio: ${e.message}'),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
       messenger?.showSnackBar(
         SnackBar(content: Text('Não foi possível confirmar o sorteio: $e')),
       );
+    } finally {
+      if (navigator.mounted && navigator.canPop()) navigator.pop();
+      await loadingDialog;
     }
   }
 
@@ -761,11 +823,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
   Widget _buildRevealBanner() {
     return InkWell(
-      onTap: () async {
-        final confirmed = await _confirmRevealWithDeviceUnlock();
-        if (!mounted || !confirmed) return;
-        setState(() => _isFriendRevealVisible = true);
-      },
+      onTap: _isFriendRevealLoading ? null : _revealMyFriend,
       borderRadius: BorderRadius.circular(18),
       child: Container(
         width: double.infinity,
@@ -806,16 +864,75 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 color: Color(0xFFF7C74B),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.card_giftcard_rounded,
-                color: Color(0xFFCB4A2A),
-                size: 32,
-              ),
+              child: _isFriendRevealLoading
+                  ? const Padding(
+                      padding: EdgeInsets.all(14),
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFCB4A2A),
+                        strokeWidth: 3,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.card_giftcard_rounded,
+                      color: Color(0xFFCB4A2A),
+                      size: 32,
+                    ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _revealMyFriend() async {
+    final confirmed = await _confirmRevealWithDeviceUnlock();
+    if (!mounted || !confirmed) return;
+
+    final eventId = widget.eventId;
+    setState(() => _isFriendRevealLoading = true);
+    try {
+      final event = await _eventFuture;
+      if (event == null) {
+        throw const DrawException('Evento não encontrado.');
+      }
+
+      final receiverId = await _drawService.getMyDraw(eventId);
+      if (!mounted || eventId != widget.eventId) return;
+
+      Map<String, dynamic>? receiver;
+      for (final participant in event.participants) {
+        if (participant['participantId'] == receiverId) {
+          receiver = participant;
+          break;
+        }
+      }
+      if (receiver == null) {
+        throw const DrawException(
+          'O participante sorteado não foi encontrado neste evento.',
+        );
+      }
+
+      setState(() {
+        _revealedParticipant = receiver;
+        _isFriendRevealVisible = true;
+      });
+    } on DrawException catch (e) {
+      if (!mounted || eventId != widget.eventId) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (e) {
+      if (!mounted || eventId != widget.eventId) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Não foi possível revelar seu amigo secreto: $e'),
+        ),
+      );
+    } finally {
+      if (mounted && eventId == widget.eventId) {
+        setState(() => _isFriendRevealLoading = false);
+      }
+    }
   }
 
   Widget _buildRevealedParticipantCard(Map<String, dynamic>? participant) {

@@ -24,7 +24,10 @@ class EventTitleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = backgroundColor ?? Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).colorScheme.primary;
+    final bg =
+        backgroundColor ??
+        Theme.of(context).appBarTheme.backgroundColor ??
+        Theme.of(context).colorScheme.primary;
     final organizerFirstName = _getFirstName(event.organizerName);
 
     final content = Container(
@@ -37,91 +40,78 @@ class EventTitleCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    event.name,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.7,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                if (isAdmin)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        onPressed: onDevAddAll,
-                        icon: const Icon(Icons.add, color: Colors.white),
-                        tooltip: 'DEV: adicionar todos usuários como participantes',
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                      IconButton(
-                        onPressed: onDelete,
-                        icon: const Icon(Icons.delete_outline_rounded, color: Colors.white),
-                        tooltip: 'Excluir evento',
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              event.description,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  event.name,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  style: const TextStyle(
                     color: Colors.white,
+                    fontSize: 25,
                     fontWeight: FontWeight.bold,
-                    letterSpacing: -0.5,
+                    letterSpacing: 0.7,
                   ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Container(
-                  width: 18,
-                  height: 18,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.check,
-                    size: 14,
-                    color: Color(0xFF1D7B72),
-                  ),
+                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Organizado por: $organizerFirstName',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+              ),
+              const SizedBox(width: 8),
+              if (isAdmin)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: onDevAddAll,
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      tooltip:
+                          'DEV: adicionar todos usuários como participantes',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                     ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                    IconButton(
+                      onPressed: onDelete,
+                      icon: const Icon(
+                        Icons.delete_outline_rounded,
+                        color: Colors.white,
+                      ),
+                      tooltip: 'Excluir evento',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 6),
-                const Text('🎄', style: TextStyle(fontSize: 18)),
-              ],
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            event.description,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
             ),
-          ],
-        ),
-      );
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Organizador: $organizerFirstName',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
 
     return includeOuterPadding
         ? Padding(
@@ -134,7 +124,10 @@ class EventTitleCard extends StatelessWidget {
   String _getFirstName(String value) {
     final normalized = value.trim();
     if (normalized.isEmpty) return 'Você';
-    final parts = normalized.split(RegExp(r'\s+')).where((part) => part.isNotEmpty).toList();
+    final parts = normalized
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
     if (parts.isEmpty) return normalized;
     if (parts.length == 1) return parts.first;
     return '${parts[0]} ${parts[1]}';

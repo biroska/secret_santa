@@ -107,44 +107,38 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildEmptyState(BuildContext context) {
     final theme = Theme.of(context);
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.event_busy_outlined,
-                    size: 56,
-                    color: theme.colorScheme.primary.withValues(alpha: 0.7),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Nenhum evento encontrado',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Você ainda não participa de nenhum evento.',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+    return SizedBox.expand(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.card_giftcard,
+                size: 56,
+                color: theme.colorScheme.primary.withValues(alpha: 0.7),
               ),
-            ),
+              const SizedBox(height: 16),
+              Text(
+                'Nenhum evento encontrado',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Você ainda não participa de nenhum evento.',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -253,118 +247,125 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      body: RefreshIndicator(
-        onRefresh: _refreshEvents,
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _events.isEmpty
-            ? _buildEmptyState(context)
-            : ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: _events.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final event = _events[index];
-                  final eventDateText = event.eventDate != null
-                      ? dateFormat.format(event.eventDate!)
-                      : 'A definir';
-                  final drawDateText = event.drawDate != null
-                      ? dateFormat.format(event.drawDate!)
-                      : 'Não realizado';
+      body: !_isLoading && _events.isEmpty
+          ? _buildEmptyState(context)
+          : RefreshIndicator(
+              onRefresh: _refreshEvents,
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _events.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final event = _events[index];
+                        final eventDateText = event.eventDate != null
+                            ? dateFormat.format(event.eventDate!)
+                            : 'A definir';
+                        final drawDateText = event.drawDate != null
+                            ? dateFormat.format(event.drawDate!)
+                            : 'Não realizado';
 
-                  return Card(
-                    margin: EdgeInsets.zero,
-                    child: InkWell(
-                      onTap: () async {
-                        final result = await context.push(
-                          '/event-details/${event.id}',
-                        );
-                        if (result == true) {
-                          await _refreshEvents();
-                        }
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            CircleAvatar(
-                              radius: 22,
-                              backgroundColor:
-                                  theme.colorScheme.primaryContainer,
-                              foregroundColor:
-                                  theme.colorScheme.onPrimaryContainer,
-                              child: Icon(event.icon),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
+                        return Card(
+                          margin: EdgeInsets.zero,
+                          child: InkWell(
+                            onTap: () async {
+                              final result = await context.push(
+                                '/event-details/${event.id}',
+                              );
+                              if (result == true) {
+                                await _refreshEvents();
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    event.name,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.titleMedium
-                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                  CircleAvatar(
+                                    radius: 22,
+                                    backgroundColor:
+                                        theme.colorScheme.primaryContainer,
+                                    foregroundColor:
+                                        theme.colorScheme.onPrimaryContainer,
+                                    child: Icon(event.icon),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Organizador: ${event.organizerName}',
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          event.name,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: theme.textTheme.titleMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Organizador: ${event.organizerName}',
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                color: theme
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                              ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        _buildInfoRow(
+                                          'Data Evento:',
+                                          eventDateText,
+                                          labelStyle: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                color: theme
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                          valueStyle: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                color: theme
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                              ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        _buildInfoRow(
+                                          'Data Sorteio:',
+                                          drawDateText,
+                                          labelStyle: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                color: theme
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                          valueStyle: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                color: theme
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                              ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  _buildInfoRow(
-                                    'Data Evento:',
-                                    eventDateText,
-                                    labelStyle: theme.textTheme.bodySmall
-                                        ?.copyWith(
-                                          color: theme
-                                              .colorScheme
-                                              .onSurfaceVariant,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                    valueStyle: theme.textTheme.bodySmall
-                                        ?.copyWith(
-                                          color: theme
-                                              .colorScheme
-                                              .onSurfaceVariant,
-                                        ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  _buildInfoRow(
-                                    'Data Sorteio:',
-                                    drawDateText,
-                                    labelStyle: theme.textTheme.bodySmall
-                                        ?.copyWith(
-                                          color: theme
-                                              .colorScheme
-                                              .onSurfaceVariant,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                    valueStyle: theme.textTheme.bodySmall
-                                        ?.copyWith(
-                                          color: theme
-                                              .colorScheme
-                                              .onSurfaceVariant,
-                                        ),
                                   ),
                                 ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
-      ),
+            ),
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add),
         label: const Text('Novo evento'),

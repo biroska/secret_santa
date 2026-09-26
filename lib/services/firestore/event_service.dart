@@ -183,6 +183,18 @@ class EventService {
 
         final data = snapshot.data() ?? {};
         final participants = (data['participants'] as List<dynamic>?) ?? const [];
+        final existingParticipantIds = participants
+            .whereType<Map>()
+            .map((participant) => participant['participantId'])
+            .whereType<String>()
+            .toSet();
+        final invalidResponsibleIds = responsibleIds
+            .map((id) => id.trim())
+            .where((id) => id.isEmpty || !existingParticipantIds.contains(id))
+            .toList();
+        if (invalidResponsibleIds.isNotEmpty) {
+          throw Exception('Um ou mais responsáveis não pertencem ao evento.');
+        }
         final dependentCount = participants.where((participant) {
           if (participant is! Map) return false;
           final map = Map<String, dynamic>.from(participant);

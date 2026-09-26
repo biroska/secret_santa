@@ -222,17 +222,39 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                             Row(
                               children: [
                                 Expanded(
-                                  child: OutlinedButton(
+                                  flex: 2,
+                                  child: ElevatedButton(
                                     onPressed: () => Navigator.of(context).pop(),
+                                    style: const ButtonStyle(
+                                      minimumSize: WidgetStatePropertyAll(
+                                        Size.fromHeight(48),
+                                      ),
+                                      padding: WidgetStatePropertyAll(
+                                        EdgeInsets.symmetric(horizontal: 8),
+                                      ),
+                                    ),
                                     child: const Text('Cancelar'),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
+                                  flex: 3,
                                   child: ElevatedButton.icon(
                                     onPressed: () => _shareLink(),
                                     icon: const Icon(Icons.share_outlined),
-                                    label: const Text('Compartilhar'),
+                                    style: const ButtonStyle(
+                                      minimumSize: WidgetStatePropertyAll(
+                                        Size.fromHeight(48),
+                                      ),
+                                      padding: WidgetStatePropertyAll(
+                                        EdgeInsets.symmetric(horizontal: 8),
+                                      ),
+                                    ),
+                                    label: const Text(
+                                      'Compartilhar',
+                                      maxLines: 1,
+                                      softWrap: false,
+                                    ),
                                   ),
                                 ),
                               ],
