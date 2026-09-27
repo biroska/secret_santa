@@ -24,6 +24,31 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+Widget _buildCompactInfoRow(String label, String value, ThemeData theme) {
+  final labelStyle = theme.textTheme.bodySmall?.copyWith(
+    color: theme.colorScheme.onSurfaceVariant,
+    fontWeight: FontWeight.w600,
+  );
+  final valueStyle = theme.textTheme.bodySmall?.copyWith(
+    color: theme.colorScheme.onSurfaceVariant,
+  );
+
+  return Row(
+    children: [
+      Text(label, style: labelStyle),
+      const SizedBox(width: 1),
+      Expanded(
+        child: Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: valueStyle,
+        ),
+      ),
+    ],
+  );
+}
+
 class _HomeScreenState extends State<HomeScreen> {
   bool _signingOut = false;
   bool _isLoading = true;
@@ -75,33 +100,6 @@ class _HomeScreenState extends State<HomeScreen> {
     } finally {
       if (mounted) setState(() => _signingOut = false);
     }
-  }
-
-  Widget _buildInfoRow(
-    String label,
-    String value, {
-    TextStyle? labelStyle,
-    TextStyle? valueStyle,
-  }) {
-    return Wrap(
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: 4,
-      runSpacing: 2,
-      children: [
-        Text(
-          label,
-          style:
-              labelStyle ??
-              const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-        ),
-        Text(
-          value,
-          style:
-              valueStyle ??
-              const TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
-        ),
-      ],
-    );
   }
 
   Widget _buildEmptyState(BuildContext context) {
@@ -280,9 +278,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             },
                             borderRadius: BorderRadius.circular(12),
                             child: Padding(
-                              padding: const EdgeInsets.all(12),
+                              padding: const EdgeInsets.all(10),
                               child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   CircleAvatar(
                                     radius: 22,
@@ -292,7 +290,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         theme.colorScheme.onPrimaryContainer,
                                     child: Icon(event.icon),
                                   ),
-                                  const SizedBox(width: 12),
+                                  const SizedBox(width: 4),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment:
@@ -307,7 +305,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 fontWeight: FontWeight.bold,
                                               ),
                                         ),
-                                        const SizedBox(height: 4),
+                                        const SizedBox(height: 2),
                                         Text(
                                           'Organizador: ${event.organizerName}',
                                           maxLines: 2,
@@ -319,41 +317,25 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     .onSurfaceVariant,
                                               ),
                                         ),
-                                        const SizedBox(height: 6),
-                                        _buildInfoRow(
-                                          'Data Evento:',
-                                          eventDateText,
-                                          labelStyle: theme.textTheme.bodySmall
-                                              ?.copyWith(
-                                                color: theme
-                                                    .colorScheme
-                                                    .onSurfaceVariant,
-                                                fontWeight: FontWeight.w600,
+                                        const SizedBox(height: 3),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: _buildCompactInfoRow(
+                                                'Evento:',
+                                                eventDateText,
+                                                theme,
                                               ),
-                                          valueStyle: theme.textTheme.bodySmall
-                                              ?.copyWith(
-                                                color: theme
-                                                    .colorScheme
-                                                    .onSurfaceVariant,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: _buildCompactInfoRow(
+                                                'Sorteio:',
+                                                drawDateText,
+                                                theme,
                                               ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        _buildInfoRow(
-                                          'Data Sorteio:',
-                                          drawDateText,
-                                          labelStyle: theme.textTheme.bodySmall
-                                              ?.copyWith(
-                                                color: theme
-                                                    .colorScheme
-                                                    .onSurfaceVariant,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                          valueStyle: theme.textTheme.bodySmall
-                                              ?.copyWith(
-                                                color: theme
-                                                    .colorScheme
-                                                    .onSurfaceVariant,
-                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),

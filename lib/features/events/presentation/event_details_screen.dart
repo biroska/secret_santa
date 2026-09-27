@@ -198,7 +198,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                           if (isAdmin &&
                               !shouldShowRevealBanner &&
                               event.participants.length >= 3)
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 10),
                           if (shouldShowRevealBanner &&
                               !shouldShowRevealedParticipantCard)
                             _buildRevealBanner(),
@@ -208,24 +208,29 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                           if (shouldShowRevealBanner)
                             const SizedBox(height: 24),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              const Text(
-                                'Participantes',
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1B1B1B),
-                                ),
-                              ),
-                              Text(
-                                '${event.participants.length}',
-                                style: TextStyle(
-                                  fontSize: 19,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey[800],
-                                ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text(
+                                    'Participantes',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF1B1B1B),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${event.participants.length}',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.normal,
+                                      color: Colors.grey[800],
+                                    ),
+                                  ),
+                                ],
                               ),
                               const Spacer(),
                               if (!shouldShowRevealBanner)
@@ -484,7 +489,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 child: Text(
                   'Valor do presente: $giftValueLabel',
                   style: const TextStyle(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF595959),
                     letterSpacing: 0.3,
@@ -549,7 +554,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             label,
             style: TextStyle(
               fontSize: 11,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w400,
               color: textColor,
             ),
           ),
@@ -558,7 +563,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             value,
             style: TextStyle(
               fontSize: 12,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w400,
               color: textColor,
             ),
             maxLines: 1,
@@ -771,48 +776,54 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       borderRadius: BorderRadius.circular(18),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+        padding: const EdgeInsets.fromLTRB(18, 12, 12, 10),
         decoration: BoxDecoration(
           color: const Color(0xFFEAF5EC),
           borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: Color(0xFF2E8A4A),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.card_giftcard_rounded,
+                color: Colors.white,
+                // size: 32,
+              ),
+            ),
+            const SizedBox(width: 12),
             Expanded(
               child: RichText(
                 text: const TextSpan(
                   style: TextStyle(
                     color: Color(0xFF2E8A4A),
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
                     height: 1.3,
                   ),
                   children: [
                     TextSpan(text: 'Realizar sorteio\n'),
                     TextSpan(
-                      text:
-                          'Atenção: após confirmar, o evento não poderá ser alterado.',
+                      text: 'Após confirmar, o evento não poderá ser alterado.',
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: 11,
                         fontWeight: FontWeight.w400,
                       ),
                     ),
                   ],
                 ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Container(
-              width: 56,
-              height: 56,
-              decoration: const BoxDecoration(
-                color: Color(0xFF2E8A4A),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.card_giftcard_rounded,
-                color: Colors.white,
-                size: 32,
               ),
             ),
           ],
@@ -831,6 +842,13 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         decoration: BoxDecoration(
           color: const Color(0xFFDF3A4A),
           borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -839,8 +857,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 text: const TextSpan(
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
                     height: 1.3,
                   ),
                   children: [
@@ -848,7 +866,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                     TextSpan(
                       text: 'Revele o seu amigo secreto',
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: 11,
                         fontWeight: FontWeight.w400,
                       ),
                     ),
