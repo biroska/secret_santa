@@ -2,4 +2,4 @@ import { initializeApp } from "firebase-admin/app";
 
 initializeApp();
 
-export { getMyDraw, performDraw } from "./draw";
+export { getMyDraw, performDraw, validateEventDraw } from "./draw";

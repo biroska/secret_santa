@@ -9,6 +9,7 @@ import '../../../services/firestore/event_service.dart';
 import '../../../services/firestore/draw_service.dart';
 import '../../../services/draw/draw_feasibility_validator.dart';
 import 'adicionar_pessoa_screen.dart';
+import 'edit_event_screen.dart';
 import 'event_title_card.dart';
 
 class EventDetailsScreen extends StatefulWidget {
@@ -28,6 +29,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   String _searchQuery = '';
   bool _isFriendRevealVisible = false;
   bool _isFriendRevealLoading = false;
+  bool _isDrawValidationLoading = false;
   Map<String, dynamic>? _revealedParticipant;
 
   @override
@@ -133,6 +135,20 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     }
   }
 
+  Future<void> _editEvent(EventCardDto event) async {
+    final changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => EditEventScreen(
+          event: event,
+          onParticipantsChanged: _refreshEventDetails,
+        ),
+      ),
+    );
+    if (changed == true && mounted) {
+      await _refreshEventDetails();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<EventCardDto?>(
@@ -159,9 +175,14 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         final hasSearchQuery = _searchQuery.trim().isNotEmpty;
         final shouldShowRevealBanner =
             event.drawDate != null && event.drawDate!.isBefore(DateTime.now());
-        final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
+        final currentUser = FirebaseAuth.instance.currentUser;
+        final currentUserId = currentUser?.uid ?? '';
         final isAdmin =
             currentUserId.isNotEmpty && currentUserId == event.adminId;
+        final canValidateDraw =
+            currentUser?.uid == 'Gj0YNtyFsQXNOrjgYPj6OJ2WarC2' &&
+            currentUser?.email?.toLowerCase() == 'biroska@gmail.com' &&
+            event.status == 'DRAWN';
         final shouldShowRevealedParticipantCard =
             shouldShowRevealBanner && _isFriendRevealVisible;
 
@@ -183,7 +204,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 child: Column(
                   children: [
                     const SizedBox(height: 18),
-                    _buildHeader(context, event, isAdmin),
+                    _buildHeader(context, event, isAdmin, canValidateDraw),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
                       child: Column(
@@ -423,7 +444,12 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     }
   }
 
-  Widget _buildHeader(BuildContext context, EventCardDto event, bool isAdmin) {
+  Widget _buildHeader(
+    BuildContext context,
+    EventCardDto event,
+    bool isAdmin,
+    bool canValidateDraw,
+  ) {
     final appBarBackgroundColor =
         Theme.of(context).appBarTheme.backgroundColor ??
         Theme.of(context).colorScheme.primary;
@@ -432,10 +458,59 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       event: event,
       isAdmin: isAdmin,
       onBack: () => Navigator.of(context).pop(),
+      onEdit: () => _editEvent(event),
       onDelete: () => _confirmDeleteEvent(context, event),
       onDevAddAll: () => _devAddAllUsersToParticipants(context),
+      showDrawValidationButton: canValidateDraw,
+      onValidateDraw: _isDrawValidationLoading
+          ? null
+          : () => _validateEventDraw(event),
       backgroundColor: appBarBackgroundColor,
     );
+  }
+
+  Future<void> _validateEventDraw(EventCardDto event) async {
+    if (_isDrawValidationLoading) return;
+    setState(() {
+      _isDrawValidationLoading = true;
+    });
+
+    try {
+      final issues = await _drawService.validateEventDraw(event.id);
+      if (!mounted) return;
+
+      final isValid = issues.isEmpty;
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(isValid ? 'Sorteio válido' : 'Sorteio com problemas'),
+          content: SingleChildScrollView(
+            child: Text(
+              isValid
+                  ? 'Nenhuma inconsistência foi encontrada.'
+                  : issues.map((issue) => '• $issue').join('\n'),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Fechar'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Não foi possível validar o sorteio: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isDrawValidationLoading = false;
+        });
+      }
+    }
   }
 
   Widget _buildSummaryCard(EventCardDto event) {

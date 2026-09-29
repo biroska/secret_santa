@@ -54,9 +54,7 @@ class DrawService {
   Future<String> getMyDraw(String eventId) async {
     try {
       final callable = _functions.httpsCallable('getMyDraw');
-      debugPrint(
-        'Invocando Cloud Function getMyDraw para o evento $eventId.',
-      );
+      debugPrint('Invocando Cloud Function getMyDraw para o evento $eventId.');
       final result = await callable.call<Map<String, dynamic>>({
         'eventId': eventId,
       });
@@ -86,6 +84,26 @@ class DrawService {
       throw const DrawException(
         'Não foi possível revelar o amigo secreto. Tente novamente.',
       );
+    }
+  }
+
+  Future<List<String>> validateEventDraw(String eventId) async {
+    try {
+      final callable = _functions.httpsCallable('validateEventDraw');
+      final result = await callable.call<Map<String, dynamic>>({
+        'eventId': eventId,
+      });
+      final issues = result.data['issues'];
+      if (issues is! List || !issues.every((issue) => issue is String)) {
+        throw const DrawException(
+          'A resposta da validação possui um formato inválido.',
+        );
+      }
+      return issues.cast<String>();
+    } on DrawException {
+      rethrow;
+    } on FirebaseFunctionsException catch (e) {
+      throw DrawException(_messageForCode(e));
     }
   }
 

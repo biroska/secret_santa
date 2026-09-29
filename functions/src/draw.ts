@@ -1,7 +1,12 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import { DrawParticipant, generateDraw, ImpossibleDrawError } from "./drawLogic";
+import {
+  DrawParticipant,
+  generateDraw,
+  ImpossibleDrawError,
+  validateDrawAssignments,
+} from "./drawLogic";
 
 interface PerformDrawRequest {
   eventId: string;
@@ -197,3 +202,85 @@ export const getMyDraw = onCall<GetMyDrawRequest>(async (request) => {
 
   return { receiverId };
 });
+
+interface ValidateEventDrawRequest {
+  eventId: string;
+}
+
+export const validateEventDraw = onCall<ValidateEventDrawRequest>(
+  async (request) => {
+    const uid = request.auth?.uid;
+    const email = request.auth?.token.email;
+    if (
+      uid !== "Gj0YNtyFsQXNOrjgYPj6OJ2WarC2" ||
+      typeof email !== "string" ||
+      email.toLowerCase() !== "biroska@gmail.com"
+    ) {
+      throw new HttpsError(
+        "permission-denied",
+        "Você não tem permissão para validar este sorteio."
+      );
+    }
+
+    const eventId = request.data?.eventId;
+    if (!eventId || typeof eventId !== "string") {
+      throw new HttpsError(
+        "invalid-argument",
+        "O parâmetro eventId é obrigatório."
+      );
+    }
+
+    const eventRef = getFirestore().collection("events").doc(eventId);
+    const eventSnapshot = await eventRef.get();
+    if (!eventSnapshot.exists) {
+      throw new HttpsError("not-found", "Evento não encontrado.");
+    }
+
+    const eventData = eventSnapshot.data() ?? {};
+    if (eventData.status !== "DRAWN") {
+      throw new HttpsError(
+        "failed-precondition",
+        "O sorteio deste evento ainda não foi realizado."
+      );
+    }
+
+    const rawParticipants = Array.isArray(eventData.participants)
+      ? eventData.participants
+      : [];
+    const participants: DrawParticipant[] = rawParticipants.map(
+      (raw, index) => {
+        if (!raw || typeof raw !== "object") {
+          throw new HttpsError(
+            "failed-precondition",
+            `Participante no índice ${index} possui formato inválido.`
+          );
+        }
+        const participant = raw as Record<string, unknown>;
+        const participantId = participant.participantId;
+        if (typeof participantId !== "string" || participantId.length === 0) {
+          throw new HttpsError(
+            "failed-precondition",
+            `Participante no índice ${index} não possui participantId válido.`
+          );
+        }
+        return {
+          participantId,
+          isDependent: participant.isDependent === true,
+          canSortResponsible: participant.canSortResponsible === true,
+          responsibleIds: Array.isArray(participant.responsibleIds)
+            ? participant.responsibleIds.filter(
+                (id): id is string => typeof id === "string"
+              )
+            : [],
+        };
+      }
+    );
+    const drawsSnapshot = await eventRef.collection("draws").get();
+    const issues = validateDrawAssignments(
+      drawsSnapshot.docs.map((doc) => doc.data()),
+      participants
+    );
+
+    return { issues };
+  }
+);

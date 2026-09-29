@@ -6,15 +6,18 @@ import '../../../services/firestore/event_service.dart';
 class IncluirDependenteScreen extends StatefulWidget {
   final String eventId;
   final List<Map<String, dynamic>> eventParticipants;
+  final Map<String, dynamic>? dependentToEdit;
 
   const IncluirDependenteScreen({
     super.key,
     this.eventId = '',
     this.eventParticipants = const [],
+    this.dependentToEdit,
   });
 
   @override
-  State<IncluirDependenteScreen> createState() => _IncluirDependenteScreenState();
+  State<IncluirDependenteScreen> createState() =>
+      _IncluirDependenteScreenState();
 }
 
 class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
@@ -24,6 +27,28 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
   final List<Map<String, dynamic>> _responsaveisSelecionados = [];
   bool _permitirSortearResponsaveis = false;
   final EventService _eventService = EventService();
+
+  bool get _isEditing => widget.dependentToEdit != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final dependent = widget.dependentToEdit;
+    if (dependent == null) return;
+
+    _nomeController.text = dependent['name'] as String? ?? '';
+    _permitirSortearResponsaveis =
+        dependent['canSortResponsible'] as bool? ?? false;
+    final responsibleIds = dependent['responsibleIds'] as List<dynamic>?;
+    if (responsibleIds != null) {
+      _responsaveisSelecionados.addAll(
+        widget.eventParticipants.where(
+          (participant) =>
+              responsibleIds.contains(participant['participantId']),
+        ),
+      );
+    }
+  }
 
   String _formatDisplayName(String value) {
     final normalized = value.trim();
@@ -44,10 +69,16 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
   List<Map<String, dynamic>> get _responsaveisDisponiveis {
     final query = _searchController.text.trim().toLowerCase();
     final base = widget.eventParticipants.where((participant) {
+      if (_isEditing &&
+          participant['participantId'] ==
+              widget.dependentToEdit!['participantId']) {
+        return false;
+      }
       final userId = ((participant['userId'] as String?) ?? '').trim();
       final name = ((participant['name'] as String?) ?? userId).trim();
       if (query.isEmpty) return true;
-      return name.toLowerCase().contains(query) || userId.toLowerCase().contains(query);
+      return name.toLowerCase().contains(query) ||
+          userId.toLowerCase().contains(query);
     }).toList();
 
     return base;
@@ -104,7 +135,9 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
             value: selected,
             onChanged: (_) => onToggle(),
             visualDensity: VisualDensity.compact,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),
+            ),
           ),
           const SizedBox(width: 4),
           if (avatarUrl != null && avatarUrl.isNotEmpty)
@@ -153,7 +186,9 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
 
     if (widget.eventId.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Evento inválido para salvar o dependente.')),
+        const SnackBar(
+          content: Text('Evento inválido para salvar o dependente.'),
+        ),
       );
       return;
     }
@@ -172,17 +207,38 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
     }
 
     try {
-      await _eventService.addDependentParticipant(
-        widget.eventId,
-        dependentName: _nomeController.text,
-        responsibleIds: responsibleIds,
-        canSortResponsible: _permitirSortearResponsaveis,
-      );
+      if (_isEditing) {
+        await _eventService.updateDependentParticipant(
+          widget.eventId,
+          participantId: widget.dependentToEdit!['participantId'] as String,
+          dependentName: _nomeController.text,
+          responsibleIds: responsibleIds,
+          canSortResponsible: _permitirSortearResponsaveis,
+        );
+      } else {
+        await _eventService.addDependentParticipant(
+          widget.eventId,
+          dependentName: _nomeController.text,
+          responsibleIds: responsibleIds,
+          canSortResponsible: _permitirSortearResponsaveis,
+        );
+      }
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Dependente salvo com sucesso.')),
+        SnackBar(
+          content: Text(
+            _isEditing
+                ? 'Dependente atualizado com sucesso.'
+                : 'Dependente salvo com sucesso.',
+          ),
+        ),
       );
+
+      if (_isEditing) {
+        Navigator.of(context).pop(true);
+        return;
+      }
 
       final router = GoRouter.maybeOf(context);
       if (router != null && widget.eventId.trim().isNotEmpty) {
@@ -210,12 +266,16 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor = Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).colorScheme.primary;
+    final backgroundColor =
+        Theme.of(context).appBarTheme.backgroundColor ??
+        Theme.of(context).colorScheme.primary;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF2F3F5),
       appBar: AppBar(
-        title: const Text('Adicionar participante'),
+        title: Text(
+          _isEditing ? 'Editar dependente' : 'Adicionar participante',
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => Navigator.of(context).pop(),
@@ -228,13 +288,16 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
             children: [
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 18,
+                ),
                 decoration: BoxDecoration(
                   color: backgroundColor.withValues(alpha: 0.45),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Text(
-                  'Novo dependente',
+                child: Text(
+                  _isEditing ? 'Editar dependente' : 'Novo dependente',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
@@ -259,19 +322,28 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                             fillColor: Colors.white,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFE5E7EB),
+                              ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFE5E7EB),
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: backgroundColor, width: 1.5),
+                              borderSide: BorderSide(
+                                color: backgroundColor,
+                                width: 1.5,
+                              ),
                             ),
                             errorBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Colors.redAccent),
+                              borderSide: const BorderSide(
+                                color: Colors.redAccent,
+                              ),
                             ),
                           ),
                           validator: (value) {
@@ -311,18 +383,28 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                             hintText: 'Buscar participante...',
                             filled: true,
                             fillColor: Colors.white,
-                            prefixIcon: const Icon(Icons.search, color: Color(0xFF6B7280)),
+                            prefixIcon: const Icon(
+                              Icons.search,
+                              color: Color(0xFF6B7280),
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFE5E7EB),
+                              ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFE5E7EB),
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: backgroundColor, width: 1.5),
+                              borderSide: BorderSide(
+                                color: backgroundColor,
+                                width: 1.5,
+                              ),
                             ),
                           ),
                         ),
@@ -346,9 +428,11 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: _responsaveisDisponiveis.length,
                             itemBuilder: (context, index) {
-                              final participant = _responsaveisDisponiveis[index];
+                              final participant =
+                                  _responsaveisDisponiveis[index];
                               final name = _getParticipantName(participant);
-                              final avatarUrl = (participant['photoUrl'] as String?) ?? '';
+                              final avatarUrl =
+                                  (participant['photoUrl'] as String?) ?? '';
 
                               return _buildResponsibleItem(
                                 name: name,
@@ -374,7 +458,10 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                                   width: 44,
                                   child: Switch(
                                     value: _permitirSortearResponsaveis,
-                                    onChanged: (value) => setState(() => _permitirSortearResponsaveis = value),
+                                    onChanged: (value) => setState(
+                                      () =>
+                                          _permitirSortearResponsaveis = value,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -420,7 +507,9 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                         foregroundColor: const Color(0xFF1F2937),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         side: const BorderSide(color: Color(0xFFD1D5DB)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: const Text('Cancelar'),
                     ),
@@ -432,9 +521,13 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                       style: FilledButton.styleFrom(
                         backgroundColor: backgroundColor,
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      child: const Text('Salvar dependente'),
+                      child: Text(
+                        _isEditing ? 'Salvar alterações' : 'Salvar dependente',
+                      ),
                     ),
                   ),
                 ],

@@ -6,8 +6,11 @@ class EventTitleCard extends StatelessWidget {
   final EventCardDto event;
   final bool isAdmin;
   final VoidCallback? onBack;
+  final VoidCallback? onEdit;
   final VoidCallback? onDelete;
   final VoidCallback? onDevAddAll;
+  final bool showDrawValidationButton;
+  final VoidCallback? onValidateDraw;
   final Color? backgroundColor;
   final bool includeOuterPadding;
 
@@ -16,8 +19,11 @@ class EventTitleCard extends StatelessWidget {
     required this.event,
     this.isAdmin = false,
     this.onBack,
+    this.onEdit,
     this.onDelete,
     this.onDevAddAll,
+    this.showDrawValidationButton = false,
+    this.onValidateDraw,
     this.backgroundColor,
     this.includeOuterPadding = true,
   });
@@ -57,27 +63,53 @@ class EventTitleCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              if (isAdmin)
+              if (isAdmin || showDrawValidationButton)
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    IconButton(
-                      onPressed: onDevAddAll,
-                      icon: const Icon(Icons.add, color: Colors.white),
-                      tooltip:
-                          'DEV: adicionar todos usuários como participantes',
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                    IconButton(
-                      onPressed: onDelete,
-                      icon: const Icon(
-                        Icons.delete_outline_rounded,
-                        color: Colors.white,
+                    if (isAdmin)
+                      IconButton(
+                        onPressed: onDevAddAll,
+                        icon: const Icon(Icons.add, color: Colors.white),
+                        tooltip:
+                            'DEV: adicionar todos usuários como participantes',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                       ),
-                      tooltip: 'Excluir evento',
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isAdmin && event.status != 'DRAWN')
+                          IconButton(
+                            onPressed: onEdit,
+                            icon: const Icon(
+                              Icons.edit_outlined,
+                              color: Colors.white,
+                            ),
+                            tooltip: 'Editar evento',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        if (isAdmin)
+                          IconButton(
+                            onPressed: onDelete,
+                            icon: const Icon(
+                              Icons.delete_outline_rounded,
+                              color: Colors.white,
+                            ),
+                            tooltip: 'Excluir evento',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        if (showDrawValidationButton)
+                          IconButton(
+                            onPressed: onValidateDraw,
+                            icon: const Icon(Icons.check, color: Colors.white),
+                            tooltip: 'Validar sorteio',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                      ],
                     ),
                   ],
                 ),

@@ -28,6 +28,58 @@ class EventService {
 
   String? _currentUserId() => FirebaseAuth.instance.currentUser?.uid;
 
+  Map<String, dynamic> _requireEditableEvent(
+    DocumentSnapshot<Map<String, dynamic>> snapshot,
+  ) {
+    if (!snapshot.exists) {
+      throw Exception('Evento não encontrado.');
+    }
+
+    final data = snapshot.data()!;
+    final currentUserId = _currentUserId();
+    if (currentUserId == null || data['adminId'] != currentUserId) {
+      throw Exception('Somente o administrador pode editar o evento.');
+    }
+    if (data['status'] == 'DRAWN') {
+      throw Exception('Não é possível editar um evento após o sorteio.');
+    }
+    return data;
+  }
+
+  List<Map<String, dynamic>> _readParticipants(Map<String, dynamic> data) {
+    final rawParticipants = data['participants'] as List<dynamic>? ?? const [];
+    if (rawParticipants.any((participant) => participant is! Map)) {
+      throw Exception('A lista de participantes do evento está inválida.');
+    }
+    return rawParticipants
+        .map((participant) => Map<String, dynamic>.from(participant as Map))
+        .toList();
+  }
+
+  String _nextParticipantId(String prefix, Set<String> existingIds) {
+    var index = 1;
+    while (existingIds.contains('$prefix$index')) {
+      index++;
+    }
+    return '$prefix$index';
+  }
+
+  void _ensureNoDependentsReferencing(
+    List<Map<String, dynamic>> participants,
+    String participantId,
+  ) {
+    final referencingDependents = participants.where((participant) {
+      if (participant['isDependent'] != true) return false;
+      final responsibleIds = participant['responsibleIds'];
+      return responsibleIds is List && responsibleIds.contains(participantId);
+    });
+    if (referencingDependents.isNotEmpty) {
+      throw Exception(
+        'Edite ou remova os dependentes que têm este participante como responsável antes de removê-lo.',
+      );
+    }
+  }
+
   bool _isUserParticipant(Map<String, dynamic> data, String userId) {
     final adminId = (data['adminId'] ?? '').toString();
     if (adminId == userId) return true;
@@ -103,9 +155,13 @@ class EventService {
         final exists = participants.any((p) => (p['userId'] ?? '') == userId);
         if (exists) return; // já existe, nada a fazer
 
-        final participantIndex = participants.length + 1;
+        final existingParticipantIds = participants
+            .whereType<Map>()
+            .map((participant) => participant['participantId'])
+            .whereType<String>()
+            .toSet();
         final participantEntry = {
-          'participantId': 'P$participantIndex',
+          'participantId': _nextParticipantId('P', existingParticipantIds),
           'userId': userId,
           'role': role,
           'isDependent': false,
@@ -182,7 +238,8 @@ class EventService {
         }
 
         final data = snapshot.data() ?? {};
-        final participants = (data['participants'] as List<dynamic>?) ?? const [];
+        final participants =
+            (data['participants'] as List<dynamic>?) ?? const [];
         final existingParticipantIds = participants
             .whereType<Map>()
             .map((participant) => participant['participantId'])
@@ -195,13 +252,7 @@ class EventService {
         if (invalidResponsibleIds.isNotEmpty) {
           throw Exception('Um ou mais responsáveis não pertencem ao evento.');
         }
-        final dependentCount = participants.where((participant) {
-          if (participant is! Map) return false;
-          final map = Map<String, dynamic>.from(participant);
-          return (map['isDependent'] as bool? ?? false) == true;
-        }).length;
-
-        final participantId = 'D${dependentCount + 1}';
+        final participantId = _nextParticipantId('D', existingParticipantIds);
         final cleanName = dependentName.trim();
         final sanitizedResponsibleIds = responsibleIds
             .map((id) => id.trim())
@@ -225,11 +276,149 @@ class EventService {
         });
       });
     } catch (e) {
-      debugPrint(
-        'Erro ao adicionar dependente ao evento $eventId: $e',
-      );
+      debugPrint('Erro ao adicionar dependente ao evento $eventId: $e');
       rethrow;
     }
+  }
+
+  Future<void> updateEditableEvent(
+    String eventId, {
+    required DateTime eventDate,
+    required int? maxGiftValue,
+  }) async {
+    final normalizedDate = DateTime.utc(
+      eventDate.year,
+      eventDate.month,
+      eventDate.day,
+      12,
+    );
+    final eventRef = _firestore.collection('events').doc(eventId);
+
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(eventRef);
+      _requireEditableEvent(snapshot);
+      transaction.update(eventRef, {
+        'eventDate': Timestamp.fromDate(normalizedDate),
+        'maxGiftValue': maxGiftValue ?? FieldValue.delete(),
+      });
+    });
+  }
+
+  Future<void> removeEventParticipant(
+    String eventId,
+    String participantId,
+  ) async {
+    final eventRef = _firestore.collection('events').doc(eventId);
+
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(eventRef);
+      final data = _requireEditableEvent(snapshot);
+      final participants = _readParticipants(data);
+      final targetParticipant = participants.firstWhere(
+        (participant) => participant['participantId'] == participantId,
+        orElse: () => const <String, dynamic>{},
+      );
+      if (targetParticipant['role'] == 'ADMIN' ||
+          targetParticipant['userId'] == data['adminId']) {
+        throw Exception('O administrador do evento não pode ser removido.');
+      }
+      final participantExists = participants.any(
+        (participant) => participant['participantId'] == participantId,
+      );
+      if (!participantExists) {
+        throw Exception('Participante não encontrado no evento.');
+      }
+      _ensureNoDependentsReferencing(participants, participantId);
+      participants.removeWhere(
+        (participant) => participant['participantId'] == participantId,
+      );
+      transaction.update(eventRef, {'participants': participants});
+    });
+  }
+
+  Future<void> updateDependentParticipant(
+    String eventId, {
+    required String participantId,
+    required String dependentName,
+    required List<String> responsibleIds,
+    required bool canSortResponsible,
+  }) async {
+    final eventRef = _firestore.collection('events').doc(eventId);
+    final cleanName = dependentName.trim();
+    final cleanResponsibleIds = responsibleIds
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty)
+        .toSet()
+        .toList();
+    if (cleanName.isEmpty) {
+      throw Exception('O nome do dependente é obrigatório.');
+    }
+    if (cleanResponsibleIds.isEmpty) {
+      throw Exception('Selecione pelo menos um responsável.');
+    }
+
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(eventRef);
+      final data = _requireEditableEvent(snapshot);
+      final participants = _readParticipants(data);
+      final dependentIndex = participants.indexWhere(
+        (participant) =>
+            participant['participantId'] == participantId &&
+            participant['isDependent'] == true,
+      );
+      if (dependentIndex == -1) {
+        throw Exception('Dependente não encontrado no evento.');
+      }
+
+      final availableIds = participants
+          .map((participant) => participant['participantId'])
+          .whereType<String>()
+          .toSet();
+      if (cleanResponsibleIds.any(
+        (responsibleId) =>
+            responsibleId == participantId ||
+            !availableIds.contains(responsibleId),
+      )) {
+        throw Exception(
+          'Selecione responsáveis válidos que pertençam ao evento.',
+        );
+      }
+
+      participants[dependentIndex] = {
+        ...participants[dependentIndex],
+        'name': cleanName,
+        'responsibleIds': cleanResponsibleIds,
+        'canSortResponsible': canSortResponsible,
+      };
+      transaction.update(eventRef, {'participants': participants});
+    });
+  }
+
+  Future<void> removeDependentParticipant(
+    String eventId,
+    String participantId,
+  ) async {
+    final eventRef = _firestore.collection('events').doc(eventId);
+
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(eventRef);
+      final data = _requireEditableEvent(snapshot);
+      final participants = _readParticipants(data);
+      final dependent = participants.firstWhere(
+        (participant) =>
+            participant['participantId'] == participantId &&
+            participant['isDependent'] == true,
+        orElse: () => const <String, dynamic>{},
+      );
+      if (dependent.isEmpty) {
+        throw Exception('Dependente não encontrado no evento.');
+      }
+      _ensureNoDependentsReferencing(participants, participantId);
+      participants.removeWhere(
+        (participant) => participant['participantId'] == participantId,
+      );
+      transaction.update(eventRef, {'participants': participants});
+    });
   }
 
   Future<List<EventCardDto>> getEvents() async {

@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart'; // Importar para Timestam
 class EventCardDto {
   final String id;
   final String adminId;
+  final String status;
   final String name;
   final String organizerName;
   final DateTime createdAt;
@@ -18,6 +19,7 @@ class EventCardDto {
   EventCardDto({
     required this.id,
     required this.adminId,
+    this.status = '',
     required this.name,
     required this.organizerName,
     required this.createdAt,
@@ -62,6 +64,7 @@ class EventCardDto {
     return EventCardDto(
       id: id,
       adminId: (data['adminId'] as String?) ?? '',
+      status: (data['status'] as String?) ?? '',
       name: data['title'] as String? ?? 'Evento sem título',
       organizerName: organizerName,
       createdAt: createdAtTimestamp.toDate(),

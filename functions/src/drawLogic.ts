@@ -15,6 +15,91 @@ export interface DrawPair {
   receiverId: string;
 }
 
+export function validateDrawAssignments(
+  rawDraws: unknown[],
+  participants: DrawParticipant[]
+): string[] {
+  const issues: string[] = [];
+  if (rawDraws.length === 0) {
+    issues.push("Nenhum resultado de sorteio foi encontrado.");
+  }
+
+  const participantsById = new Map<string, DrawParticipant>();
+  for (const participant of participants) {
+    if (participantsById.has(participant.participantId)) {
+      issues.push(
+        `O participante "${participant.participantId}" está duplicado.`
+      );
+    } else {
+      participantsById.set(participant.participantId, participant);
+    }
+  }
+
+  const seenGivers = new Set<string>();
+  const seenReceivers = new Set<string>();
+  rawDraws.forEach((rawDraw, index) => {
+    const drawLabel = `Sorteio ${index + 1}`;
+    if (typeof rawDraw !== "object" || rawDraw === null) {
+      issues.push(`${drawLabel} possui formato inválido.`);
+      return;
+    }
+
+    const draw = rawDraw as Record<string, unknown>;
+    const giverId = draw.giverId;
+    const receiverId = draw.receiverId;
+    if (typeof giverId !== "string" || giverId.length === 0) {
+      issues.push(`${drawLabel} não possui giverId válido.`);
+    }
+    if (typeof receiverId !== "string" || receiverId.length === 0) {
+      issues.push(`${drawLabel} não possui receiverId válido.`);
+    }
+    if (
+      typeof giverId !== "string" ||
+      giverId.length === 0 ||
+      typeof receiverId !== "string" ||
+      receiverId.length === 0
+    ) {
+      return;
+    }
+
+    if (seenGivers.has(giverId)) {
+      issues.push(`O giverId "${giverId}" aparece mais de uma vez.`);
+    }
+    seenGivers.add(giverId);
+    if (seenReceivers.has(receiverId)) {
+      issues.push(`O receiverId "${receiverId}" aparece mais de uma vez.`);
+    }
+    seenReceivers.add(receiverId);
+
+    if (giverId === receiverId) {
+      issues.push(`O participante "${giverId}" foi sorteado para si mesmo.`);
+    }
+
+    const giver = participantsById.get(giverId);
+    if (!giver) {
+      issues.push(`O giverId "${giverId}" não pertence aos participantes.`);
+    }
+    if (!participantsById.has(receiverId)) {
+      issues.push(
+        `O receiverId "${receiverId}" não pertence aos participantes.`
+      );
+    }
+
+    if (
+      giver?.isDependent &&
+      !giver.canSortResponsible &&
+      giver.responsibleIds.includes(receiverId)
+    ) {
+      issues.push(
+        `O dependente "${giverId}" não pode presentear seu responsável ` +
+          `"${receiverId}".`
+      );
+    }
+  });
+
+  return issues;
+}
+
 /** Erro lançado quando não é possível gerar um sorteio válido. */
 export class ImpossibleDrawError extends Error {
   constructor(message: string) {
