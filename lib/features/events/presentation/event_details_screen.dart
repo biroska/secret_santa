@@ -279,7 +279,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                           if (isAdmin &&
                               !shouldShowRevealBanner &&
                               event.participants.length >= 3)
-                            const SizedBox(height: 10),
+                            const SizedBox(height: 8),
                           if (shouldShowRevealBanner &&
                               !shouldShowRevealedParticipantCard)
                             _buildRevealBanner(),
@@ -287,7 +287,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                               shouldShowRevealedParticipantCard)
                             _buildRevealedParticipantCard(_revealedParticipant),
                           if (shouldShowRevealBanner)
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 12),
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
@@ -298,7 +298,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                                     'Participantes',
                                     style: TextStyle(
                                       fontSize: 18,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w500,
                                       color: Color(0xFF1B1B1B),
                                     ),
                                   ),
@@ -333,7 +333,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                                 ),
                             ],
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 10),
                           _buildSearchField(),
                           const SizedBox(height: 14),
                           if (filteredParticipants.isEmpty)
@@ -1177,7 +1177,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                         style: const TextStyle(
                           color: Color(0xFF1B1B1B),
                           fontSize: 18,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w400,
                         ),
                       ),
                     ),

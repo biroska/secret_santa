@@ -244,18 +244,56 @@ class _EditEventScreenState extends State<EditEventScreen> {
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
                           ],
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'Valor máximo do presente',
+                            hintText: 'Valor máximo do presente',
                             prefixText: 'R\$ ',
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 18,
+                            ),
                             helperText:
                                 'Deixe vazio para não definir um limite.',
-                            border: OutlineInputBorder(),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFE6E8EC),
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFE6E8EC),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: BorderSide(
+                                color: Theme.of(context).colorScheme.primary,
+                                width: 1.5,
+                              ),
+                            ),
+                            errorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: const BorderSide(
+                                color: Colors.redAccent,
+                              ),
+                            ),
+                            focusedErrorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: const BorderSide(
+                                color: Colors.redAccent,
+                                width: 1.5,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 20),
                         SizedBox(
                           width: double.infinity,
-                          child: FilledButton(
+                          child: ElevatedButton(
                             onPressed: _isSaving ? null : _save,
                             child: _isSaving
                                 ? const SizedBox(
@@ -263,6 +301,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
+                                      color: Colors.white,
                                     ),
                                   )
                                 : const Text('Salvar alterações'),
@@ -273,10 +312,10 @@ class _EditEventScreenState extends State<EditEventScreen> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'Participantes (${_participants.length})',
+                    'Participantes ${_participants.length}',
                     style: const TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w500,
                       color: Color(0xFF1B1B1B),
                     ),
                   ),
@@ -368,7 +407,7 @@ class EditEventParticipantCard extends StatelessWidget {
                   style: const TextStyle(
                     color: Color(0xFF1B1B1B),
                     fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w400,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
