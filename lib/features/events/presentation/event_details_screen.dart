@@ -29,7 +29,9 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   String _searchQuery = '';
   bool _isFriendRevealVisible = false;
   bool _isFriendRevealLoading = false;
+  bool _isDrawLoading = false;
   bool _isDrawValidationLoading = false;
+  OverlayEntry? _drawLoadingOverlay;
   Map<String, dynamic>? _revealedParticipant;
 
   @override
@@ -42,8 +44,63 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
   @override
   void dispose() {
+    _removeDrawLoadingOverlay();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _removeDrawLoadingOverlay() {
+    final overlayEntry = _drawLoadingOverlay;
+    if (overlayEntry == null) return;
+
+    _drawLoadingOverlay = null;
+    overlayEntry.remove();
+    overlayEntry.dispose();
+    if (mounted && _isDrawLoading) {
+      setState(() => _isDrawLoading = false);
+    }
+  }
+
+  void _showDrawLoadingOverlay() {
+    if (_isDrawLoading) return;
+    setState(() => _isDrawLoading = true);
+
+    _drawLoadingOverlay = OverlayEntry(
+      builder: (overlayContext) => Stack(
+        fit: StackFit.expand,
+        children: [
+          const ModalBarrier(dismissible: false, color: Colors.black26),
+          Center(
+            child: Semantics(
+              liveRegion: true,
+              label: 'Realizando sorteio',
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 20,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircularProgressIndicator(),
+                      const SizedBox(width: 20),
+                      Flexible(
+                        child: Text(
+                          'Realizando sorteio...',
+                          style: Theme.of(overlayContext).textTheme.bodyLarge,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    Overlay.of(context, rootOverlay: true).insert(_drawLoadingOverlay!);
   }
 
   @override
@@ -215,7 +272,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                           if (isAdmin &&
                               !shouldShowRevealBanner &&
                               event.participants.length >= 3)
-                            _buildAdminDrawCard(),
+                            PopScope(
+                              canPop: !_isDrawLoading,
+                              child: _buildAdminDrawCard(),
+                            ),
                           if (isAdmin &&
                               !shouldShowRevealBanner &&
                               event.participants.length >= 3)
@@ -698,6 +758,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   }
 
   Future<void> _showDrawConfirmationDialog() async {
+    if (_isDrawLoading) return;
+
     final messenger = ScaffoldMessenger.maybeOf(context);
     final shouldContinue = await showDialog<bool>(
       context: context,
@@ -751,24 +813,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     final isUnlockConfirmed = await _confirmDrawUnlock();
     if (!mounted || !isUnlockConfirmed) return;
 
-    final navigator = Navigator.of(context, rootNavigator: true);
-    final loadingDialog = showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => PopScope(
-        canPop: false,
-        child: const AlertDialog(
-          content: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 20),
-              Flexible(child: Text('Realizando sorteio...')),
-            ],
-          ),
-        ),
-      ),
-    );
+    _showDrawLoadingOverlay();
     try {
       await _eventService.updateDrawDate(widget.eventId);
       // O sorteio em si (definição de quem presenteia quem) é executado no
@@ -792,8 +837,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         SnackBar(content: Text('Não foi possível confirmar o sorteio: $e')),
       );
     } finally {
-      if (navigator.mounted && navigator.canPop()) navigator.pop();
-      await loadingDialog;
+      _removeDrawLoadingOverlay();
     }
   }
 

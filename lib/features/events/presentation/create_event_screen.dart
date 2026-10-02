@@ -86,6 +86,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       initialDate: currentDate,
       firstDate: DateTime(today.year, today.month, today.day),
       lastDate: DateTime(2101),
+      locale: const Locale('pt', 'BR'),
     );
 
     if (picked != null) {
@@ -188,10 +189,13 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         child: Form(
           key: _formKey,
           child: ListView(
+            padding: const EdgeInsets.only(top: 12),
             children: <Widget>[
               TextFormField(
                 controller: _titleController,
                 decoration: _inputDecoration('Título'),
+                maxLength: 20,
+                textCapitalization: TextCapitalization.sentences,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Por favor, insira um título';
@@ -203,6 +207,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               TextFormField(
                 controller: _descriptionController,
                 decoration: _inputDecoration('Descrição'),
+                maxLength: 50,
+                textCapitalization: TextCapitalization.sentences,
                 maxLines: 3,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {

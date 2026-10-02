@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/about/presentation/about_screen.dart';
@@ -169,6 +170,8 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      supportedLocales: const [Locale('en', 'US'), Locale('pt', 'BR')],
       scaffoldMessengerKey: rootScaffoldMessengerKey,
       routerConfig: _router,
     );
