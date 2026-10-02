@@ -207,7 +207,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               TextFormField(
                 controller: _descriptionController,
                 decoration: _inputDecoration('Descrição'),
-                maxLength: 50,
+                maxLength: 15,
                 textCapitalization: TextCapitalization.sentences,
                 maxLines: 3,
                 validator: (value) {
