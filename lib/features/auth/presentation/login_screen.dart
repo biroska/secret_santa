@@ -6,7 +6,8 @@ import 'package:secret_santa/utils/app_routes.dart';
 
 import '../data/google_auth_api.dart';
 import '../data/google_auth_service.dart';
-import 'package:sign_in_button/sign_in_button.dart';
+import '../../../theme/app_colors.dart';
+import 'widgets/google_sign_in_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, required this.auth, this.pendingEventId});
@@ -44,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
         context.go('/event/$pendingEventId', extra: result);
         return;
       }
-      context.go( AppRoutes.HOME, extra: result);
+      context.go(AppRoutes.HOME, extra: result);
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -70,68 +71,86 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final supported = GoogleAuthService.isPlatformSupported;
+    const mutedText = Color(0xFF64748B);
 
     return Scaffold(
+      backgroundColor: AppColors.surfaceTintBlue,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Spacer(),
-              Icon(
-                Icons.card_giftcard_rounded,
-                size: 72,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Secret Santa',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Entre para participar do amigo secreto',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 40),
-              if (!supported) ...[
-                Text(
-                  'Google Sign-In não está disponível nesta plataforma. '
-                  'Use Android, iOS, macOS ou Web (Chrome).',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.error,
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 380),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD6E4FF),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: const Icon(
+                        Icons.card_giftcard_outlined,
+                        size: 40,
+                        color: Color(0xFF2B3F73),
+                      ),
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              if (_error != null) ...[
-                Text(
-                  _error!,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.error,
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Secret Santa',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0B1220),
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-              ],
-              SignInButton(
-                Buttons.google,
-                onPressed: () {
-                  _onGoogleSignIn();
-                },
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Entre para participar do amigo secreto',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: mutedText),
+                  ),
+                  const SizedBox(height: 40),
+                  if (!supported) ...[
+                    Text(
+                      'Google Sign-In não está disponível nesta plataforma. '
+                      'Use Android, iOS, macOS ou Web (Chrome).',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.error,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  if (_error != null) ...[
+                    Text(
+                      _error!,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.error,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  GoogleSignInButton(
+                    isLoading: _loading,
+                    onPressed: _onGoogleSignIn,
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Ao entrar você aceita os termos de uso e a política de privacidade.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: mutedText),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              const Spacer(),
-            ],
+            ),
           ),
         ),
       ),

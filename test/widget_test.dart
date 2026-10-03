@@ -13,7 +13,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Secret Santa'), findsOneWidget);
-    expect(find.text('Entrar com o Google'), findsOneWidget);
+    expect(find.text('Entrar com Google'), findsOneWidget);
   });
 
   testWidgets('Tapping Google sign-in navigates to home with fake session',
@@ -23,7 +23,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Entrar com o Google'));
+    await tester.tap(find.text('Entrar com Google'));
     await tester.pumpAndSettle();
 
     expect(find.text('Você entrou'), findsOneWidget);
