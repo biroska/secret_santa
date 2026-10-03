@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../widgets/user_avatar.dart';
 import '../../../services/firestore/event_service.dart';
 
 class IncluirDependenteScreen extends StatefulWidget {
@@ -140,22 +141,7 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
             ),
           ),
           const SizedBox(width: 4),
-          if (avatarUrl != null && avatarUrl.isNotEmpty)
-            CircleAvatar(
-              radius: 20,
-              backgroundImage: NetworkImage(avatarUrl),
-              backgroundColor: const Color(0xFFE5E7EB),
-            )
-          else
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE5E7EB),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.person, color: Color(0xFF667085)),
-            ),
+          UserAvatar(photoUrl: avatarUrl),
           const SizedBox(width: 12),
           Expanded(
             child: Text(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import '../../../widgets/user_avatar.dart';
 import '../../../dtos/event_card_dto.dart';
 import '../../../services/firestore/event_service.dart';
 import 'incluir_dependente_screen.dart';
@@ -358,11 +359,26 @@ class EditEventParticipantCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final participantId = participant['participantId'] as String? ?? '';
     final isDependent = participant['isDependent'] == true;
-    final isAdmin =
-        participant['role'] == 'ADMIN' || participant['userId'] == adminId;
+    final role = (participant['role'] as String? ?? '').toUpperCase();
+    final isAdmin = role == 'ADMIN' || participant['userId'] == adminId;
+    final isBadgeDependent = isDependent || role == 'DEPENDENT';
     final name = (participant['name'] as String?)?.trim().isNotEmpty == true
         ? (participant['name'] as String).trim()
         : (participant['userId'] as String? ?? participantId);
+    final photoUrl = (participant['photoUrl'] as String?) ?? '';
+    final badgeLabel = isAdmin
+        ? 'Organizador'
+        : (isBadgeDependent ? 'Dependente' : 'Participante');
+    final badgeColor = isAdmin
+        ? const Color(0xFFE9F3FA)
+        : (isBadgeDependent
+              ? const Color(0xFFFCEFD9)
+              : const Color(0xFFE2F0E2));
+    final badgeTextColor = isAdmin
+        ? const Color(0xFF2C6F9F)
+        : (isBadgeDependent
+              ? const Color(0xFFB07A1E)
+              : const Color(0xFF3D8F3D));
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -378,49 +394,71 @@ class EditEventParticipantCard extends StatelessWidget {
               tooltip: isDependent
                   ? 'Remover dependente'
                   : 'Remover participante',
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+              visualDensity: VisualDensity.compact,
               onPressed: onRemove,
               icon: const Icon(
                 Icons.delete_outline_rounded,
                 color: Color(0xFFCF2A2A),
+                size: 20,
               ),
             ),
           if (isDependent)
             IconButton(
               tooltip: 'Editar dependente',
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+              visualDensity: VisualDensity.compact,
               onPressed: onEditDependent,
-              icon: const Icon(Icons.edit_outlined, color: Color(0xFF1D7B72)),
+              icon: const Icon(
+                Icons.edit_outlined,
+                color: Color(0xFF1D7B72),
+                size: 20,
+              ),
             ),
-          CircleAvatar(
-            backgroundColor: const Color(0xFFE5E7EB),
-            child: Icon(
-              isDependent ? Icons.child_care : Icons.person_outline,
-              color: const Color(0xFF667085),
-            ),
-          ),
+          UserAvatar(photoUrl: photoUrl),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    color: Color(0xFF1B1B1B),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  isAdmin
-                      ? 'Organizador'
-                      : (isDependent ? 'Dependente' : 'Participante'),
-                  style: const TextStyle(
-                    color: Color(0xFF667085),
-                    fontSize: 12,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        name,
+                        style: const TextStyle(
+                          color: Color(0xFF1B1B1B),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: badgeColor,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: badgeTextColor.withValues(alpha: 0.4),
+                        ),
+                      ),
+                      child: Text(
+                        badgeLabel,
+                        style: TextStyle(
+                          color: badgeTextColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

@@ -13,7 +13,7 @@ void main() {
             participant: const {
               'participantId': 'P2',
               'userId': 'user-2',
-              'name': 'Participante',
+              'name': 'João Silva',
               'role': 'PARTICIPANT',
               'isDependent': false,
             },
@@ -26,13 +26,14 @@ void main() {
     );
 
     final deleteButton = find.byTooltip('Remover participante');
-    final avatar = find.byType(CircleAvatar);
+    final avatar = find.byIcon(Icons.person);
     expect(deleteButton, findsOneWidget);
     expect(
       tester.getCenter(deleteButton).dx,
       lessThan(tester.getCenter(avatar).dx),
     );
     expect(find.byTooltip('Editar dependente'), findsNothing);
+    expect(find.text('Participante'), findsOneWidget);
   });
 
   testWidgets('shows trash and edit icons on the left for dependents', (
@@ -45,7 +46,7 @@ void main() {
             participant: const {
               'participantId': 'D1',
               'userId': 'dependent-D1',
-              'name': 'Dependente',
+              'name': 'Ana',
               'role': 'DEPENDENT',
               'isDependent': true,
             },
@@ -59,7 +60,7 @@ void main() {
 
     final deleteButton = find.byTooltip('Remover dependente');
     final editButton = find.byTooltip('Editar dependente');
-    final avatar = find.byType(CircleAvatar);
+    final avatar = find.byIcon(Icons.person);
     expect(deleteButton, findsOneWidget);
     expect(editButton, findsOneWidget);
     expect(
@@ -70,6 +71,7 @@ void main() {
       tester.getCenter(editButton).dx,
       lessThan(tester.getCenter(avatar).dx),
     );
+    expect(find.text('Dependente'), findsOneWidget);
   });
 
   testWidgets('does not show removal controls for the event admin', (
@@ -82,7 +84,7 @@ void main() {
             participant: const {
               'participantId': 'P1',
               'userId': 'admin-1',
-              'name': 'Organizador',
+              'name': 'Marina',
               'role': 'ADMIN',
               'isDependent': false,
             },
@@ -97,5 +99,42 @@ void main() {
     expect(find.byTooltip('Remover participante'), findsNothing);
     expect(find.byTooltip('Remover dependente'), findsNothing);
     expect(find.byTooltip('Editar dependente'), findsNothing);
+    expect(find.text('Organizador'), findsOneWidget);
+  });
+
+  testWidgets('uses details-screen badge styling', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: EditEventParticipantCard(
+            participant: const {
+              'participantId': 'P2',
+              'userId': 'user-2',
+              'name': 'João Silva',
+              'role': 'PARTICIPANT',
+              'isDependent': false,
+            },
+            adminId: 'admin-1',
+            onRemove: () {},
+            onEditDependent: () {},
+          ),
+        ),
+      ),
+    );
+
+    final badge = tester.widget<Container>(
+      find
+          .ancestor(
+            of: find.text('Participante'),
+            matching: find.byType(Container),
+          )
+          .first,
+    );
+    final decoration = badge.decoration! as BoxDecoration;
+    expect(decoration.color, const Color(0xFFE2F0E2));
+    expect(
+      (decoration.border! as Border).top.color,
+      const Color(0xFF3D8F3D).withValues(alpha: 0.4),
+    );
   });
 }

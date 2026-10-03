@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart'; // Para formatação de data
 
+import '../../../widgets/user_avatar.dart';
 import '../../../utils/app_routes.dart';
 import '../../auth/data/google_auth_api.dart';
 import '../../auth/data/google_auth_result.dart';
@@ -161,14 +162,13 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
+            child: UserAvatar(
+              photoUrl: widget.session.photoUrl,
               radius: 20,
-              backgroundImage: widget.session.photoUrl != null
-                  ? NetworkImage(widget.session.photoUrl!)
-                  : null,
-              child: widget.session.photoUrl == null
-                  ? const Icon(Icons.person, size: 24)
-                  : null,
+              fallbackBuilder: () => const CircleAvatar(
+                radius: 20,
+                child: Icon(Icons.person, size: 24),
+              ),
             ),
           ),
         ],
@@ -182,18 +182,13 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
+                  UserAvatar(
+                    photoUrl: widget.session.photoUrl,
                     radius: 30,
-                    backgroundImage: widget.session.photoUrl != null
-                        ? NetworkImage(widget.session.photoUrl!)
-                        : null,
-                    child: widget.session.photoUrl == null
-                        ? const Icon(
-                            Icons.person,
-                            size: 36,
-                            color: Colors.white,
-                          )
-                        : null,
+                    fallbackBuilder: () => const CircleAvatar(
+                      radius: 30,
+                      child: Icon(Icons.person, size: 36, color: Colors.white),
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:local_auth/local_auth.dart';
 
+import '../../../widgets/user_avatar.dart';
 import '../../../dtos/event_card_dto.dart';
 import '../../../services/firestore/event_service.dart';
 import '../../../services/firestore/draw_service.dart';
@@ -1148,22 +1149,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       ),
       child: Row(
         children: [
-          if (avatarUrl != null && avatarUrl.isNotEmpty)
-            CircleAvatar(
-              radius: 20,
-              backgroundImage: NetworkImage(avatarUrl),
-              backgroundColor: const Color(0xFFE5E7EB),
-            )
-          else
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE5E7EB),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.person, color: Color(0xFF667085)),
-            ),
+          UserAvatar(photoUrl: avatarUrl),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
