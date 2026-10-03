@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../dtos/event_card_dto.dart';
 import '../../../widgets/user_avatar.dart';
+import 'event_title_card.dart';
 import '../../../services/firestore/event_service.dart';
 
 class IncluirDependenteScreen extends StatefulWidget {
   final String eventId;
   final List<Map<String, dynamic>> eventParticipants;
   final Map<String, dynamic>? dependentToEdit;
+  final EventCardDto? event;
 
   const IncluirDependenteScreen({
     super.key,
     this.eventId = '',
     this.eventParticipants = const [],
     this.dependentToEdit,
+    this.event,
   });
 
   @override
@@ -272,25 +276,33 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
           padding: const EdgeInsets.fromLTRB(16, 18, 16, 20),
           child: Column(
             children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 18,
-                ),
-                decoration: BoxDecoration(
-                  color: backgroundColor.withValues(alpha: 0.45),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  _isEditing ? 'Editar dependente' : 'Novo dependente',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1B1B1B),
+              if (widget.event != null)
+                EventTitleCard(
+                  event: widget.event!,
+                  isAdmin: false,
+                  backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+                  includeOuterPadding: false,
+                )
+              else
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 18,
+                  ),
+                  decoration: BoxDecoration(
+                    color: backgroundColor.withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    _isEditing ? 'Editar dependente' : 'Novo dependente',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1B1B1B),
+                    ),
                   ),
                 ),
-              ),
               const SizedBox(height: 18),
               Expanded(
                 child: SingleChildScrollView(
@@ -301,11 +313,14 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                       children: [
                         TextFormField(
                           controller: _nomeController,
+                          readOnly: _isEditing,
                           decoration: InputDecoration(
                             labelText: 'Nome do dependente',
                             hintText: 'Ex.: Alice Galdino',
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: _isEditing
+                                ? const Color(0xFFF3F4F6)
+                                : Colors.white,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: const BorderSide(
@@ -502,15 +517,8 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: FilledButton(
+                    child: ElevatedButton(
                       onPressed: _saveDependente,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: backgroundColor,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
                       child: Text(
                         _isEditing ? 'Salvar alterações' : 'Salvar dependente',
                       ),

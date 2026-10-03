@@ -112,6 +112,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
             eventId: widget.event.id,
             eventParticipants: _participants,
             dependentToEdit: participant,
+            event: widget.event,
           ),
         ),
       );
@@ -366,6 +367,10 @@ class EditEventParticipantCard extends StatelessWidget {
         ? (participant['name'] as String).trim()
         : (participant['userId'] as String? ?? participantId);
     final photoUrl = (participant['photoUrl'] as String?) ?? '';
+    final canSortResponsible = participant['canSortResponsible'] == true;
+    final warningText = isDependent && !canSortResponsible
+        ? 'Não pode sortear os responsáveis'
+        : null;
     final badgeLabel = isAdmin
         ? 'Organizador'
         : (isBadgeDependent ? 'Dependente' : 'Participante');
@@ -395,26 +400,26 @@ class EditEventParticipantCard extends StatelessWidget {
                   ? 'Remover dependente'
                   : 'Remover participante',
               padding: EdgeInsets.zero,
-              constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+              constraints: const BoxConstraints.tightFor(width: 40, height: 40),
               visualDensity: VisualDensity.compact,
               onPressed: onRemove,
               icon: const Icon(
-                Icons.delete_outline_rounded,
+                Icons.delete_forever_outlined,
                 color: Color(0xFFCF2A2A),
-                size: 20,
+                size: 26,
               ),
             ),
           if (isDependent)
             IconButton(
               tooltip: 'Editar dependente',
               padding: EdgeInsets.zero,
-              constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+              constraints: const BoxConstraints.tightFor(width: 40, height: 40),
               visualDensity: VisualDensity.compact,
               onPressed: onEditDependent,
               icon: const Icon(
                 Icons.edit_outlined,
                 color: Color(0xFF1D7B72),
-                size: 20,
+                size: 26,
               ),
             ),
           UserAvatar(photoUrl: photoUrl),
@@ -423,44 +428,47 @@ class EditEventParticipantCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        name,
-                        style: const TextStyle(
-                          color: Color(0xFF1B1B1B),
-                          fontSize: 18,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: badgeColor,
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                          color: badgeTextColor.withValues(alpha: 0.4),
-                        ),
-                      ),
-                      child: Text(
-                        badgeLabel,
-                        style: TextStyle(
-                          color: badgeTextColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
+                Text(
+                  name,
+                  style: const TextStyle(
+                    color: Color(0xFF1B1B1B),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
+                if (warningText != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 1),
+                    child: Text(
+                      warningText,
+                      style: const TextStyle(
+                        color: Color(0xFFCF2A2A),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        height: 1.1,
+                      ),
+                    ),
+                  ),
               ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: badgeColor,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: badgeTextColor.withValues(alpha: 0.4)),
+            ),
+            child: Text(
+              badgeLabel,
+              style: TextStyle(
+                color: badgeTextColor,
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              ),
             ),
           ),
         ],

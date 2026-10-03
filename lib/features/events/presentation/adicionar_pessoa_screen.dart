@@ -277,6 +277,7 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                               builder: (_) => IncluirDependenteScreen(
                                 eventId: widget.eventId,
                                 eventParticipants: _event?.participants ?? const [],
+                                event: _event,
                               ),
                             ),
                           );

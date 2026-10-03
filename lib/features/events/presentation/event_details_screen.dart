@@ -1155,41 +1155,15 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        name,
-                        style: const TextStyle(
-                          color: Color(0xFF1B1B1B),
-                          fontSize: 18,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ),
-                    if (showBadge && badge != null && badge.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: badgeColor,
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                            color: badgeTextColor.withValues(alpha: 0.4),
-                          ),
-                        ),
-                        child: Text(
-                          badge,
-                          style: TextStyle(
-                            color: badgeTextColor,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                  ],
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF1B1B1B),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
                 if (subtitle != null && subtitle.isNotEmpty)
                   Padding(
@@ -1204,19 +1178,41 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   ),
                 if (warningText != null && warningText.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(top: 4),
+                    padding: const EdgeInsets.only(top: 1),
                     child: Text(
                       warningText,
                       style: const TextStyle(
                         color: Color(0xFFCF2A2A),
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
+                        height: 1.1,
                       ),
                     ),
                   ),
               ],
             ),
           ),
+          if (showBadge && badge != null && badge.isNotEmpty) ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: badgeColor,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: badgeTextColor.withValues(alpha: 0.4),
+                ),
+              ),
+              child: Text(
+                badge,
+                style: TextStyle(
+                  color: badgeTextColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
