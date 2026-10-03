@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../utils/app_navigation.dart';
 import '../../../models/participant_invite_model.dart';
 import '../../../services/mock_invite_service.dart';
 import '../../../dtos/event_card_dto.dart';
@@ -113,7 +114,7 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
         title: const Text('Adicionar participante'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => AppNavigation.back(context),
         ),
       ),
       body: _loading
@@ -224,7 +225,7 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                                 Expanded(
                                   flex: 2,
                                   child: ElevatedButton(
-                                    onPressed: () => Navigator.of(context).pop(),
+                                    onPressed: () => AppNavigation.back(context),
                                     style: const ButtonStyle(
                                       minimumSize: WidgetStatePropertyAll(
                                         Size.fromHeight(48),
@@ -272,15 +273,22 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                         subtitle: const Text('Inclua um dependente'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => IncluirDependenteScreen(
-                                eventId: widget.eventId,
-                                eventParticipants: _event?.participants ?? const [],
-                                event: _event,
-                              ),
-                            ),
-                          );
+                          Navigator.of(context)
+                             .push<bool>(
+                               MaterialPageRoute(
+                                 builder: (_) => IncluirDependenteScreen(
+                                   eventId: widget.eventId,
+                                   eventParticipants:
+                                       _event?.participants ?? const [],
+                                   event: _event,
+                                 ),
+                               ),
+                             )
+                             .then((changed) {
+                               if (changed == true && context.mounted) {
+                                 AppNavigation.back(context, true);
+                               }
+                             });
                         },
                       ),
                     ),

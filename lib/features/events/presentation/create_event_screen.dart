@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:go_router/go_router.dart';
+
+import '../../../utils/app_navigation.dart';
 
 import '../../../dtos/new_event_dto.dart';
 import '../../../services/firestore/event_service.dart';
@@ -117,13 +118,13 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Evento criado com sucesso!')),
         );
-        context.pop(true);
+        AppNavigation.back(context, true);
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao criar evento: $e')),
         );
-        context.pop(false);
+        AppNavigation.back(context, false);
       } finally {
         if (mounted) {
           setState(() {
@@ -181,7 +182,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         title: const Text('Novo Evento'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => AppNavigation.back(context),
         ),
       ),
       body: Padding(

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:local_auth/local_auth.dart';
 
+import '../../../utils/app_navigation.dart';
 import '../../../widgets/user_avatar.dart';
 import '../../../dtos/event_card_dto.dart';
 import '../../../services/firestore/event_service.dart';
@@ -184,7 +185,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     try {
       await _eventService.deleteEvent(event.id);
       if (!context.mounted) return;
-      Navigator.of(context).pop(true);
+      AppNavigation.back(context, true);
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -251,7 +252,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             centerTitle: true,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => AppNavigation.back(context),
             ),
           ),
           body: SafeArea(
@@ -317,13 +318,20 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                               const Spacer(),
                               if (!shouldShowRevealBanner)
                                 TextButton.icon(
-                                  onPressed: () => Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => AdicionarPessoaScreen(
-                                        eventId: widget.eventId,
-                                      ),
-                                    ),
-                                  ),
+                                  onPressed: () async {
+                                    final changed = await Navigator.of(context)
+                                        .push<bool>(
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                AdicionarPessoaScreen(
+                                                  eventId: widget.eventId,
+                                                ),
+                                          ),
+                                        );
+                                    if (changed == true && mounted) {
+                                      await _refreshEventDetails();
+                                    }
+                                  },
                                   icon: const Icon(Icons.add, size: 22),
                                   label: const Text('Convidar'),
                                   style: TextButton.styleFrom(
@@ -518,7 +526,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     return EventTitleCard(
       event: event,
       isAdmin: isAdmin,
-      onBack: () => Navigator.of(context).pop(),
+      onBack: () => AppNavigation.back(context),
       onEdit: () => _editEvent(event),
       onDelete: () => _confirmDeleteEvent(context, event),
       onDevAddAll: () => _devAddAllUsersToParticipants(context),

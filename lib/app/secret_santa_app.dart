@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
+import '../utils/app_navigation.dart';
 
 import '../features/about/presentation/about_screen.dart';
 import '../features/auth/data/google_auth_api.dart';
@@ -80,19 +81,21 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
         ),
         GoRoute(
           path: '/about',
-          builder: (context, state) => const AboutScreen(),
+          builder: (context, state) => const BackScope(child: AboutScreen()),
         ),
         GoRoute(
           path: '/create-group',
-          builder: (context, state) => const CreateGroupScreen(),
+          builder: (context, state) => const BackScope(child: CreateGroupScreen()),
         ),
         GoRoute(
           path: '/group-details',
-          builder: (context, state) => const GroupDetailsScreen(),
+          builder: (context, state) => const BackScope(child: GroupDetailsScreen()),
         ),
         GoRoute(
           path: '/create-event',
-          builder: (context, state) => CreateEventScreen(eventService: _eventService), // Passando o eventService
+          builder: (context, state) => BackScope(
+            child: CreateEventScreen(eventService: _eventService),
+          ),
         ),
         GoRoute(
           // Deep link de convite: secretsanta://invite/<eventId>
@@ -127,13 +130,13 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
         ),
         GoRoute(
           path: '/scan-invite',
-          builder: (context, state) => const ScanInviteScreen(),
+          builder: (context, state) => const BackScope(child: ScanInviteScreen()),
         ),
         GoRoute(
           path: '/event-details/:id',
           builder: (context, state) {
             final eventId = state.pathParameters['id']!;
-            return EventDetailsScreen(eventId: eventId);
+            return BackScope(child: EventDetailsScreen(eventId: eventId));
           },
         ),
         GoRoute(
@@ -144,9 +147,11 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
                 : const <Map<String, dynamic>>[];
             final eventId = state.pathParameters['id'] ??
                 (state.extra is Map ? (state.extra as Map)['eventId']?.toString() ?? '' : '');
-            return IncluirDependenteScreen(
-              eventId: eventId,
-              eventParticipants: participants,
+            return BackScope(
+              child: IncluirDependenteScreen(
+                eventId: eventId,
+                eventParticipants: participants,
+              ),
             );
           },
         ),

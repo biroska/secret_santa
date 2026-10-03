@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import '../../../utils/app_navigation.dart';
 import '../../../widgets/user_avatar.dart';
 import '../../../dtos/event_card_dto.dart';
 import '../../../services/firestore/event_service.dart';
@@ -80,7 +81,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
         const SnackBar(content: Text('Evento atualizado com sucesso.')),
       );
       _hasChanges = true;
-      Navigator.of(context).pop(true);
+      AppNavigation.back(context, true);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -187,7 +188,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
     });
   }
 
-  void _close() => Navigator.of(context).pop(_hasChanges);
+  void _close() => AppNavigation.back(context, _hasChanges);
 
   @override
   Widget build(BuildContext context) {

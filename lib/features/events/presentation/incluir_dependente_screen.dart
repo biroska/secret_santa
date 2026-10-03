@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../dtos/event_card_dto.dart';
+import '../../../utils/app_navigation.dart';
 import '../../../widgets/user_avatar.dart';
 import 'event_title_card.dart';
 import '../../../services/firestore/event_service.dart';
@@ -225,20 +225,7 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
         ),
       );
 
-      if (_isEditing) {
-        Navigator.of(context).pop(true);
-        return;
-      }
-
-      final router = GoRouter.maybeOf(context);
-      if (router != null && widget.eventId.trim().isNotEmpty) {
-        router.go('/event-details/${widget.eventId}');
-        return;
-      }
-
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop(true);
-      }
+      AppNavigation.back(context, true);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -268,7 +255,7 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => AppNavigation.back(context),
         ),
       ),
       body: SafeArea(
@@ -503,7 +490,7 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () => AppNavigation.back(context),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFF1F2937),
                         padding: const EdgeInsets.symmetric(vertical: 16),
