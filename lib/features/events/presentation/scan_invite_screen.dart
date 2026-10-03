@@ -74,7 +74,10 @@ class _ScanInviteScreenState extends State<ScanInviteScreen> {
         return;
       }
 
-      final joined = await _eventService.joinEventByCode(normalizedCode, user.uid);
+      final joined = await _eventService.joinEventByCode(
+        normalizedCode,
+        user.uid,
+      );
 
       if (!mounted) return;
 
@@ -155,7 +158,11 @@ class _ScanInviteScreenState extends State<ScanInviteScreen> {
   @override
   Widget build(BuildContext context) {
     // On web/desktop, mobile_scanner may not be supported — fall back to paste UI
-    if (kIsWeb || ![TargetPlatform.android, TargetPlatform.iOS].contains(defaultTargetPlatform)) {
+    if (kIsWeb ||
+        ![
+          TargetPlatform.android,
+          TargetPlatform.iOS,
+        ].contains(defaultTargetPlatform)) {
       return Scaffold(
         appBar: AppBar(title: const Text('Escanear convite')),
         body: Padding(
@@ -163,7 +170,9 @@ class _ScanInviteScreenState extends State<ScanInviteScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Scanner indisponível nesta plataforma. Cole o conteúdo do QR abaixo:'),
+              const Text(
+                'Scanner indisponível nesta plataforma. Cole o conteúdo do QR abaixo:',
+              ),
               const SizedBox(height: 12),
               _PasteFallback(
                 isLoading: _isLoading,
@@ -187,10 +196,7 @@ class _ScanInviteScreenState extends State<ScanInviteScreen> {
       ),
       body: Stack(
         children: [
-          MobileScanner(
-            controller: _controller,
-            onDetect: _onDetect,
-          ),
+          MobileScanner(controller: _controller, onDetect: _onDetect),
           if (_isLoading)
             const ColoredBox(
               color: Colors.black45,
@@ -231,7 +237,10 @@ class _PasteFallbackState extends State<_PasteFallback> {
       children: [
         TextField(
           controller: _controller,
-          decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Conteúdo do QR / URL'),
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            hintText: 'Conteúdo do QR / URL',
+          ),
           minLines: 1,
           maxLines: 3,
         ),

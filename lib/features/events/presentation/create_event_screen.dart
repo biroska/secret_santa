@@ -7,10 +7,7 @@ import '../../../dtos/new_event_dto.dart';
 import '../../../services/firestore/event_service.dart';
 
 class CreateEventScreen extends StatefulWidget {
-  const CreateEventScreen({
-    super.key,
-    required this.eventService,
-  });
+  const CreateEventScreen({super.key, required this.eventService});
 
   final EventService eventService;
 
@@ -54,8 +51,12 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-      prefixIcon: icon == null ? null : Icon(icon, size: 20, color: Colors.grey[600]),
-      suffixIcon: icon == null ? null : Icon(icon, size: 20, color: Colors.grey[600]),
+      prefixIcon: icon == null
+          ? null
+          : Icon(icon, size: 20, color: Colors.grey[600]),
+      suffixIcon: icon == null
+          ? null
+          : Icon(icon, size: 20, color: Colors.grey[600]),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: const BorderSide(color: Color(0xFFE6E8EC)),
@@ -121,9 +122,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         AppNavigation.back(context, true);
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao criar evento: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro ao criar evento: $e')));
         AppNavigation.back(context, false);
       } finally {
         if (mounted) {
@@ -161,7 +162,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       setState(() {
         _sliderMax = normalized;
         if (_giftValue > _sliderMax) _giftValue = _sliderMax.toDouble();
-        _giftValue = ((_giftValue / 10).round() * 10).clamp(0, _sliderMax).toDouble();
+        _giftValue = ((_giftValue / 10).round() * 10)
+            .clamp(0, _sliderMax)
+            .toDouble();
       });
     });
   }
@@ -221,7 +224,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _eventDateController,
-                decoration: _inputDecoration('Data do Evento', icon: Icons.calendar_today),
+                decoration: _inputDecoration(
+                  'Data do Evento',
+                  icon: Icons.calendar_today,
+                ),
                 readOnly: true,
                 onTap: () => _selectDate(context),
                 validator: (value) {
@@ -256,8 +262,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                           divisions: _sliderMax > 0 ? (_sliderMax ~/ 10) : null,
                           label: _giftValue.round().toString(),
                           onChanged: (val) => setState(() {
-                            final rounded = ((val / 10).round() * 10).toDouble();
-                            _giftValue = rounded.clamp(0, _sliderMax).toDouble();
+                            final rounded = ((val / 10).round() * 10)
+                                .toDouble();
+                            _giftValue = rounded
+                                .clamp(0, _sliderMax)
+                                .toDouble();
                           }),
                         ),
                       ),

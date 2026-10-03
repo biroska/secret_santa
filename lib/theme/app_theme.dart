@@ -33,6 +33,13 @@ abstract final class AppTheme {
         backgroundColor: scheme.inversePrimary,
         foregroundColor: scheme.onSurface,
       ),
+      cardTheme: CardThemeData(
+        elevation: 1,
+        margin: EdgeInsets.zero,
+        color: scheme.surfaceContainerLow,
+        surfaceTintColor: scheme.surfaceTint,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: scheme.primary,
         foregroundColor: scheme.onPrimary,

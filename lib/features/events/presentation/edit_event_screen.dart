@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../../../utils/app_navigation.dart';
+import '../../../widgets/app_card.dart';
 import '../../../widgets/user_avatar.dart';
 import '../../../dtos/event_card_dto.dart';
 import '../../../services/firestore/event_service.dart';
@@ -215,20 +216,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
+                  AppCard(
                     child: Column(
                       children: [
                         ListTile(
@@ -386,13 +374,9 @@ class EditEventParticipantCard extends StatelessWidget {
               ? const Color(0xFFB07A1E)
               : const Color(0xFF3D8F3D));
 
-    return Container(
+    return AppCard(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-      ),
       child: Row(
         children: [
           if (!isAdmin)

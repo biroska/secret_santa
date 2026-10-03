@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../dtos/event_card_dto.dart';
 import '../../../utils/app_navigation.dart';
+import '../../../widgets/app_card.dart';
 import '../../../widgets/user_avatar.dart';
 import 'event_title_card.dart';
 import '../../../services/firestore/event_service.dart';
@@ -127,13 +128,9 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
     required String? avatarUrl,
     required VoidCallback onToggle,
   }) {
-    return Container(
+    return AppCard(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.only(left: 8, right: 12, top: 10, bottom: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-      ),
       child: Row(
         children: [
           Checkbox(
@@ -267,7 +264,9 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                 EventTitleCard(
                   event: widget.event!,
                   isAdmin: false,
-                  backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).appBarTheme.backgroundColor,
                   includeOuterPadding: false,
                 )
               else
@@ -398,13 +397,8 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                         ),
                         const SizedBox(height: 12),
                         if (_responsaveisDisponiveis.isEmpty)
-                          Container(
-                            width: double.infinity,
+                          AppCard(
                             padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(14),
-                            ),
                             child: const Text(
                               'Nenhum participante disponível para ser responsável.',
                               style: TextStyle(color: Color(0xFF667085)),
@@ -431,12 +425,8 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                             },
                           ),
                         const SizedBox(height: 18),
-                        Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE7EEF4),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
+                        AppCard(
+                          color: const Color(0xFFE7EEF4),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [

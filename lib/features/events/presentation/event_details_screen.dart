@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:local_auth/local_auth.dart';
 
 import '../../../utils/app_navigation.dart';
+import '../../../widgets/app_card.dart';
 import '../../../widgets/user_avatar.dart';
 import '../../../dtos/event_card_dto.dart';
 import '../../../services/firestore/event_service.dart';
@@ -598,20 +599,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         ? dateFormat.format(event.eventDate!)
         : 'A definir';
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return AppCard(
       child: Column(
         children: [
           Row(
@@ -899,133 +887,99 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   }
 
   Widget _buildAdminDrawCard() {
-    return InkWell(
+    return AppCard(
       onTap: _showDrawConfirmationDialog,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(18, 12, 12, 10),
-        decoration: BoxDecoration(
-          color: const Color(0xFFEAF5EC),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+      color: const Color(0xFFEAF5EC),
+      padding: const EdgeInsets.fromLTRB(18, 12, 12, 10),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: Color(0xFF2E8A4A),
+              borderRadius: BorderRadius.circular(10),
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: Color(0xFF2E8A4A),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.card_giftcard_rounded,
-                color: Colors.white,
-                // size: 32,
-              ),
+            child: const Icon(
+              Icons.card_giftcard_rounded,
+              color: Colors.white,
+              // size: 32,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: RichText(
-                text: const TextSpan(
-                  style: TextStyle(
-                    color: Color(0xFF2E8A4A),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    height: 1.3,
-                  ),
-                  children: [
-                    TextSpan(text: 'Realizar sorteio\n'),
-                    TextSpan(
-                      text: 'Após confirmar, o evento não poderá ser alterado.',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ],
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: RichText(
+              text: const TextSpan(
+                style: TextStyle(
+                  color: Color(0xFF2E8A4A),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  height: 1.3,
                 ),
+                children: [
+                  TextSpan(text: 'Realizar sorteio\n'),
+                  TextSpan(
+                    text: 'Após confirmar, o evento não poderá ser alterado.',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w400),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildRevealBanner() {
-    return InkWell(
+    return AppCard(
       onTap: _isFriendRevealLoading ? null : _revealMyFriend,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFDF3A4A),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: RichText(
-                text: const TextSpan(
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    height: 1.3,
-                  ),
-                  children: [
-                    TextSpan(text: 'O Sorteio Já Aconteceu!\n'),
-                    TextSpan(
-                      text: 'Revele o seu amigo secreto',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ],
+      color: const Color(0xFFDF3A4A),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: RichText(
+              text: const TextSpan(
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  height: 1.3,
                 ),
+                children: [
+                  TextSpan(text: 'O Sorteio Já Aconteceu!\n'),
+                  TextSpan(
+                    text: 'Revele o seu amigo secreto',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w400),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 12),
-            Container(
-              width: 56,
-              height: 56,
-              decoration: const BoxDecoration(
-                color: Color(0xFFF7C74B),
-                shape: BoxShape.circle,
-              ),
-              child: _isFriendRevealLoading
-                  ? const Padding(
-                      padding: EdgeInsets.all(14),
-                      child: CircularProgressIndicator(
-                        color: Color(0xFFCB4A2A),
-                        strokeWidth: 3,
-                      ),
-                    )
-                  : const Icon(
-                      Icons.card_giftcard_rounded,
+          ),
+          const SizedBox(width: 12),
+          Container(
+            width: 56,
+            height: 56,
+            decoration: const BoxDecoration(
+              color: Color(0xFFF7C74B),
+              shape: BoxShape.circle,
+            ),
+            child: _isFriendRevealLoading
+                ? const Padding(
+                    padding: EdgeInsets.all(14),
+                    child: CircularProgressIndicator(
                       color: Color(0xFFCB4A2A),
-                      size: 32,
+                      strokeWidth: 3,
                     ),
-            ),
-          ],
-        ),
+                  )
+                : const Icon(
+                    Icons.card_giftcard_rounded,
+                    color: Color(0xFFCB4A2A),
+                    size: 32,
+                  ),
+          ),
+        ],
       ),
     );
   }
@@ -1149,12 +1103,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     String? warningText,
     String? avatarUrl,
   }) {
-    return Container(
+    return AppCard(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-      ),
       child: Row(
         children: [
           UserAvatar(photoUrl: avatarUrl),

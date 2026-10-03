@@ -100,9 +100,7 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Não foi possível compartilhar o convite: $e'),
-        ),
+        SnackBar(content: Text('Não foi possível compartilhar o convite: $e')),
       );
     }
   }
@@ -129,7 +127,9 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                       EventTitleCard(
                         event: _event!,
                         isAdmin: false,
-                        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+                        backgroundColor: Theme.of(
+                          context,
+                        ).appBarTheme.backgroundColor,
                         includeOuterPadding: false,
                       )
                     else
@@ -147,7 +147,9 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                       ),
                     const SizedBox(height: 18),
                     Card(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.all(12),
                         child: Column(
@@ -160,16 +162,30 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                                     color: const Color(0xFFE9F3FA),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: const Icon(Icons.qr_code, color: Color(0xFF2C6F9F)),
+                                  child: const Icon(
+                                    Icons.qr_code,
+                                    color: Color(0xFF2C6F9F),
+                                  ),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Text(_model!.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                      Text(
+                                        _model!.title,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                       const SizedBox(height: 4),
-                                      Text(_model!.subtitle, style: const TextStyle(color: Color(0xFF667085))),
+                                      Text(
+                                        _model!.subtitle,
+                                        style: const TextStyle(
+                                          color: Color(0xFF667085),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -181,7 +197,9 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: const Color(0xFFE5E7EB)),
+                                border: Border.all(
+                                  color: const Color(0xFFE5E7EB),
+                                ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withValues(alpha: 0.06),
@@ -225,7 +243,8 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                                 Expanded(
                                   flex: 2,
                                   child: ElevatedButton(
-                                    onPressed: () => AppNavigation.back(context),
+                                    onPressed: () =>
+                                        AppNavigation.back(context),
                                     style: const ButtonStyle(
                                       minimumSize: WidgetStatePropertyAll(
                                         Size.fromHeight(48),
@@ -266,29 +285,36 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                     ),
                     const SizedBox(height: 14),
                     Card(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       child: ListTile(
-                        leading: const CircleAvatar(child: Icon(Icons.person_outline, color: Color(0xFF8A5B00))),
+                        leading: const CircleAvatar(
+                          child: Icon(
+                            Icons.person_outline,
+                            color: Color(0xFF8A5B00),
+                          ),
+                        ),
                         title: const Text('Dependente'),
                         subtitle: const Text('Inclua um dependente'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () {
                           Navigator.of(context)
-                             .push<bool>(
-                               MaterialPageRoute(
-                                 builder: (_) => IncluirDependenteScreen(
-                                   eventId: widget.eventId,
-                                   eventParticipants:
-                                       _event?.participants ?? const [],
-                                   event: _event,
-                                 ),
-                               ),
-                             )
-                             .then((changed) {
-                               if (changed == true && context.mounted) {
-                                 AppNavigation.back(context, true);
-                               }
-                             });
+                              .push<bool>(
+                                MaterialPageRoute(
+                                  builder: (_) => IncluirDependenteScreen(
+                                    eventId: widget.eventId,
+                                    eventParticipants:
+                                        _event?.participants ?? const [],
+                                    event: _event,
+                                  ),
+                                ),
+                              )
+                              .then((changed) {
+                                if (changed == true && context.mounted) {
+                                  AppNavigation.back(context, true);
+                                }
+                              });
                         },
                       ),
                     ),
