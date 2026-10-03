@@ -1,3 +1,4 @@
+import '../../../widgets/app_snack_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -138,19 +139,14 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       });
 
       if (refreshedEvent == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Não foi possível atualizar os participantes no momento.',
-            ),
-          ),
+        AppSnackBar.error(
+          context,
+          'Não foi possível atualizar os participantes no momento.',
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao atualizar os dados do evento: $e')),
-      );
+      AppSnackBar.error(context, 'Erro ao atualizar os dados do evento: $e');
     }
   }
 
@@ -189,9 +185,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       AppNavigation.back(context, true);
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Não foi possível excluir o evento: $e')),
-      );
+      AppSnackBar.error(context, 'Não foi possível excluir o evento: $e');
     }
   }
 
@@ -479,10 +473,9 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       final usersSnap = await firestore.collection('users').get();
       if (usersSnap.docs.isEmpty) {
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Nenhum usuário encontrado na coleção users.'),
-          ),
+        AppSnackBar.error(
+          context,
+          'Nenhum usuário encontrado na coleção users.',
         );
         return;
       }
@@ -497,10 +490,9 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       }
 
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Processados ${usersSnap.docs.length} usuários.'),
-        ),
+      AppSnackBar.success(
+        context,
+        'Processados ${usersSnap.docs.length} usuários.',
       );
 
       // Recarregar detalhes do evento para refletir alterações
@@ -508,9 +500,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     } catch (e) {
       debugPrint('Erro devAddAllUsers: $e');
       if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Erro ao adicionar usuários: $e')));
+      AppSnackBar.error(context, 'Erro ao adicionar usuários: $e');
     }
   }
 
@@ -571,9 +561,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Não foi possível validar o sorteio: $e')),
-      );
+      AppSnackBar.error(context, 'Não foi possível validar o sorteio: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -715,12 +703,9 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
       if (!deviceSupported && !canCheckBiometrics) {
         if (!mounted) return false;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Este dispositivo não suporta confirmação de desbloqueio.',
-            ),
-          ),
+        AppSnackBar.error(
+          context,
+          'Este dispositivo não suporta confirmação de desbloqueio.',
         );
         return false;
       }
@@ -733,22 +718,15 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       );
 
       if (!authenticated && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Confirmação de desbloqueio cancelada.'),
-          ),
-        );
+        AppSnackBar.error(context, 'Confirmação de desbloqueio cancelada.');
       }
 
       return authenticated;
     } catch (e) {
       if (!mounted) return false;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Não foi possível confirmar o desbloqueio do celular: $e',
-          ),
-        ),
+      AppSnackBar.error(
+        context,
+        'Não foi possível confirmar o desbloqueio do celular: $e',
       );
       return false;
     }
@@ -818,20 +796,18 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       await _drawService.performDraw(widget.eventId);
       if (!mounted) return;
       await _refreshEventDetails();
-      messenger?.showSnackBar(
-        const SnackBar(content: Text('Sorteio realizado com sucesso.')),
-      );
+      AppSnackBar.successOn(messenger, 'Sorteio realizado com sucesso.');
     } on DrawException catch (e) {
       if (!mounted) return;
-      messenger?.showSnackBar(
-        SnackBar(
-          content: Text('Não foi possível realizar o sorteio: ${e.message}'),
-        ),
+      AppSnackBar.errorOn(
+        messenger,
+        'Não foi possível realizar o sorteio: ${e.message}',
       );
     } catch (e) {
       if (!mounted) return;
-      messenger?.showSnackBar(
-        SnackBar(content: Text('Não foi possível confirmar o sorteio: $e')),
+      AppSnackBar.errorOn(
+        messenger,
+        'Não foi possível confirmar o sorteio: $e',
       );
     } finally {
       _removeDrawLoadingOverlay();
@@ -847,12 +823,9 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
       if (!isDeviceSupported && !canCheckBiometrics) {
         if (!mounted) return false;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Este dispositivo não suporta confirmação de desbloqueio.',
-            ),
-          ),
+        AppSnackBar.error(
+          context,
+          'Este dispositivo não suporta confirmação de desbloqueio.',
         );
         return false;
       }
@@ -865,22 +838,15 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       );
 
       if (!authenticated && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Confirmação de desbloqueio cancelada.'),
-          ),
-        );
+        AppSnackBar.error(context, 'Confirmação de desbloqueio cancelada.');
       }
 
       return authenticated;
     } catch (e) {
       if (!mounted) return false;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Não foi possível confirmar o desbloqueio do celular: $e',
-          ),
-        ),
+      AppSnackBar.error(
+        context,
+        'Não foi possível confirmar o desbloqueio do celular: $e',
       );
       return false;
     }
@@ -1018,15 +984,12 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       });
     } on DrawException catch (e) {
       if (!mounted || eventId != widget.eventId) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      AppSnackBar.error(context, e.message);
     } catch (e) {
       if (!mounted || eventId != widget.eventId) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Não foi possível revelar seu amigo secreto: $e'),
-        ),
+      AppSnackBar.error(
+        context,
+        'Não foi possível revelar seu amigo secreto: $e',
       );
     } finally {
       if (mounted && eventId == widget.eventId) {

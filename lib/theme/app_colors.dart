@@ -12,4 +12,7 @@ abstract final class AppColors {
 
   /// Fundo suave para gradientes ou áreas secundárias.
   static const Color surfaceTintBlue = Color(0xFFE8EEF7);
+
+  /// Fundo do SnackBar de erro.
+  static const Color snackError = Color(0xFFF44336);
 }

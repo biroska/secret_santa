@@ -1,3 +1,4 @@
+import '../../../widgets/app_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -64,9 +65,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
     final rawGiftValue = _giftValueController.text.trim();
     final giftValue = rawGiftValue.isEmpty ? null : int.tryParse(rawGiftValue);
     if (rawGiftValue.isNotEmpty && (giftValue == null || giftValue < 0)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Informe um valor de presente válido.')),
-      );
+      AppSnackBar.error(context, 'Informe um valor de presente válido.');
       return;
     }
 
@@ -78,16 +77,12 @@ class _EditEventScreenState extends State<EditEventScreen> {
         maxGiftValue: giftValue,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Evento atualizado com sucesso.')),
-      );
+      AppSnackBar.success(context, 'Evento atualizado com sucesso.');
       _hasChanges = true;
       AppNavigation.back(context, true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Não foi possível salvar as alterações: $e')),
-      );
+      AppSnackBar.error(context, 'Não foi possível salvar as alterações: $e');
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -99,10 +94,9 @@ class _EditEventScreenState extends State<EditEventScreen> {
   ) async {
     final participantId = participant['participantId'] as String?;
     if (participantId == null || participantId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Não foi possível identificar o participante.'),
-        ),
+      AppSnackBar.error(
+        context,
+        'Não foi possível identificar o participante.',
       );
       return;
     }
@@ -168,14 +162,10 @@ class _EditEventScreenState extends State<EditEventScreen> {
       if (!mounted) return;
       await widget.onParticipantsChanged();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Participante removido com sucesso.')),
-      );
+      AppSnackBar.success(context, 'Participante removido com sucesso.');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Não foi possível remover: $e')));
+      AppSnackBar.error(context, 'Não foi possível remover: $e');
     }
   }
 

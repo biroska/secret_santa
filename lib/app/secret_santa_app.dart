@@ -1,3 +1,4 @@
+import '../widgets/app_snack_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -85,17 +86,18 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
         ),
         GoRoute(
           path: '/create-group',
-          builder: (context, state) => const BackScope(child: CreateGroupScreen()),
+          builder: (context, state) =>
+              const BackScope(child: CreateGroupScreen()),
         ),
         GoRoute(
           path: '/group-details',
-          builder: (context, state) => const BackScope(child: GroupDetailsScreen()),
+          builder: (context, state) =>
+              const BackScope(child: GroupDetailsScreen()),
         ),
         GoRoute(
           path: '/create-event',
-          builder: (context, state) => BackScope(
-            child: CreateEventScreen(eventService: _eventService),
-          ),
+          builder: (context, state) =>
+              BackScope(child: CreateEventScreen(eventService: _eventService)),
         ),
         GoRoute(
           // Deep link de convite: secretsanta://invite/<eventId>
@@ -109,7 +111,10 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
           },
           builder: (context, state) {
             final eventId = state.pathParameters['eventId'] ?? '';
-            return EventInviteScreen(eventId: eventId, eventService: _eventService);
+            return EventInviteScreen(
+              eventId: eventId,
+              eventService: _eventService,
+            );
           },
         ),
         GoRoute(
@@ -125,12 +130,16 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
           },
           builder: (context, state) {
             final eventId = state.pathParameters['eventId'] ?? '';
-            return EventInviteScreen(eventId: eventId, eventService: _eventService);
+            return EventInviteScreen(
+              eventId: eventId,
+              eventService: _eventService,
+            );
           },
         ),
         GoRoute(
           path: '/scan-invite',
-          builder: (context, state) => const BackScope(child: ScanInviteScreen()),
+          builder: (context, state) =>
+              const BackScope(child: ScanInviteScreen()),
         ),
         GoRoute(
           path: '/event-details/:id',
@@ -145,8 +154,11 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
             final participants = state.extra is List<Map<String, dynamic>>
                 ? state.extra as List<Map<String, dynamic>>
                 : const <Map<String, dynamic>>[];
-            final eventId = state.pathParameters['id'] ??
-                (state.extra is Map ? (state.extra as Map)['eventId']?.toString() ?? '' : '');
+            final eventId =
+                state.pathParameters['id'] ??
+                (state.extra is Map
+                    ? (state.extra as Map)['eventId']?.toString() ?? ''
+                    : '');
             return BackScope(
               child: IncluirDependenteScreen(
                 eventId: eventId,
@@ -200,16 +212,12 @@ class _UnknownDeepLinkScreenState extends State<_UnknownDeepLinkScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.go('/home');
-      rootScaffoldMessengerKey.currentState?.showSnackBar(
-        const SnackBar(content: Text('Evento não encontrado.')),
-      );
+      AppSnackBar.errorRoot('Evento não encontrado.');
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }

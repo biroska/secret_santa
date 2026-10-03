@@ -1,3 +1,4 @@
+import '../../../widgets/app_snack_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -54,9 +55,7 @@ class _ScanInviteScreenState extends State<ScanInviteScreen> {
   Future<void> _joinEventCode(String rawCode) async {
     final normalizedCode = _extractEventCode(rawCode);
     if (normalizedCode.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Código do evento não foi encontrado')),
-      );
+      AppSnackBar.error(context, 'Código do evento não foi encontrado');
       return;
     }
 
@@ -68,9 +67,7 @@ class _ScanInviteScreenState extends State<ScanInviteScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Usuário não autenticado.')),
-        );
+        AppSnackBar.error(context, 'Usuário não autenticado.');
         return;
       }
 
@@ -82,17 +79,13 @@ class _ScanInviteScreenState extends State<ScanInviteScreen> {
       if (!mounted) return;
 
       if (!joined) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Código do evento não foi encontrado')),
-        );
+        AppSnackBar.error(context, 'Código do evento não foi encontrado');
         // Permite tentar escanear novamente.
         _scanned = false;
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Você entrou no evento com sucesso!')),
-      );
+      AppSnackBar.success(context, 'Você entrou no evento com sucesso!');
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser != null) {
         context.go(
@@ -109,9 +102,7 @@ class _ScanInviteScreenState extends State<ScanInviteScreen> {
       }
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Não foi possível entrar no evento.')),
-      );
+      AppSnackBar.error(context, 'Não foi possível entrar no evento.');
       _scanned = false;
     } finally {
       if (mounted) {

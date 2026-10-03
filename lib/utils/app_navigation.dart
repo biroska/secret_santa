@@ -13,8 +13,7 @@ class AppNavigation {
   /// alcançáveis por `go` têm a Home como pai.
   static String fallbackParent(String location) => AppRoutes.HOME;
 
-  static bool canGoBack(BuildContext context) =>
-      Navigator.of(context).canPop();
+  static bool canGoBack(BuildContext context) => Navigator.of(context).canPop();
 
   static void back(BuildContext context, [Object? result]) {
     final navigator = Navigator.of(context);

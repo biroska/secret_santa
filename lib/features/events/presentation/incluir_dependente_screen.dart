@@ -1,3 +1,4 @@
+import '../../../widgets/app_snack_bar.dart';
 import 'package:flutter/material.dart';
 
 import '../../../dtos/event_card_dto.dart';
@@ -165,18 +166,12 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
     }
 
     if (_responsaveisSelecionados.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecione pelo menos um responsável.')),
-      );
+      AppSnackBar.error(context, 'Selecione pelo menos um responsável.');
       return;
     }
 
     if (widget.eventId.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Evento inválido para salvar o dependente.'),
-        ),
-      );
+      AppSnackBar.error(context, 'Evento inválido para salvar o dependente.');
       return;
     }
 
@@ -185,10 +180,9 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
         .where((participantId) => participantId.trim().isNotEmpty)
         .toList();
     if (responsibleIds.length != _responsaveisSelecionados.length) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Não foi possível identificar um dos responsáveis.'),
-        ),
+      AppSnackBar.error(
+        context,
+        'Não foi possível identificar um dos responsáveis.',
       );
       return;
     }
@@ -212,22 +206,17 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _isEditing
-                ? 'Dependente atualizado com sucesso.'
-                : 'Dependente salvo com sucesso.',
-          ),
-        ),
+      AppSnackBar.success(
+        context,
+        _isEditing
+            ? 'Dependente atualizado com sucesso.'
+            : 'Dependente salvo com sucesso.',
       );
 
       AppNavigation.back(context, true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Não foi possível salvar o dependente: $e')),
-      );
+      AppSnackBar.error(context, 'Não foi possível salvar o dependente: $e');
     }
   }
 

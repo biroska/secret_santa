@@ -123,11 +123,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
               ],
-              /*GoogleSignInButton(
-                onPressed: supported ? _onGoogleSignIn : null,
-                isLoading: _loading,
-              ),*/
-              Text( " Google login is supported? $supported" ),
               SignInButton(
                 Buttons.google,
                 onPressed: () {

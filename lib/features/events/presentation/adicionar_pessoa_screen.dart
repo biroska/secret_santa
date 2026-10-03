@@ -1,3 +1,4 @@
+import '../../../widgets/app_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -99,9 +100,7 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Não foi possível compartilhar o convite: $e')),
-      );
+      AppSnackBar.error(context, 'Não foi possível compartilhar o convite: $e');
     }
   }
 

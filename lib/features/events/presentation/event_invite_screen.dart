@@ -1,8 +1,8 @@
+import '../../../widgets/app_snack_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../app/app_keys.dart';
 import '../../../services/firestore/event_service.dart';
 
 /// Tela exibida imediatamente após o app ser aberto por um link de convite
@@ -33,16 +33,18 @@ class _EventInviteScreenState extends State<EventInviteScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _handleInvite());
   }
 
-  void _notify(String message) {
-    rootScaffoldMessengerKey.currentState?.showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+  void _notify(String message, {bool isError = false}) {
+    if (isError) {
+      AppSnackBar.errorRoot(message);
+    } else {
+      AppSnackBar.successRoot(message);
+    }
   }
 
   void _goToNotFound() {
     if (!mounted) return;
     context.go('/home');
-    _notify('Evento não encontrado.');
+    _notify('Evento não encontrado.', isError: true);
   }
 
   void _goToEvent(String message) {

@@ -1,3 +1,4 @@
+import '../../../widgets/app_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -116,15 +117,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         await widget.eventService.createEvent(newEventDto);
 
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Evento criado com sucesso!')),
-        );
+        AppSnackBar.success(context, 'Evento criado com sucesso!');
         AppNavigation.back(context, true);
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Erro ao criar evento: $e')));
+        AppSnackBar.error(context, 'Erro ao criar evento: $e');
         AppNavigation.back(context, false);
       } finally {
         if (mounted) {
