@@ -4,8 +4,6 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../utils/app_navigation.dart';
-import '../../../models/participant_invite_model.dart';
-import '../../../services/mock_invite_service.dart';
 import '../../../dtos/event_card_dto.dart';
 import '../../../services/firestore/event_service.dart';
 import 'event_title_card.dart';
@@ -13,16 +11,18 @@ import 'incluir_dependente_screen.dart';
 
 class AdicionarPessoaScreen extends StatefulWidget {
   final String eventId;
-  final ParticipantInviteModel? model;
 
-  const AdicionarPessoaScreen({super.key, required this.eventId, this.model});
+  const AdicionarPessoaScreen({super.key, required this.eventId});
 
   @override
   State<AdicionarPessoaScreen> createState() => _AdicionarPessoaScreenState();
 }
 
 class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
-  ParticipantInviteModel? _model;
+  static const String _inviteTitle = 'Participante';
+  static const String _inviteSubtitle =
+      'Peça para escanear o QR Code ou envie o link do evento.';
+
   EventCardDto? _event;
   bool _loading = true;
 
@@ -33,26 +33,23 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
   }
 
   Future<void> _loadData() async {
-    if (widget.model != null) {
-      _model = widget.model;
-    } else {
-      final service = MockInviteService();
-      _model = await service.getInviteForEvent(widget.eventId);
-    }
+    if (!_loading) setState(() => _loading = true);
 
-    // carregar dados do evento para exibir o título reutilizável
+    EventCardDto? event;
     try {
-      final eventService = EventService();
-      _event = await eventService.getEventById(widget.eventId);
+      event = await EventService().getEventById(widget.eventId);
     } catch (e) {
-      // ignorar erro e permitir que a tela continue com mock
       debugPrint('Erro ao carregar evento em AdicionarPessoaScreen: $e');
     }
 
     if (!mounted) return;
     setState(() {
+      _event = event;
       _loading = false;
     });
+    if (event == null) {
+      AppSnackBar.error(context, 'Não foi possível carregar o evento.');
+    }
   }
 
   /// Domínio do Firebase Hosting que responde por Android App Links
@@ -62,18 +59,11 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
   /// Link de convite compartilhável. Usa uma URL https (clicável em
   /// WhatsApp/SMS) que abre o app diretamente via Android App Link verificado
   /// e cai para a página de instalação (`public/install.html`) quando o app
-  /// não está instalado, com fallback ao link mock caso o evento real ainda
-  /// não tenha sido carregado.
-  String get _inviteLink {
-    final eventId = _event?.id;
-    if (eventId != null && eventId.isNotEmpty) {
-      return 'https://$_appLinkHost/event/$eventId';
-    }
-    return _model?.inviteLink ?? '';
-  }
+  /// não está instalado.
+  String get _inviteLink => 'https://$_appLinkHost/event/${_event?.id ?? ''}';
 
   Future<void> _shareLink() async {
-    if (_model == null) {
+    if (_event == null) {
       return;
     }
 
@@ -104,6 +94,28 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
     }
   }
 
+  Widget _buildLoadError() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Não foi possível carregar o evento.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadData,
+              child: const Text('Tentar novamente'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -116,34 +128,22 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
+          : _event == null
+          ? _buildLoadError()
           : SafeArea(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (_event != null)
-                      EventTitleCard(
-                        event: _event!,
-                        isAdmin: false,
-                        backgroundColor: Theme.of(
-                          context,
-                        ).appBarTheme.backgroundColor,
-                        includeOuterPadding: false,
-                      )
-                    else
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).appBarTheme.backgroundColor,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: const Text(
-                          'Participantes entram por QR Code ou link. Dependentes são cadastrados por você.',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
+                    EventTitleCard(
+                      event: _event!,
+                      isAdmin: false,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).appBarTheme.backgroundColor,
+                      includeOuterPadding: false,
+                    ),
                     const SizedBox(height: 18),
                     Card(
                       shape: RoundedRectangleBorder(
@@ -173,14 +173,14 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        _model!.title,
+                                        _inviteTitle,
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        _model!.subtitle,
+                                        _inviteSubtitle,
                                         style: const TextStyle(
                                           color: Color(0xFF667085),
                                         ),
@@ -209,19 +209,33 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(10),
-                                child: _event != null
-                                    ? Image.network(
-                                        'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${Uri.encodeComponent(_inviteLink)}',
+                                child: Image.network(
+                                  'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${Uri.encodeComponent(_inviteLink)}',
+                                  width: 200,
+                                  height: 200,
+                                  fit: BoxFit.cover,
+                                  loadingBuilder: (context, child, progress) =>
+                                      progress == null
+                                      ? child
+                                      : const SizedBox(
+                                          width: 200,
+                                          height: 200,
+                                          child: Center(
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                        ),
+                                  errorBuilder: (context, error, stack) =>
+                                      const SizedBox(
                                         width: 200,
                                         height: 200,
-                                        fit: BoxFit.cover,
-                                      )
-                                    : Image.asset(
-                                        _model!.qrAsset,
-                                        height: 200,
-                                        width: 200,
-                                        fit: BoxFit.cover,
+                                        child: Center(
+                                          child: Text(
+                                            'Não foi possível carregar o QR Code.',
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
                                       ),
+                                ),
                               ),
                             ),
                             if (_event?.name.isNotEmpty ?? false) ...[
