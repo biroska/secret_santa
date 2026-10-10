@@ -2,7 +2,6 @@ import '../../../widgets/app_snack_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:local_auth/local_auth.dart';
 
 import '../../../utils/app_navigation.dart';
@@ -465,45 +464,6 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     return '${parts[0]} ${parts[1]}';
   }
 
-  // DEV helper: insere todos usuários da coleção 'users' como participantes do evento
-  // Usa EventService.addParticipantIfNotExists para evitar duplicatas.
-  Future<void> _devAddAllUsersToParticipants(BuildContext context) async {
-    try {
-      final firestore = FirebaseFirestore.instance;
-      final usersSnap = await firestore.collection('users').get();
-      if (usersSnap.docs.isEmpty) {
-        if (!context.mounted) return;
-        AppSnackBar.error(
-          context,
-          'Nenhum usuário encontrado na coleção users.',
-        );
-        return;
-      }
-
-      for (var doc in usersSnap.docs) {
-        final uid = doc.id;
-        try {
-          await _eventService.addParticipantIfNotExists(widget.eventId, uid);
-        } catch (e) {
-          debugPrint('Falha ao processar usuário $uid: $e');
-        }
-      }
-
-      if (!context.mounted) return;
-      AppSnackBar.success(
-        context,
-        'Processados ${usersSnap.docs.length} usuários.',
-      );
-
-      // Recarregar detalhes do evento para refletir alterações
-      _fetchEventDetails();
-    } catch (e) {
-      debugPrint('Erro devAddAllUsers: $e');
-      if (!context.mounted) return;
-      AppSnackBar.error(context, 'Erro ao adicionar usuários: $e');
-    }
-  }
-
   Widget _buildHeader(
     BuildContext context,
     EventCardDto event,
@@ -520,7 +480,6 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       onBack: () => AppNavigation.back(context),
       onEdit: () => _editEvent(event),
       onDelete: () => _confirmDeleteEvent(context, event),
-      onDevAddAll: () => _devAddAllUsersToParticipants(context),
       showDrawValidationButton: canValidateDraw,
       onValidateDraw: _isDrawValidationLoading
           ? null

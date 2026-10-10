@@ -8,7 +8,6 @@ class EventTitleCard extends StatelessWidget {
   final VoidCallback? onBack;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
-  final VoidCallback? onDevAddAll;
   final bool showDrawValidationButton;
   final VoidCallback? onValidateDraw;
   final Color? backgroundColor;
@@ -21,7 +20,6 @@ class EventTitleCard extends StatelessWidget {
     this.onBack,
     this.onEdit,
     this.onDelete,
-    this.onDevAddAll,
     this.showDrawValidationButton = false,
     this.onValidateDraw,
     this.backgroundColor,
@@ -67,15 +65,6 @@ class EventTitleCard extends StatelessWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (isAdmin)
-                      IconButton(
-                        onPressed: onDevAddAll,
-                        icon: const Icon(Icons.add, color: Colors.white),
-                        tooltip:
-                            'DEV: adicionar todos usuários como participantes',
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
                     Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
