@@ -47,7 +47,7 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBrDQuRt9CHw-DKyNRJorOiHjclr9-vrJE',
+    apiKey: '',
     appId: '1:786022998658:web:5e5f0997e2bffd3126ca9b',
     messagingSenderId: '786022998658',
     projectId: 'galdinos-secret-santa',
