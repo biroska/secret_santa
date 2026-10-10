@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Política de Privacidade — SecretSanta</title>
+    <meta name="description" content="Política de Privacidade do aplicativo SecretSanta." />
+    <style>
+        :root {
+            --bg: #f7fafc;
+            --surface: #ffffff;
+            --text: #1a2a32;
+            --muted: #4a5d68;
+            --accent: #2c6f9f;
+            --border: #d9e3ea;
+            --hero: #0f2027;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.65;
+        }
+        header {
+            background: linear-gradient(160deg, #0f2027 0%, #1a3a45 55%, #2c6f9f 140%);
+            color: #fff;
+            padding: 48px 24px 40px;
+        }
+        header .wrap,
+        main {
+            max-width: 760px;
+            margin: 0 auto;
+        }
+        header h1 {
+            margin: 0 0 8px;
+            font-size: 1.75rem;
+        }
+        header p {
+            margin: 0;
+            opacity: 0.88;
+            max-width: 42rem;
+        }
+        .meta {
+            margin-top: 16px;
+            font-size: 0.9rem;
+            opacity: 0.75;
+        }
+        main {
+            padding: 32px 24px 64px;
+        }
+        section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px 28px;
+            margin-bottom: 16px;
+        }
+        h2 {
+            margin: 0 0 12px;
+            font-size: 1.15rem;
+            color: var(--hero);
+        }
+        h3 {
+            margin: 20px 0 8px;
+            font-size: 1rem;
+            color: var(--accent);
+        }
+        p, li { color: var(--muted); }
+        p:last-child, ul:last-child { margin-bottom: 0; }
+        ul { padding-left: 1.25rem; }
+        li { margin-bottom: 6px; }
+        a { color: var(--accent); }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 0.95rem;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: #eef4f8;
+            color: var(--hero);
+            font-weight: 600;
+        }
+        footer {
+            text-align: center;
+            padding: 0 24px 48px;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="wrap">
+        <h1>Política de Privacidade</h1>
+        <p>
+            Esta Política descreve como o aplicativo <strong>SecretSanta</strong>
+            (“App”, “nós”) coleta, usa, armazena e protege dados pessoais dos
+            usuários, em conformidade com a Lei Geral de Proteção de Dados
+            (LGPD — Lei nº 13.709/2018) e com as exigências da Google Play.
+        </p>
+        <p class="meta">Última atualização: 8 de outubro de 2026</p>
+    </div>
+</header>
+
+<main>
+    <section>
+        <h2>1. Quem somos</h2>
+        <p>
+            O SecretSanta é um aplicativo de organização de sorteios de Amigo
+            Secreto (eventos, participantes, listas de desejos e revelação do
+            sorteio). O tratamento dos dados é realizado pelo controlador do App,
+            responsável pelo projeto SecretSanta.
+        </p>
+        <p>
+            Contato para assuntos de privacidade:
+            <a href="mailto:secret.santa.developer@gmail.com">secret.santa.developer@gmail.com</a>
+        </p>
+    </section>
+
+    <section>
+        <h2>2. Dados que coletamos</h2>
+        <p>
+            Coletamos apenas os dados necessários para autenticação e para o
+            funcionamento dos eventos de Amigo Secreto.
+        </p>
+
+        <h3>2.1 Conta e autenticação</h3>
+        <p>
+            O login é feito exclusivamente via <strong>Google Sign-In</strong>,
+            integrado ao <strong>Firebase Authentication</strong>. Quando você
+            entra, recebemos e armazenamos:
+        </p>
+        <ul>
+            <li>Identificador único da conta (UID do Firebase)</li>
+            <li>Nome de exibição da conta Google</li>
+            <li>Endereço de e-mail</li>
+            <li>URL da foto de perfil fornecida pelo Google</li>
+            <li>Data de criação do perfil no App</li>
+        </ul>
+
+        <h3>2.2 Dados de eventos e participação</h3>
+        <ul>
+            <li>Título, descrição, data e status do evento</li>
+            <li>Identificação do administrador do evento</li>
+            <li>Lista de participantes (papel no evento, data de entrada)</li>
+            <li>Lista de desejos de presentes (<em>gift wish</em>)</li>
+            <li>Resultado do sorteio (quem presenteia quem)</li>
+            <li>Restrições de sorteio entre participantes, quando configuradas</li>
+        </ul>
+
+        <h3>2.3 Dependentes</h3>
+        <p>
+            Um participante pode cadastrar <strong>dependentes</strong> (pessoas
+            sem conta no App, por exemplo crianças ou familiares) informando:
+        </p>
+        <ul>
+            <li>Nome do dependente</li>
+            <li>Relação com o(s) responsável(is) no evento</li>
+            <li>Preferência sobre poder ou não sortear o responsável</li>
+            <li>Lista de desejos associada ao dependente, quando informada</li>
+        </ul>
+        <p>
+            Quem cadastra um dependente declara ter autorização para fornecer
+            esses dados e é responsável pela informação prestada.
+        </p>
+
+        <h3>2.4 Dados do dispositivo e permissões</h3>
+        <ul>
+            <li>
+                <strong>Câmera:</strong> usada apenas para ler códigos QR de
+                convite. As imagens não são gravadas nem enviadas aos nossos
+                servidores.
+            </li>
+            <li>
+                <strong>Biometria / bloqueio do aparelho:</strong> pode ser pedida
+                localmente (via sistema operacional) para revelar o resultado do
+                sorteio. Dados biométricos <strong>não</strong> são coletados,
+                armazenados nem transmitidos pelo App.
+            </li>
+            <li>
+                <strong>Internet:</strong> necessária para autenticação e
+                sincronização com o Firebase.
+            </li>
+        </ul>
+
+        <h3>2.5 O que não coletamos</h3>
+        <p>
+            Não coletamos localização precisa, contatos da agenda, microfone,
+            galeria de fotos do dispositivo, dados de pagamento nem identificadores
+            para publicidade. Também não utilizamos Firebase Analytics,
+            Crashlytics ou notificações push neste App.
+        </p>
+    </section>
+
+    <section>
+        <h2>3. Para que usamos os dados</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Finalidade</th>
+                <th>Exemplos</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Autenticar e identificar o usuário</td>
+                <td>Login com Google, manter sessão, exibir nome e foto</td>
+            </tr>
+            <tr>
+                <td>Operar o Amigo Secreto</td>
+                <td>Criar eventos, convidar pessoas, cadastrar desejos e dependentes</td>
+            </tr>
+            <tr>
+                <td>Gerar e revelar o sorteio</td>
+                <td>Cloud Functions no Firebase; revelação com autenticação local</td>
+            </tr>
+            <tr>
+                <td>Compartilhar convites</td>
+                <td>Links e códigos QR para entrar no evento</td>
+            </tr>
+            <tr>
+                <td>Atender solicitações do titular</td>
+                <td>Exclusão ou correção de dados mediante contato</td>
+            </tr>
+            </tbody>
+        </table>
+        <p>
+            Bases legais principais (LGPD): execução do contrato/serviço solicitado
+            pelo usuário (art. 7º, V), consentimento quando aplicável (art. 7º, I)
+            e legítimo interesse para manutenção segura do serviço (art. 7º, IX),
+            sem prejuízo dos direitos do titular.
+        </p>
+    </section>
+
+    <section>
+        <h2>4. Compartilhamento e serviços de terceiros</h2>
+        <p>
+            Não vendemos dados pessoais. Compartilhamos dados apenas com
+            provedores essenciais à operação do App:
+        </p>
+        <ul>
+            <li>
+                <strong>Google / Firebase</strong> (Authentication, Cloud Firestore,
+                Cloud Functions e Firebase Hosting): armazenamento e processamento
+                dos dados de conta, eventos e sorteios. Os dados são tratados
+                conforme as políticas do Google Cloud / Firebase.
+            </li>
+            <li>
+                <strong>Google Sign-In:</strong> autenticação da conta Google do
+                usuário.
+            </li>
+            <li>
+                <strong>Serviço de geração de QR Code (api.qrserver.com):</strong>
+                em algumas telas, a URL do convite pode ser enviada a esse serviço
+                apenas para renderizar a imagem do QR Code. Não enviamos senha nem
+                dados biométricos.
+            </li>
+        </ul>
+        <p>
+            Podemos divulgar dados se exigido por lei, ordem judicial ou
+            autoridade competente.
+        </p>
+    </section>
+
+    <section>
+        <h2>5. Armazenamento e retenção</h2>
+        <p>
+            Os dados de conta, eventos, participantes, desejos e sorteios ficam
+            armazenados no <strong>Cloud Firestore</strong> (Google Firebase),
+            com infraestrutura gerenciada pelo Google.
+        </p>
+        <p>
+            Mantemos os dados enquanto sua conta existir e enquanto forem
+            necessários para os eventos em que você participa. Você pode solicitar
+            a exclusão da conta e dos dados associados pelo e-mail de contato
+            indicado nesta Política. Após a exclusão, poderemos reter informações
+            mínimas quando houver obrigação legal.
+        </p>
+    </section>
+
+    <section>
+        <h2>6. Segurança</h2>
+        <p>
+            Adotamos medidas razoáveis de segurança, incluindo autenticação via
+            Google/Firebase, comunicação HTTPS e controle de acesso às funções de
+            sorteio no servidor. A revelação do resultado do sorteio pode exigir
+            autenticação local no dispositivo (biometria ou PIN do aparelho),
+            processada apenas pelo sistema operacional.
+        </p>
+        <p>
+            Nenhum sistema é 100% seguro. Recomendamos proteger sua conta Google
+            e não compartilhar o resultado do sorteio com terceiros.
+        </p>
+    </section>
+
+    <section>
+        <h2>7. Seus direitos (LGPD)</h2>
+        <p>Você pode solicitar, a qualquer momento:</p>
+        <ul>
+            <li>Confirmação da existência de tratamento</li>
+            <li>Acesso aos dados</li>
+            <li>Correção de dados incompletos, inexatos ou desatualizados</li>
+            <li>Anonimização, bloqueio ou eliminação de dados desnecessários</li>
+            <li>Informação sobre compartilhamentos</li>
+            <li>Revogação do consentimento, quando essa for a base legal</li>
+            <li>Eliminação dos dados pessoais tratados com consentimento</li>
+        </ul>
+        <p>
+            Para exercer esses direitos, envie um e-mail para
+            <a href="mailto:secret.santa.developer@gmail.com">secret.santa.developer@gmail.com</a>
+            com o assunto “Privacidade — SecretSanta”, preferencialmente pelo
+            mesmo e-mail da conta Google usada no App.
+        </p>
+    </section>
+
+    <section>
+        <h2>8. Crianças e dependentes</h2>
+        <p>
+            O App pode ser usado por famílias e grupos que incluam dependentes
+            menores de idade. Dados de menores só devem ser inseridos por quem
+            detém autoridade parental ou legal. Não direcionamos o App a crianças
+            para cadastro autônomo de conta: a conta exige login com Google.
+        </p>
+    </section>
+
+    <section>
+        <h2>9. Transferência internacional</h2>
+        <p>
+            Ao usar Firebase/Google, seus dados podem ser processados em
+            servidores localizados fora do Brasil. Nesses casos, o tratamento
+            ocorre segundo as salvaguardas e termos dos provedores Google/Firebase
+            e a legislação aplicável.
+        </p>
+    </section>
+
+    <section>
+        <h2>10. Alterações desta Política</h2>
+        <p>
+            Podemos atualizar esta Política para refletir mudanças no App ou na
+            legislação. A data de “Última atualização” no topo desta página indica
+            a versão vigente. O uso continuado do App após alterações relevantes
+            constitui ciência da nova versão.
+        </p>
+    </section>
+
+    <section>
+        <h2>11. Contato</h2>
+        <p>
+            Dúvidas, solicitações ou reclamações sobre privacidade:<br />
+            E-mail: <a href="mailto:secret.santa.developer@gmail.com">secret.santa.developer@gmail.com</a><br />
+            Aplicativo: SecretSanta
+        </p>
+    </section>
+</main>
+
+<footer>
+    SecretSanta — Política de Privacidade
+</footer>
+</body>
+</html>

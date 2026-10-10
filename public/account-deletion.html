@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Exclusão de conta e dados — SecretSanta</title>
+    <meta
+            name="description"
+            content="Como solicitar a exclusão da conta e dos dados pessoais no aplicativo SecretSanta."
+    />
+    <style>
+        :root {
+            --bg: #f7fafc;
+            --surface: #ffffff;
+            --text: #1a2a32;
+            --muted: #4a5d68;
+            --accent: #2c6f9f;
+            --border: #d9e3ea;
+            --hero: #0f2027;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.65;
+        }
+        header {
+            background: linear-gradient(160deg, #0f2027 0%, #1a3a45 55%, #2c6f9f 140%);
+            color: #fff;
+            padding: 48px 24px 40px;
+        }
+        header .wrap,
+        main {
+            max-width: 760px;
+            margin: 0 auto;
+        }
+        header h1 {
+            margin: 0 0 8px;
+            font-size: 1.75rem;
+        }
+        header p {
+            margin: 0;
+            opacity: 0.88;
+            max-width: 42rem;
+        }
+        .meta {
+            margin-top: 16px;
+            font-size: 0.9rem;
+            opacity: 0.75;
+        }
+        main {
+            padding: 32px 24px 64px;
+        }
+        section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px 28px;
+            margin-bottom: 16px;
+        }
+        h2 {
+            margin: 0 0 12px;
+            font-size: 1.15rem;
+            color: var(--hero);
+        }
+        p, li { color: var(--muted); }
+        p:last-child, ul:last-child, ol:last-child { margin-bottom: 0; }
+        ul, ol { padding-left: 1.25rem; }
+        li { margin-bottom: 8px; }
+        a { color: var(--accent); }
+        .email-box {
+            display: inline-block;
+            margin: 8px 0;
+            padding: 10px 14px;
+            background: #eef4f8;
+            border-radius: 8px;
+            font-weight: 600;
+            color: var(--hero);
+            word-break: break-all;
+        }
+        footer {
+            text-align: center;
+            padding: 0 24px 48px;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="wrap">
+        <h1>Exclusão de conta e dados</h1>
+        <p>
+            Esta página explica como solicitar a exclusão da sua conta e dos dados
+            associados ao aplicativo <strong>SecretSanta</strong>.
+        </p>
+        <p class="meta">Última atualização: 8 de outubro de 2026</p>
+    </div>
+</header>
+
+<main>
+    <section>
+        <h2>1. Aplicativo</h2>
+        <p>
+            <strong>SecretSanta</strong> — aplicativo de organização de sorteios de
+            Amigo Secreto (login com Google, eventos, participantes, listas de
+            desejos e revelação do sorteio).
+        </p>
+    </section>
+
+    <section>
+        <h2>2. Como solicitar a exclusão</h2>
+        <p>Siga os passos abaixo:</p>
+        <ol>
+            <li>
+                Envie um e-mail para
+                <a href="mailto:secret.santa.developer@gmail.com"
+                >secret.santa.developer@gmail.com</a
+                >
+                com o assunto:
+                <strong>Exclusão de conta — SecretSanta</strong>.
+            </li>
+            <li>
+                Use o <strong>mesmo endereço de e-mail da conta Google</strong> com
+                a qual você entra no app.
+            </li>
+            <li>
+                No corpo da mensagem, peça a exclusão da conta e dos dados pessoais
+                e, se possível, informe o nome exibido no perfil.
+            </li>
+            <li>
+                Aguarde a confirmação por e-mail. Em geral processamos o pedido em
+                até <strong>30 dias</strong>.
+            </li>
+        </ol>
+        <p class="email-box">secret.santa.developer@gmail.com</p>
+        <p>
+            Também é possível sair da sessão pelo menu do app (sair / sign out).
+            Isso encerra o login no dispositivo, mas <strong>não</strong> exclui
+            automaticamente a conta nos servidores — para apagar a conta, use o
+            pedido por e-mail acima.
+        </p>
+    </section>
+
+    <section>
+        <h2>3. O que é excluído</h2>
+        <p>Após validarmos a solicitação, removemos ou anonimizamos:</p>
+        <ul>
+            <li>A conta de autenticação associada ao SecretSanta (Firebase Auth)</li>
+            <li>
+                O perfil na base de dados (nome, e-mail, URL da foto e data de
+                criação)
+            </li>
+            <li>
+                Sua participação em eventos (incluindo listas de desejos vinculadas
+                à sua conta)
+            </li>
+            <li>
+                Eventos em que você é o único administrador, quando não houver
+                necessidade de retenção operacional residual
+            </li>
+            <li>
+                Dependentes cadastrados por você, quando vinculados apenas à sua
+                conta
+            </li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>4. O que pode ser mantido e por quanto tempo</h2>
+        <ul>
+            <li>
+                Dados mínimos necessários para cumprir obrigação legal, resolver
+                disputas ou prevenir abuso — apenas pelo período exigido pela lei
+                aplicável.
+            </li>
+            <li>
+                Conteúdo de eventos de <strong>terceiros</strong> em que você apenas
+                participou (por exemplo, título do evento criado por outro
+                administrador) pode permanecer sob responsabilidade desse
+                organizador; sua identificação pessoal será removida ou anonimizada
+                na medida do possível.
+            </li>
+            <li>
+                Resultados de sorteio já realizados em grupos ativos podem ser
+                anonimizados em vez de apagados por completo, para não quebrar o
+                histórico do evento de outros usuários.
+            </li>
+            <li>
+                Cópias em backups podem existir por um período limitado até a
+                rotação normal dos backups da infraestrutura (Firebase / Google
+                Cloud).
+            </li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>5. Contato</h2>
+        <p>
+            Dúvidas sobre exclusão de conta ou privacidade:<br />
+            E-mail:
+            <a href="mailto:secret.santa.developer@gmail.com"
+            >secret.santa.developer@gmail.com</a
+            ><br />
+            Aplicativo: SecretSanta
+        </p>
+        <p>
+            Política de Privacidade:
+            <a href="/privacy-policy.html">privacy-policy.html</a>
+        </p>
+    </section>
+</main>
+
+<footer>
+    SecretSanta — Exclusão de conta e dados
+</footer>
+</body>
+</html>
