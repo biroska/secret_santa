@@ -47,13 +47,13 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-      apiKey: "AIzaSyBrDQuRt9CHw-DKyNRJorOiHjclr9-vrJE",
-      authDomain: "galdinos-secret-santa.firebaseapp.com",
-      projectId: "galdinos-secret-santa",
-      storageBucket: "galdinos-secret-santa.firebasestorage.app",
-      messagingSenderId: "786022998658",
-      appId: "1:786022998658:web:5e5f0997e2bffd3126ca9b",
-      measurementId: "G-GS1W302SWY"
+    apiKey: 'AIzaSyBrDQuRt9CHw-DKyNRJorOiHjclr9-vrJE',
+    appId: '1:786022998658:web:5e5f0997e2bffd3126ca9b',
+    messagingSenderId: '786022998658',
+    projectId: 'galdinos-secret-santa',
+    authDomain: 'galdinos-secret-santa.firebaseapp.com',
+    storageBucket: 'galdinos-secret-santa.firebasestorage.app',
+    measurementId: 'G-GS1W302SWY',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
@@ -70,7 +70,9 @@ class DefaultFirebaseOptions {
     messagingSenderId: '786022998658',
     projectId: 'galdinos-secret-santa',
     storageBucket: 'galdinos-secret-santa.firebasestorage.app',
+    androidClientId: '786022998658-lgp0aflpai68o5qm43fhuaj5l8773sv7.apps.googleusercontent.com',
     iosClientId: '786022998658-duagrvlgg5nppp4tk0bnecu568kkbs4e.apps.googleusercontent.com',
     iosBundleId: 'com.example.secretSanta',
   );
+
 }

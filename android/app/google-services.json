@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "786022998658-lgp0aflpai68o5qm43fhuaj5l8773sv7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "br.com.galdino.secret_santa",
+            "certificate_hash": "3cea9d3198f76600055f6c25f6f7cba3226354e0"
+          }
+        },
+        {
           "client_id": "786022998658-oj7sgfre711hf67rok58cnqhuqi9eab8.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
