@@ -7,6 +7,10 @@ import {
   ImpossibleDrawError,
   validateDrawAssignments,
 } from "./drawLogic";
+import {
+  getLinkedDependentIds,
+  InvalidLinkedDependentError,
+} from "./drawAccess";
 
 interface PerformDrawRequest {
   eventId: string;
@@ -141,7 +145,8 @@ interface GetMyDrawRequest {
 }
 
 /**
- * Retorna somente o resultado do participante autenticado.
+ * Retorna o resultado do participante autenticado e dos dependentes vinculados
+ * a ele no evento.
  */
 export const getMyDraw = onCall<GetMyDrawRequest>(async (request) => {
   const uid = request.auth?.uid;
@@ -174,7 +179,9 @@ export const getMyDraw = onCall<GetMyDrawRequest>(async (request) => {
     );
   }
 
-  const participants = (eventData.participants as unknown[]) ?? [];
+  const participants = Array.isArray(eventData.participants)
+    ? eventData.participants
+    : [];
   const participant = participants.find((raw) => {
     if (!raw || typeof raw !== "object") return false;
     return (raw as Record<string, unknown>).userId === uid;
@@ -188,19 +195,42 @@ export const getMyDraw = onCall<GetMyDrawRequest>(async (request) => {
   }
 
   const giverId = participant.participantId;
-  const drawSnapshot = await eventRef
-    .collection("draws")
-    .doc(giverId)
-    .get();
-  const receiverId = drawSnapshot.data()?.receiverId;
-  if (typeof receiverId !== "string") {
-    throw new HttpsError(
-      "not-found",
-      "O resultado do sorteio não foi encontrado para o participante atual."
-    );
+  const getReceiverId = async (participantId: string): Promise<string> => {
+    const drawSnapshot = await eventRef
+      .collection("draws")
+      .doc(participantId)
+      .get();
+    const receiverId = drawSnapshot.data()?.receiverId;
+    if (typeof receiverId !== "string") {
+      throw new HttpsError(
+        "not-found",
+        "O resultado do sorteio não foi encontrado para um participante autorizado."
+      );
+    }
+    return receiverId;
+  };
+
+  let dependentIds: string[];
+  try {
+    dependentIds = getLinkedDependentIds(participants, giverId);
+  } catch (error) {
+    if (!(error instanceof InvalidLinkedDependentError)) {
+      throw error;
+    }
+    throw new HttpsError("failed-precondition", error.message);
   }
 
-  return { receiverId };
+  const [receiverId, dependentDraws] = await Promise.all([
+    getReceiverId(giverId),
+    Promise.all(
+      dependentIds.map(async (participantId) => ({
+        participantId,
+        receiverId: await getReceiverId(participantId),
+      }))
+    ),
+  ]);
+
+  return { receiverId, dependentDraws };
 });
 
 interface ValidateEventDrawRequest {

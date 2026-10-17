@@ -6,6 +6,7 @@ const {
   ImpossibleDrawError,
   validateDrawAssignments,
 } = require("../lib/drawLogic");
+const { getLinkedDependentIds } = require("../lib/drawAccess");
 
 test("rejects dependent with no allowed receiver", () => {
   const participants = [
@@ -191,4 +192,39 @@ test("allows a dependent to draw a responsible when permitted", () => {
   );
 
   assert.deepEqual(issues, []);
+});
+
+test("returns only dependent IDs linked to the responsible participant", () => {
+  const participants = [
+    {
+      participantId: "D1",
+      isDependent: true,
+      responsibleIds: ["P1", "P2"],
+    },
+    {
+      participantId: "D2",
+      isDependent: true,
+      responsibleIds: ["P2"],
+    },
+    {
+      participantId: "P3",
+      isDependent: false,
+      responsibleIds: ["P1"],
+    },
+  ];
+
+  assert.deepEqual(getLinkedDependentIds(participants, "P1"), ["D1"]);
+  assert.deepEqual(getLinkedDependentIds(participants, "P2"), ["D1", "D2"]);
+  assert.deepEqual(getLinkedDependentIds(participants, "P3"), []);
+});
+
+test("rejects linked dependents without a valid participant ID", () => {
+  assert.throws(
+    () =>
+      getLinkedDependentIds(
+        [{ isDependent: true, responsibleIds: ["P1"] }],
+        "P1"
+      ),
+    /participantId válido/
+  );
 });

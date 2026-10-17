@@ -36,6 +36,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   bool _isDrawValidationLoading = false;
   OverlayEntry? _drawLoadingOverlay;
   Map<String, dynamic>? _revealedParticipant;
+  List<_RevealedDependentDraw> _revealedDependentDraws = [];
 
   @override
   void initState() {
@@ -119,6 +120,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       _isFriendRevealVisible = false;
       _isFriendRevealLoading = false;
       _revealedParticipant = null;
+      _revealedDependentDraws = [];
       _eventFuture = _eventService.getEventById(widget.eventId);
     });
   }
@@ -129,6 +131,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         _isFriendRevealVisible = false;
         _isFriendRevealLoading = false;
         _revealedParticipant = null;
+        _revealedDependentDraws = [];
       });
       final refreshedEvent = await _eventService.getEventById(widget.eventId);
       if (!mounted) return;
@@ -281,7 +284,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                             _buildRevealBanner(),
                           if (shouldShowRevealBanner &&
                               shouldShowRevealedParticipantCard)
-                            _buildRevealedParticipantCard(_revealedParticipant),
+                            _buildRevealedParticipantCards(),
                           if (shouldShowRevealBanner)
                             const SizedBox(height: 12),
                           Row(
@@ -921,24 +924,48 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         throw const DrawException('Evento não encontrado.');
       }
 
-      final receiverId = await _drawService.getMyDraw(eventId);
+      final draw = await _drawService.getMyDraw(eventId);
       if (!mounted || eventId != widget.eventId) return;
 
-      Map<String, dynamic>? receiver;
-      for (final participant in event.participants) {
-        if (participant['participantId'] == receiverId) {
-          receiver = participant;
-          break;
-        }
-      }
+      final receiver = _findEventParticipant(event, draw.receiverId);
       if (receiver == null) {
         throw const DrawException(
           'O participante sorteado não foi encontrado neste evento.',
         );
       }
 
+      final dependentDraws = <_RevealedDependentDraw>[];
+      for (final dependentDraw in draw.dependentDraws) {
+        final dependent = _findEventParticipant(
+          event,
+          dependentDraw.participantId,
+        );
+        final dependentReceiver = _findEventParticipant(
+          event,
+          dependentDraw.receiverId,
+        );
+        if (dependent == null || dependentReceiver == null) {
+          throw const DrawException(
+            'O resultado de um dependente não foi encontrado neste evento.',
+          );
+        }
+
+        final dependentName = (dependent['name'] as String?)?.trim();
+        dependentDraws.add(
+          _RevealedDependentDraw(
+            dependentName: _getFirstName(
+              dependentName == null || dependentName.isEmpty
+                  ? 'Dependente'
+                  : dependentName,
+            ),
+            receiver: dependentReceiver,
+          ),
+        );
+      }
+
       setState(() {
         _revealedParticipant = receiver;
+        _revealedDependentDraws = dependentDraws;
         _isFriendRevealVisible = true;
       });
     } on DrawException catch (e) {
@@ -957,11 +984,43 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     }
   }
 
-  Widget _buildRevealedParticipantCard(Map<String, dynamic>? participant) {
+  Map<String, dynamic>? _findEventParticipant(
+    EventCardDto event,
+    String participantId,
+  ) {
+    for (final participant in event.participants) {
+      if (participant['participantId'] == participantId) {
+        return participant;
+      }
+    }
+    return null;
+  }
+
+  Widget _buildRevealedParticipantCards() {
+    final participant = _revealedParticipant;
     if (participant == null) {
       return const SizedBox.shrink();
     }
 
+    return Column(
+      children: [
+        _buildRevealedParticipantCard(
+          participant,
+          subtitle: 'Seu amigo secreto',
+        ),
+        for (final dependentDraw in _revealedDependentDraws)
+          _buildRevealedParticipantCard(
+            dependentDraw.receiver,
+            subtitle: 'Amigo secreto de ${dependentDraw.dependentName}',
+          ),
+      ],
+    );
+  }
+
+  Widget _buildRevealedParticipantCard(
+    Map<String, dynamic> participant, {
+    required String subtitle,
+  }) {
     final name = _getFirstName(
       (participant['name'] as String?)?.trim() ??
           (participant['userId'] as String? ?? 'Usuário'),
@@ -975,6 +1034,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         padding: const EdgeInsets.only(bottom: 12),
         child: _buildParticipantItem(
           name: name,
+          subtitle: subtitle,
           avatarUrl: photoUrl.isNotEmpty ? photoUrl : null,
         ),
       ),
@@ -1097,4 +1157,14 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       ),
     );
   }
+}
+
+class _RevealedDependentDraw {
+  const _RevealedDependentDraw({
+    required this.dependentName,
+    required this.receiver,
+  });
+
+  final String dependentName;
+  final Map<String, dynamic> receiver;
 }

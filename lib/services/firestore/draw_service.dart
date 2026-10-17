@@ -11,6 +11,60 @@ class DrawException implements Exception {
   String toString() => message;
 }
 
+class DependentDrawResult {
+  const DependentDrawResult({
+    required this.participantId,
+    required this.receiverId,
+  });
+
+  final String participantId;
+  final String receiverId;
+}
+
+class MyDrawResult {
+  const MyDrawResult({required this.receiverId, required this.dependentDraws});
+
+  final String receiverId;
+  final List<DependentDrawResult> dependentDraws;
+
+  factory MyDrawResult.fromJson(Map<String, dynamic> json) {
+    final receiverId = json['receiverId'];
+    if (receiverId is! String || receiverId.isEmpty) {
+      throw const DrawException(
+        'A resposta do sorteio não contém um participante válido.',
+      );
+    }
+
+    final rawDependentDraws = json['dependentDraws'];
+    if (rawDependentDraws is! List) {
+      throw const DrawException(
+        'A resposta do sorteio não contém os resultados dos dependentes.',
+      );
+    }
+
+    final dependentDraws = <DependentDrawResult>[];
+    for (final rawDraw in rawDependentDraws) {
+      if (rawDraw is! Map ||
+          rawDraw['participantId'] is! String ||
+          (rawDraw['participantId'] as String).isEmpty ||
+          rawDraw['receiverId'] is! String ||
+          (rawDraw['receiverId'] as String).isEmpty) {
+        throw const DrawException(
+          'A resposta contém um resultado de dependente inválido.',
+        );
+      }
+      dependentDraws.add(
+        DependentDrawResult(
+          participantId: rawDraw['participantId'] as String,
+          receiverId: rawDraw['receiverId'] as String,
+        ),
+      );
+    }
+
+    return MyDrawResult(receiverId: receiverId, dependentDraws: dependentDraws);
+  }
+}
+
 /// Serviço responsável por acionar o sorteio (executado no backend/Firebase).
 class DrawService {
   DrawService({FirebaseFunctions? functions})
@@ -50,25 +104,20 @@ class DrawService {
     }
   }
 
-  /// Retorna o receiver associado ao participante autenticado.
-  Future<String> getMyDraw(String eventId) async {
+  /// Retorna o resultado do participante autenticado e de seus dependentes.
+  Future<MyDrawResult> getMyDraw(String eventId) async {
     try {
       final callable = _functions.httpsCallable('getMyDraw');
       debugPrint('Invocando Cloud Function getMyDraw para o evento $eventId.');
       final result = await callable.call<Map<String, dynamic>>({
         'eventId': eventId,
       });
-      final receiverId = result.data['receiverId'];
-      if (receiverId is! String || receiverId.isEmpty) {
-        throw const DrawException(
-          'A resposta do sorteio não contém um participante válido.',
-        );
-      }
+      final draw = MyDrawResult.fromJson(result.data);
       debugPrint(
         'Retorno da Cloud Function getMyDraw para o evento $eventId: '
-        'success=true.',
+        'success=true, dependentDraws=${draw.dependentDraws.length}.',
       );
-      return receiverId;
+      return draw;
     } on DrawException {
       rethrow;
     } on FirebaseFunctionsException catch (e) {
