@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_button_styles.dart';
 import 'app_colors.dart';
 
 /// Temas claros/escuros derivados da paleta em [AppColors].
@@ -39,6 +40,9 @@ abstract final class AppTheme {
         color: scheme.surfaceContainerLow,
         surfaceTintColor: scheme.surfaceTint,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: AppButtonStyles.elevated,
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: scheme.primary,

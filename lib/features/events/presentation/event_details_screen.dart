@@ -164,11 +164,11 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
           'Você está prestes a remover o evento "${event.name}". Essa ação não pode ser desfeita.',
         ),
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: const Text('Cancelar'),
           ),
-          FilledButton.icon(
+          ElevatedButton.icon(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             icon: const Icon(Icons.delete_outline_rounded),
             label: const Text('Excluir'),
@@ -514,7 +514,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             ),
           ),
           actions: [
-            TextButton(
+            ElevatedButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Fechar'),
             ),
@@ -706,11 +706,11 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
           'Após confirmar o sorteio, o evento não poderá ser alterado. Deseja continuar?',
         ),
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: const Text('Cancelar'),
           ),
-          FilledButton(
+          ElevatedButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             child: const Text('Confirmar'),
           ),
@@ -737,7 +737,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
           title: const Text('Sorteio inviável'),
           content: Text(feasibility.message),
           actions: [
-            TextButton(
+            ElevatedButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Entendi'),
             ),

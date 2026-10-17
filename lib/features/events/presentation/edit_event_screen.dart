@@ -132,11 +132,11 @@ class _EditEventScreenState extends State<EditEventScreen> {
         ),
         content: Text('Deseja remover $name do evento?'),
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: const Text('Cancelar'),
           ),
-          FilledButton(
+          ElevatedButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             child: const Text('Remover'),
           ),

@@ -468,16 +468,8 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton(
+                    child: ElevatedButton(
                       onPressed: () => AppNavigation.back(context),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF1F2937),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: const BorderSide(color: Color(0xFFD1D5DB)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
                       child: const Text('Cancelar'),
                     ),
                   ),

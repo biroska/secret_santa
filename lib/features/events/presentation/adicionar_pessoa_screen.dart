@@ -238,18 +238,6 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                                 ),
                               ),
                             ),
-                            if (_event?.name.isNotEmpty ?? false) ...[
-                              const SizedBox(height: 10),
-                              Text(
-                                _event!.name,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: Color(0xFF667085),
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
                             const SizedBox(height: 12),
                             Row(
                               children: [

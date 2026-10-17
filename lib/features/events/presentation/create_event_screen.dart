@@ -282,9 +282,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _isSaving || !_isFormValid ? null : _submitForm,
-                style: _isFormValid
-                    ? null
-                    : ElevatedButton.styleFrom(backgroundColor: Colors.grey),
                 child: _isSaving
                     ? const SizedBox(
                         width: 20,
