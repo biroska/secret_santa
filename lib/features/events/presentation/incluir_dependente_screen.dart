@@ -37,9 +37,14 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
 
   bool get _isEditing => widget.dependentToEdit != null;
 
+  bool get _canSave =>
+      _nomeController.text.trim().isNotEmpty &&
+      _responsaveisSelecionados.isNotEmpty;
+
   @override
   void initState() {
     super.initState();
+    _nomeController.addListener(() => setState(() {}));
     final dependent = widget.dependentToEdit;
     if (dependent == null) return;
 
@@ -76,6 +81,10 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
   List<Map<String, dynamic>> get _responsaveisDisponiveis {
     final query = _searchController.text.trim().toLowerCase();
     final base = widget.eventParticipants.where((participant) {
+      if (participant['isDependent'] == true ||
+          participant['role'] == 'DEPENDENT') {
+        return false;
+      }
       if (_isEditing &&
           participant['participantId'] ==
               widget.dependentToEdit!['participantId']) {
@@ -476,7 +485,7 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: _saveDependente,
+                      onPressed: _canSave ? _saveDependente : null,
                       child: const Text('Salvar'),
                     ),
                   ),
