@@ -485,9 +485,7 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: _saveDependente,
-                      child: Text(
-                        _isEditing ? 'Salvar alterações' : 'Salvar dependente',
-                      ),
+                      child: const Text('Salvar'),
                     ),
                   ),
                 ],

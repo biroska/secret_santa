@@ -394,7 +394,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                                     true;
                                 final warningText =
                                     isDependent && !canSortResponsible
-                                    ? 'Não pode sortear os responsáveis'
+                                    ? 'Não sorteia os responsáveis'
                                     : null;
 
                                 return Padding(
@@ -605,7 +605,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: _infoChip(
-                  label: 'FESTA',
+                  label: 'EVENTO',
                   value: eventDateLabel,
                   color: const Color(0xFFE9F3FA),
                   textColor: const Color(0xFF2C6F9F),
@@ -1123,10 +1123,12 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                       warningText,
                       style: const TextStyle(
                         color: Color(0xFFCF2A2A),
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: FontWeight.w600,
                         height: 1.1,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
               ],

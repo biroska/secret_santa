@@ -285,7 +285,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
                                       color: Colors.white,
                                     ),
                                   )
-                                : const Text('Salvar alterações'),
+                                : const Text('Salvar'),
                           ),
                         ),
                       ],
@@ -347,8 +347,9 @@ class EditEventParticipantCard extends StatelessWidget {
         : (participant['userId'] as String? ?? participantId);
     final photoUrl = (participant['photoUrl'] as String?) ?? '';
     final canSortResponsible = participant['canSortResponsible'] == true;
+    final actionButtonHeight = isDependent ? 26.0 : 40.0;
     final warningText = isDependent && !canSortResponsible
-        ? 'Não pode sortear os responsáveis'
+        ? 'Não sorteia os responsáveis'
         : null;
     final badgeLabel = isAdmin
         ? 'Organizador'
@@ -363,91 +364,140 @@ class EditEventParticipantCard extends StatelessWidget {
         : (isBadgeDependent
               ? const Color(0xFFB07A1E)
               : const Color(0xFF3D8F3D));
+    final removeButton = IconButton(
+      tooltip: isDependent ? 'Remover dependente' : 'Remover participante',
+      padding: EdgeInsets.zero,
+      constraints: BoxConstraints.tightFor(
+        width: 40,
+        height: actionButtonHeight,
+      ),
+      visualDensity: VisualDensity.compact,
+      style: isDependent
+          ? IconButton.styleFrom(
+              minimumSize: const Size(40, 26),
+              fixedSize: const Size(40, 26),
+              maximumSize: const Size(40, 26),
+              padding: EdgeInsets.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            )
+          : null,
+      onPressed: onRemove,
+      icon: const Icon(
+        Icons.delete_forever_outlined,
+        color: Color(0xFFCF2A2A),
+        size: 26,
+      ),
+    );
+    final editButton = IconButton(
+      tooltip: 'Editar dependente',
+      padding: EdgeInsets.zero,
+      constraints: BoxConstraints.tightFor(
+        width: 40,
+        height: actionButtonHeight,
+      ),
+      visualDensity: VisualDensity.compact,
+      style: IconButton.styleFrom(
+        minimumSize: const Size(40, 26),
+        fixedSize: const Size(40, 26),
+        maximumSize: const Size(40, 26),
+        padding: EdgeInsets.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      onPressed: onEditDependent,
+      icon: const Icon(Icons.edit_outlined, color: Color(0xFF1D7B72), size: 26),
+    );
+    final badge = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: badgeColor,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: badgeTextColor.withValues(alpha: 0.4)),
+      ),
+      child: Text(
+        badgeLabel,
+        style: TextStyle(
+          color: badgeTextColor,
+          fontWeight: FontWeight.w600,
+          fontSize: 12,
+        ),
+      ),
+    );
 
     return AppCard(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      child: Row(
-        children: [
-          if (!isAdmin)
-            IconButton(
-              tooltip: isDependent
-                  ? 'Remover dependente'
-                  : 'Remover participante',
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints.tightFor(width: 40, height: 40),
-              visualDensity: VisualDensity.compact,
-              onPressed: onRemove,
-              icon: const Icon(
-                Icons.delete_forever_outlined,
-                color: Color(0xFFCF2A2A),
-                size: 26,
-              ),
-            ),
-          if (isDependent)
-            IconButton(
-              tooltip: 'Editar dependente',
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints.tightFor(width: 40, height: 40),
-              visualDensity: VisualDensity.compact,
-              onPressed: onEditDependent,
-              icon: const Icon(
-                Icons.edit_outlined,
-                color: Color(0xFF1D7B72),
-                size: 26,
-              ),
-            ),
-          UserAvatar(photoUrl: photoUrl),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: isDependent
+          ? Row(
               children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    color: Color(0xFF1B1B1B),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w400,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [if (!isAdmin) removeButton, editButton],
                 ),
-                if (warningText != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 1),
-                    child: Text(
-                      warningText,
-                      style: const TextStyle(
-                        color: Color(0xFFCF2A2A),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        height: 1.1,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          UserAvatar(photoUrl: photoUrl),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              name,
+                              style: const TextStyle(
+                                color: Color(0xFF1B1B1B),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w400,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
+                      if (warningText != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 1),
+                          child: Text(
+                            warningText,
+                            style: const TextStyle(
+                              color: Color(0xFFCF2A2A),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              height: 1.1,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
+                ),
+                const SizedBox(width: 8),
+                badge,
+              ],
+            )
+          : Row(
+              children: [
+                if (!isAdmin) removeButton,
+                UserAvatar(photoUrl: photoUrl),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    name,
+                    style: const TextStyle(
+                      color: Color(0xFF1B1B1B),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                badge,
               ],
             ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: badgeColor,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: badgeTextColor.withValues(alpha: 0.4)),
-            ),
-            child: Text(
-              badgeLabel,
-              style: TextStyle(
-                color: badgeTextColor,
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -36,7 +36,7 @@ class EventTitleCard extends StatelessWidget {
 
     final content = Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 22),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(18),
@@ -74,10 +74,18 @@ class EventTitleCard extends StatelessWidget {
                             icon: const Icon(
                               Icons.edit_outlined,
                               color: Colors.white,
+                              size: 18,
                             ),
                             tooltip: 'Editar evento',
                             padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
+                            style: IconButton.styleFrom(
+                              minimumSize: const Size(22, 20),
+                              fixedSize: const Size(22, 20),
+                              maximumSize: const Size(22, 20),
+                              padding: EdgeInsets.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                            ),
                           ),
                         if (isAdmin)
                           IconButton(
@@ -85,10 +93,18 @@ class EventTitleCard extends StatelessWidget {
                             icon: const Icon(
                               Icons.delete_outline_rounded,
                               color: Colors.white,
+                              size: 18,
                             ),
                             tooltip: 'Excluir evento',
                             padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
+                            style: IconButton.styleFrom(
+                              minimumSize: const Size(22, 20),
+                              fixedSize: const Size(22, 20),
+                              maximumSize: const Size(22, 20),
+                              padding: EdgeInsets.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                            ),
                           ),
                         if (showDrawValidationButton)
                           IconButton(
@@ -113,6 +129,7 @@ class EventTitleCard extends StatelessWidget {
               color: Colors.white,
               fontSize: 16,
               fontWeight: FontWeight.w600,
+              height: 1,
             ),
           ),
           const SizedBox(height: 12),

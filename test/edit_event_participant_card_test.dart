@@ -61,17 +61,65 @@ void main() {
     final deleteButton = find.byTooltip('Remover dependente');
     final editButton = find.byTooltip('Editar dependente');
     final avatar = find.byIcon(Icons.person);
+    final name = find.text('Ana');
+    final badge = find.text('Dependente');
+    final warning = tester.widget<Text>(
+      find.text('Não sorteia os responsáveis'),
+    );
     expect(deleteButton, findsOneWidget);
     expect(editButton, findsOneWidget);
     expect(
       tester.getCenter(deleteButton).dx,
-      lessThan(tester.getCenter(avatar).dx),
+      closeTo(tester.getCenter(editButton).dx, 0.1),
+    );
+    expect(
+      tester.getCenter(deleteButton).dy,
+      lessThan(tester.getCenter(editButton).dy),
+    );
+    expect(
+      tester.getCenter(editButton).dy - tester.getCenter(deleteButton).dy,
+      closeTo(26, 0.1),
     );
     expect(
       tester.getCenter(editButton).dx,
       lessThan(tester.getCenter(avatar).dx),
     );
+    expect(tester.getCenter(avatar).dy, closeTo(tester.getCenter(name).dy, 8));
+    expect(
+      tester.getCenter(name).dy,
+      lessThan(tester.getCenter(find.text('Não sorteia os responsáveis')).dy),
+    );
+    expect(tester.getCenter(badge).dx, greaterThan(tester.getCenter(name).dx));
+    final card = find.byType(Card);
+    expect(tester.getCenter(badge).dy, closeTo(tester.getCenter(card).dy, 8));
+    expect(warning.style!.fontSize, 10);
     expect(find.text('Dependente'), findsOneWidget);
+  });
+
+  testWidgets('omits the warning when a dependent can draw responsible', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: EditEventParticipantCard(
+            participant: const {
+              'participantId': 'D1',
+              'userId': 'dependent-D1',
+              'name': 'Ana',
+              'role': 'DEPENDENT',
+              'isDependent': true,
+              'canSortResponsible': true,
+            },
+            adminId: 'admin-1',
+            onRemove: () {},
+            onEditDependent: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Não sorteia os responsáveis'), findsNothing);
   });
 
   testWidgets('does not show removal controls for the event admin', (

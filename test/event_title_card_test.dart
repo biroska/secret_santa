@@ -72,4 +72,42 @@ void main() {
     expect(find.byTooltip('Editar evento'), findsNothing);
     expect(find.byTooltip('Excluir evento'), findsNothing);
   });
+
+  testWidgets(
+    'reduces action spacing, description height, and bottom padding',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: EventTitleCard(
+              event: _event(status: 'CREATED'),
+              isAdmin: true,
+              onEdit: () {},
+              onDelete: () {},
+            ),
+          ),
+        ),
+      );
+
+      final editButton = find.byTooltip('Editar evento');
+      final deleteButton = find.byTooltip('Excluir evento');
+      expect(
+        tester.getCenter(deleteButton).dy - tester.getCenter(editButton).dy,
+        lessThanOrEqualTo(22),
+      );
+
+      final description = tester.widget<Text>(find.text('Evento de teste'));
+      expect(description.style!.height, 1);
+
+      final cardContainer = tester.widget<Container>(
+        find
+            .ancestor(
+              of: find.byTooltip('Editar evento'),
+              matching: find.byType(Container),
+            )
+            .last,
+      );
+      expect(cardContainer.padding, const EdgeInsets.fromLTRB(12, 10, 12, 10));
+    },
+  );
 }
