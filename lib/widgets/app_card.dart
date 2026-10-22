@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
-/// Card padrão do app: usa o `cardTheme` (mesmo estilo da listagem de eventos).
+import '../theme/app_button_styles.dart';
+
+/// Card padrão do app: usa o `cardTheme` (mesmo estilo do card de dependente).
 class AppCard extends StatelessWidget {
   const AppCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(14),
+    this.padding = AppCardStyles.padding,
     this.margin,
     this.color,
     this.onTap,
@@ -21,11 +23,11 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(12);
+    final radius = BorderRadius.circular(AppCardStyles.radius);
     final content = Padding(padding: padding, child: child);
     final card = Card(
       margin: margin,
-      color: color ?? Colors.white,
+      color: color,
       clipBehavior: Clip.antiAlias,
       child: onTap == null
           ? content

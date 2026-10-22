@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart'; // Para formatação de data
 
 import '../../../widgets/user_avatar.dart';
+import '../../../widgets/app_card.dart';
+import '../../../theme/app_button_styles.dart';
 import '../../../utils/app_routes.dart';
 import '../../auth/data/google_auth_api.dart';
 import '../../auth/data/google_auth_result.dart';
@@ -260,84 +262,77 @@ class _HomeScreenState extends State<HomeScreen> {
                             ? dateFormat.format(event.drawDate!)
                             : 'Não realizado';
 
-                        return Card(
-                          margin: EdgeInsets.zero,
-                          child: InkWell(
-                            onTap: () async {
-                              final result = await context.push(
-                                '/event-details/${event.id}',
-                              );
-                              if (result == true) {
-                                await _refreshEvents();
-                              }
-                            },
-                            borderRadius: BorderRadius.circular(12),
-                            child: Padding(
-                              padding: const EdgeInsets.all(10),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  CircleAvatar(
-                                    radius: 22,
-                                    backgroundColor:
-                                        theme.colorScheme.primaryContainer,
-                                    foregroundColor:
-                                        theme.colorScheme.onPrimaryContainer,
-                                    child: Icon(event.icon),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                        return AppCard(
+                          onTap: () async {
+                            final result = await context.push(
+                              '/event-details/${event.id}',
+                            );
+                            if (result == true) {
+                              await _refreshEvents();
+                            }
+                          },
+                          padding: AppCardStyles.compactPadding,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              CircleAvatar(
+                                radius: 22,
+                                backgroundColor:
+                                    theme.colorScheme.primaryContainer,
+                                foregroundColor:
+                                    theme.colorScheme.onPrimaryContainer,
+                                child: Icon(event.icon),
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      event.name,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Organizador: ${event.organizerName}',
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Row(
                                       children: [
-                                        Text(
-                                          event.name,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: theme.textTheme.titleMedium
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                              ),
+                                        Expanded(
+                                          child: _buildCompactInfoRow(
+                                            'Evento:',
+                                            eventDateText,
+                                            theme,
+                                          ),
                                         ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          'Organizador: ${event.organizerName}',
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: theme.textTheme.bodySmall
-                                              ?.copyWith(
-                                                color: theme
-                                                    .colorScheme
-                                                    .onSurfaceVariant,
-                                              ),
-                                        ),
-                                        const SizedBox(height: 3),
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: _buildCompactInfoRow(
-                                                'Evento:',
-                                                eventDateText,
-                                                theme,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Expanded(
-                                              child: _buildCompactInfoRow(
-                                                'Sorteio:',
-                                                drawDateText,
-                                                theme,
-                                              ),
-                                            ),
-                                          ],
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: _buildCompactInfoRow(
+                                            'Sorteio:',
+                                            drawDateText,
+                                            theme,
+                                          ),
                                         ),
                                       ],
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         );
                       },

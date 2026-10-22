@@ -396,6 +396,7 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                         const SizedBox(height: 12),
                         if (_responsaveisDisponiveis.isEmpty)
                           AppCard(
+                            color: Colors.white,
                             padding: const EdgeInsets.all(16),
                             child: const Text(
                               'Nenhum participante disponível para ser responsável.',
