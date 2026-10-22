@@ -7,6 +7,7 @@ import '../../../core/config/google_auth_config.dart';
 import 'google_auth_api.dart';
 import 'google_auth_result.dart';
 import '../../../services/firestore/user_service.dart'; // Importando UserService
+import '../../../services/notifications/push_notification_service.dart';
 import '../../../models/user.dart'; // Importando a classe Users
 
 /// Google Sign-In followed by [FirebaseAuth.signInWithCredential].
@@ -87,6 +88,7 @@ class GoogleAuthService implements GoogleAuthApi {
         );
         await _userService.createUser(newUser);
       }
+      await PushNotificationService.instance.registerForUser(user.uid);
       // --- Fim da nova lógica ---
 
       return GoogleAuthResult(
@@ -110,6 +112,16 @@ class GoogleAuthService implements GoogleAuthApi {
 
   @override
   Future<void> signOut() async {
+    final uid = _firebaseAuth.currentUser?.uid;
+    if (uid != null) {
+      try {
+        await PushNotificationService.instance.unregisterForUser(uid);
+      } catch (e, st) {
+        if (kDebugMode) {
+          debugPrint('Falha ao remover token FCM no logout: $e\n$st');
+        }
+      }
+    }
     try {
       await _firebaseAuth.signOut();
     } catch (e, st) {

@@ -137,6 +137,8 @@ export const performDraw = onCall<PerformDrawRequest>(async (request) => {
     pairsCount: pairs.length,
   });
 
+  // The Firestore trigger sends push notifications asynchronously.
+
   return { success: true, pairsCount: pairs.length };
 });
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart'; // Para formatação de data
@@ -10,6 +12,7 @@ import '../../auth/data/google_auth_api.dart';
 import '../../auth/data/google_auth_result.dart';
 import '../../../dtos/event_card_dto.dart'; // Importando o DTO
 import '../../../services/firestore/event_service.dart'; // Importando o EventService
+import '../../../services/notifications/push_notification_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -61,6 +64,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _refreshEvents();
+    final uid = widget.session.firebaseUid;
+    if (uid.isNotEmpty) {
+      unawaited(PushNotificationService.instance.registerForUser(uid));
+    }
   }
 
   @override

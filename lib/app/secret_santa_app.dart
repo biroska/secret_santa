@@ -19,6 +19,7 @@ import '../features/events/presentation/event_invite_screen.dart';
 import '../features/events/presentation/incluir_dependente_screen.dart';
 import '../theme/app_theme.dart';
 import '../services/firestore/event_service.dart';
+import '../services/notifications/push_notification_service.dart';
 import 'app_keys.dart';
 
 class SecretSantaApp extends StatefulWidget {
@@ -172,10 +173,24 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
       // com path inexistente), redirecionando para a Home com uma notificação.
       errorBuilder: (context, state) => const _UnknownDeepLinkScreen(),
     );
+    PushNotificationService.instance.attachNavigationHandler((route) {
+      if (FirebaseAuth.instance.currentUser == null) {
+        _router.go('/login');
+        return;
+      }
+      _router.go(route);
+    });
+    _router.routerDelegate.addListener(_onRouteChanged);
+  }
+
+  void _onRouteChanged() {
+    final location = _router.routerDelegate.currentConfiguration.uri.toString();
+    PushNotificationService.instance.updateCurrentRouteHint(location);
   }
 
   @override
   void dispose() {
+    _router.routerDelegate.removeListener(_onRouteChanged);
     _router.dispose();
     super.dispose();
   }

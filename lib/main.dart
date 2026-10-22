@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -6,14 +7,29 @@ import 'app/secret_santa_app.dart';
 import 'features/auth/data/google_auth_service.dart';
 // import 'services/firestore/event_service.dart'; // Removendo a importação do EventService
 import 'firebase_options.dart';
+import 'services/notifications/push_notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    }
+
     final authService = GoogleAuthService();
     await authService.init();
+
+    try {
+      await PushNotificationService.instance.initialize();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('Falha ao inicializar push notifications: $e\n$st');
+      }
+    }
 
     runApp(SecretSantaApp(auth: authService));
   } catch (e) {
