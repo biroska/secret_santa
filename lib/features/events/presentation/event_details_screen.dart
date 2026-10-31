@@ -316,16 +316,14 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                               if (!shouldShowRevealBanner)
                                 TextButton.icon(
                                   onPressed: () async {
-                                    final changed = await Navigator.of(context)
-                                        .push<bool>(
-                                          MaterialPageRoute(
-                                            builder: (_) =>
-                                                AdicionarPessoaScreen(
-                                                  eventId: widget.eventId,
-                                                ),
-                                          ),
-                                        );
-                                    if (changed == true && mounted) {
+                                    await Navigator.of(context).push<bool>(
+                                      MaterialPageRoute(
+                                        builder: (_) => AdicionarPessoaScreen(
+                                          eventId: widget.eventId,
+                                        ),
+                                      ),
+                                    );
+                                    if (mounted) {
                                       await _refreshEventDetails();
                                     }
                                   },
