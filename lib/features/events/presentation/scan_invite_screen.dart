@@ -189,8 +189,10 @@ class _ScanInviteScreenState extends State<ScanInviteScreen> {
         children: [
           MobileScanner(controller: _controller, onDetect: _onDetect),
           if (_isLoading)
-            const ColoredBox(
-              color: Colors.black45,
+            ColoredBox(
+              color: Theme.of(
+                context,
+              ).colorScheme.scrim.withValues(alpha: 0.45),
               child: Center(child: CircularProgressIndicator()),
             ),
         ],

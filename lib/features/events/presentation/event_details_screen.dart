@@ -11,6 +11,7 @@ import '../../../dtos/event_card_dto.dart';
 import '../../../services/firestore/event_service.dart';
 import '../../../services/firestore/draw_service.dart';
 import '../../../services/draw/draw_feasibility_validator.dart';
+import '../../../theme/app_colors.dart';
 import 'adicionar_pessoa_screen.dart';
 import 'edit_event_screen.dart';
 import 'event_title_card.dart';
@@ -73,7 +74,12 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       builder: (overlayContext) => Stack(
         fit: StackFit.expand,
         children: [
-          const ModalBarrier(dismissible: false, color: Colors.black26),
+          ModalBarrier(
+            dismissible: false,
+            color: Theme.of(
+              overlayContext,
+            ).colorScheme.scrim.withValues(alpha: 0.26),
+          ),
           Center(
             child: Semantics(
               liveRegion: true,
@@ -207,6 +213,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = AppColors.of(context);
     return FutureBuilder<EventCardDto?>(
       future: _eventFuture,
       builder: (context, snapshot) {
@@ -243,7 +251,6 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             shouldShowRevealBanner && _isFriendRevealVisible;
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF2F3F5),
           appBar: AppBar(
             title: const Text('Evento'),
             centerTitle: true,
@@ -266,7 +273,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildSummaryCard(event),
+                          _buildSummaryCard(event, colorScheme, appColors),
                           const SizedBox(height: 18),
                           if (isAdmin &&
                               !shouldShowRevealBanner &&
@@ -293,22 +300,28 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Text(
+                                  Text(
                                     'Participantes',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xFF1B1B1B),
-                                    ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w500,
+                                          color: colorScheme.onSurface,
+                                        ),
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
                                     '${event.participants.length}',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.normal,
-                                      color: Colors.grey[800],
-                                    ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.normal,
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
                                   ),
                                 ],
                               ),
@@ -330,7 +343,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                                   icon: const Icon(Icons.add, size: 22),
                                   label: const Text('Convidar'),
                                   style: TextButton.styleFrom(
-                                    foregroundColor: const Color(0xFF1D7B72),
+                                    foregroundColor: colorScheme.primary,
                                     padding: EdgeInsets.zero,
                                     minimumSize: const Size(0, 0),
                                   ),
@@ -349,8 +362,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                                 hasSearchQuery
                                     ? 'Nenhum participante encontrado'
                                     : 'Nenhum participante ainda',
-                                style: const TextStyle(
-                                  color: Color(0xFF667085),
+                                style: TextStyle(
+                                  color: colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             )
@@ -369,16 +382,16 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
                                 if (role == 'ADMIN') {
                                   badgeLabel = 'Organizador';
-                                  badgeColor = const Color(0xFFE9F3FA);
-                                  badgeTextColor = const Color(0xFF2C6F9F);
+                                  badgeColor = appColors.infoContainer;
+                                  badgeTextColor = appColors.onInfoContainer;
                                 } else if (role == 'DEPENDENT') {
                                   badgeLabel = 'Dependente';
-                                  badgeColor = const Color(0xFFFCEFD9);
-                                  badgeTextColor = const Color(0xFFB07A1E);
+                                  badgeColor = appColors.warningContainer;
+                                  badgeTextColor = appColors.onWarningContainer;
                                 } else {
                                   badgeLabel = 'Participante';
-                                  badgeColor = const Color(0xFFE2F0E2);
-                                  badgeTextColor = const Color(0xFF3D8F3D);
+                                  badgeColor = appColors.successContainer;
+                                  badgeTextColor = appColors.onSuccessContainer;
                                 }
 
                                 final photoUrl =
@@ -471,10 +484,6 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     bool isAdmin,
     bool canValidateDraw,
   ) {
-    final appBarBackgroundColor =
-        Theme.of(context).appBarTheme.backgroundColor ??
-        Theme.of(context).colorScheme.primary;
-
     return EventTitleCard(
       event: event,
       isAdmin: isAdmin,
@@ -485,7 +494,6 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       onValidateDraw: _isDrawValidationLoading
           ? null
           : () => _validateEventDraw(event),
-      backgroundColor: appBarBackgroundColor,
     );
   }
 
@@ -531,7 +539,11 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     }
   }
 
-  Widget _buildSummaryCard(EventCardDto event) {
+  Widget _buildSummaryCard(
+    EventCardDto event,
+    ColorScheme colorScheme,
+    AppColors appColors,
+  ) {
     final dateFormat = DateFormat('dd/MM/yyyy');
 
     final giftValueLabel = event.maxGiftValue != null
@@ -556,22 +568,22 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8E6C6),
+                  color: appColors.giftContainer,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.card_giftcard_rounded,
-                  color: Color(0xFFEB9F35),
+                  color: appColors.onGiftContainer,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'Valor do presente: $giftValueLabel',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF595959),
+                    color: colorScheme.onSurface,
                     letterSpacing: 0.3,
                   ),
                   maxLines: 1,
@@ -587,8 +599,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 child: _infoChip(
                   label: 'CRIADO EM',
                   value: dateFormat.format(event.createdAt),
-                  color: const Color(0xFFFDE9E9),
-                  textColor: const Color(0xFFBD3A3A),
+                  color: colorScheme.errorContainer,
+                  textColor: colorScheme.onErrorContainer,
                 ),
               ),
               const SizedBox(width: 10),
@@ -596,8 +608,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 child: _infoChip(
                   label: 'SORTEIO',
                   value: drawDateLabel,
-                  color: const Color(0xFFEAF5EC),
-                  textColor: const Color(0xFF2E8A4A),
+                  color: appColors.successContainer,
+                  textColor: appColors.onSuccessContainer,
                 ),
               ),
               const SizedBox(width: 10),
@@ -605,8 +617,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 child: _infoChip(
                   label: 'EVENTO',
                   value: eventDateLabel,
-                  color: const Color(0xFFE9F3FA),
-                  textColor: const Color(0xFF2C6F9F),
+                  color: appColors.infoContainer,
+                  textColor: appColors.onInfoContainer,
                 ),
               ),
             ],
@@ -813,9 +825,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   }
 
   Widget _buildAdminDrawCard() {
+    final appColors = AppColors.of(context);
     return AppCard(
       onTap: _showDrawConfirmationDialog,
-      color: const Color(0xFFEAF5EC),
+      color: appColors.successContainer,
       padding: const EdgeInsets.fromLTRB(18, 12, 12, 10),
       child: Row(
         children: [
@@ -823,21 +836,21 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: Color(0xFF2E8A4A),
+              color: appColors.onSuccessContainer,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.card_giftcard_rounded,
-              color: Colors.white,
+              color: appColors.successContainer,
               // size: 32,
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: RichText(
-              text: const TextSpan(
+              text: TextSpan(
                 style: TextStyle(
-                  color: Color(0xFF2E8A4A),
+                  color: appColors.onSuccessContainer,
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   height: 1.3,
@@ -858,17 +871,19 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   }
 
   Widget _buildRevealBanner() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = AppColors.of(context);
     return AppCard(
       onTap: _isFriendRevealLoading ? null : _revealMyFriend,
-      color: const Color(0xFFDF3A4A),
+      color: colorScheme.errorContainer,
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       child: Row(
         children: [
           Expanded(
             child: RichText(
-              text: const TextSpan(
+              text: TextSpan(
                 style: TextStyle(
-                  color: Colors.white,
+                  color: colorScheme.onErrorContainer,
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   height: 1.3,
@@ -887,21 +902,21 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
           Container(
             width: 56,
             height: 56,
-            decoration: const BoxDecoration(
-              color: Color(0xFFF7C74B),
+            decoration: BoxDecoration(
+              color: appColors.giftContainer,
               shape: BoxShape.circle,
             ),
             child: _isFriendRevealLoading
-                ? const Padding(
-                    padding: EdgeInsets.all(14),
+                ? Padding(
+                    padding: const EdgeInsets.all(14),
                     child: CircularProgressIndicator(
-                      color: Color(0xFFCB4A2A),
+                      color: appColors.onGiftContainer,
                       strokeWidth: 3,
                     ),
                   )
-                : const Icon(
+                : Icon(
                     Icons.card_giftcard_rounded,
-                    color: Color(0xFFCB4A2A),
+                    color: appColors.onGiftContainer,
                     size: 32,
                   ),
           ),
@@ -1040,16 +1055,17 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   }
 
   Widget _buildSearchField() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFDADADA)),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Row(
         children: [
-          const Icon(Icons.search, color: Color(0xFF5C5C5C)),
+          Icon(Icons.search, color: colorScheme.onSurfaceVariant),
           const SizedBox(width: 10),
           Expanded(
             child: TextField(
@@ -1062,7 +1078,13 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               },
               decoration: const InputDecoration(
                 hintText: 'Buscar participante...',
+                filled: false,
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                focusedErrorBorder: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.symmetric(vertical: 16),
               ),
@@ -1077,12 +1099,13 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     required String name,
     String? subtitle,
     String? badge,
-    Color badgeColor = Colors.transparent,
-    Color badgeTextColor = const Color(0xFF3D8F3D),
+    Color? badgeColor,
+    Color? badgeTextColor,
     bool showBadge = false,
     String? warningText,
     String? avatarUrl,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return AppCard(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
@@ -1097,10 +1120,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFF1B1B1B),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontSize: 18,
                     fontWeight: FontWeight.w400,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 if (subtitle != null && subtitle.isNotEmpty)
@@ -1108,9 +1131,9 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
                       subtitle,
-                      style: const TextStyle(
-                        color: Color(0xFF667085),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontSize: 12,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),
@@ -1119,11 +1142,11 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                     padding: const EdgeInsets.only(top: 1),
                     child: Text(
                       warningText,
-                      style: const TextStyle(
-                        color: Color(0xFFCF2A2A),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         height: 1.1,
+                        color: colorScheme.error,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1137,16 +1160,17 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: badgeColor,
+                color: badgeColor ?? colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
-                  color: badgeTextColor.withValues(alpha: 0.4),
+                  color: (badgeTextColor ?? colorScheme.onSurfaceVariant)
+                      .withValues(alpha: 0.4),
                 ),
               ),
               child: Text(
                 badge,
                 style: TextStyle(
-                  color: badgeTextColor,
+                  color: badgeTextColor ?? colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
                   fontSize: 12,
                 ),

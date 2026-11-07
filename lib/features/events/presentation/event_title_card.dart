@@ -10,7 +10,6 @@ class EventTitleCard extends StatelessWidget {
   final VoidCallback? onDelete;
   final bool showDrawValidationButton;
   final VoidCallback? onValidateDraw;
-  final Color? backgroundColor;
   final bool includeOuterPadding;
 
   const EventTitleCard({
@@ -22,23 +21,19 @@ class EventTitleCard extends StatelessWidget {
     this.onDelete,
     this.showDrawValidationButton = false,
     this.onValidateDraw,
-    this.backgroundColor,
     this.includeOuterPadding = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bg =
-        backgroundColor ??
-        Theme.of(context).appBarTheme.backgroundColor ??
-        Theme.of(context).colorScheme.primary;
+    final colorScheme = Theme.of(context).colorScheme;
     final organizerFirstName = _getFirstName(event.organizerName);
 
     final content = Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       decoration: BoxDecoration(
-        color: bg,
+        color: colorScheme.primary,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
@@ -51,8 +46,8 @@ class EventTitleCard extends StatelessWidget {
                   event.name,
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: colorScheme.onPrimary,
                     fontSize: 25,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.7,
@@ -71,9 +66,9 @@ class EventTitleCard extends StatelessWidget {
                         if (isAdmin && event.status != 'DRAWN')
                           IconButton(
                             onPressed: onEdit,
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.edit_outlined,
-                              color: Colors.white,
+                              color: colorScheme.onPrimary,
                               size: 18,
                             ),
                             tooltip: 'Editar evento',
@@ -90,9 +85,9 @@ class EventTitleCard extends StatelessWidget {
                         if (isAdmin)
                           IconButton(
                             onPressed: onDelete,
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.delete_outline_rounded,
-                              color: Colors.white,
+                              color: colorScheme.onPrimary,
                               size: 18,
                             ),
                             tooltip: 'Excluir evento',
@@ -109,7 +104,10 @@ class EventTitleCard extends StatelessWidget {
                         if (showDrawValidationButton)
                           IconButton(
                             onPressed: onValidateDraw,
-                            icon: const Icon(Icons.check, color: Colors.white),
+                            icon: Icon(
+                              Icons.check,
+                              color: colorScheme.onPrimary,
+                            ),
                             tooltip: 'Validar sorteio',
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
@@ -125,8 +123,8 @@ class EventTitleCard extends StatelessWidget {
             event.description,
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: colorScheme.onPrimary,
               fontSize: 16,
               fontWeight: FontWeight.w600,
               height: 1,
@@ -139,7 +137,7 @@ class EventTitleCard extends StatelessWidget {
                 child: Text(
                   'Organizador: $organizerFirstName',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.white,
+                    color: colorScheme.onPrimary,
                     fontWeight: FontWeight.w400,
                   ),
                   overflow: TextOverflow.ellipsis,

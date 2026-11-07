@@ -202,6 +202,7 @@ class _SecretSantaAppState extends State<SecretSantaApp> {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.system,
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       supportedLocales: const [Locale('en', 'US'), Locale('pt', 'BR')],
       scaffoldMessengerKey: rootScaffoldMessengerKey,

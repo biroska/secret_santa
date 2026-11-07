@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../app/app_keys.dart';
-import '../theme/app_colors.dart';
 
 enum AppSnackType { success, error }
 
@@ -45,8 +44,11 @@ abstract final class AppSnackBar {
     final theme = Theme.of(messenger.context);
     final isError = type == AppSnackType.error;
     final background = isError
-        ? AppColors.snackError
-        : (theme.appBarTheme.backgroundColor ?? theme.colorScheme.primary);
+        ? theme.colorScheme.error
+        : theme.colorScheme.inverseSurface;
+    final foreground = isError
+        ? theme.colorScheme.onError
+        : theme.colorScheme.onInverseSurface;
 
     messenger
       ..hideCurrentSnackBar()
@@ -64,6 +66,7 @@ abstract final class AppSnackBar {
               message: message,
               icon: isError ? Icons.close_rounded : Icons.check_rounded,
               background: background,
+              foreground: foreground,
             ),
           ),
         ),
@@ -76,11 +79,13 @@ class _AppSnackContent extends StatelessWidget {
     required this.message,
     required this.icon,
     required this.background,
+    required this.foreground,
   });
 
   final String message;
   final IconData icon;
   final Color background;
+  final Color foreground;
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +96,7 @@ class _AppSnackContent extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
+            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.12),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -99,15 +104,15 @@ class _AppSnackContent extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, color: Colors.white, size: 24),
+          Icon(icon, color: foreground, size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               message,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: foreground,
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
               ),

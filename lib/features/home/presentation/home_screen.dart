@@ -196,20 +196,22 @@ class _HomeScreenState extends State<HomeScreen> {
                     radius: 30,
                     fallbackBuilder: () => const CircleAvatar(
                       radius: 30,
-                      child: Icon(Icons.person, size: 36, color: Colors.white),
+                      child: Icon(Icons.person, size: 36),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     name,
                     style: theme.textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
+                      color: theme.colorScheme.onPrimary,
                     ),
                   ),
                   Text(
                     widget.session.email,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.white70,
+                      color: theme.colorScheme.onPrimary.withValues(
+                        alpha: 0.78,
+                      ),
                     ),
                   ),
                 ],

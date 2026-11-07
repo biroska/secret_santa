@@ -8,6 +8,7 @@ import '../../../widgets/app_card.dart';
 import '../../../widgets/user_avatar.dart';
 import '../../../dtos/event_card_dto.dart';
 import '../../../services/firestore/event_service.dart';
+import '../../../theme/app_colors.dart';
 import 'incluir_dependente_screen.dart';
 import 'event_title_card.dart';
 
@@ -183,8 +184,8 @@ class _EditEventScreenState extends State<EditEventScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F3F5),
       appBar: AppBar(
         title: const Text('Editar evento'),
         leading: IconButton(
@@ -229,46 +230,12 @@ class _EditEventScreenState extends State<EditEventScreen> {
                             labelText: 'Valor máximo do presente',
                             hintText: 'Valor máximo do presente',
                             prefixText: 'R\$ ',
-                            filled: true,
-                            fillColor: Colors.white,
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 18,
                             ),
                             helperText:
                                 'Deixe vazio para não definir um limite.',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(14),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE6E8EC),
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(14),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE6E8EC),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(14),
-                              borderSide: BorderSide(
-                                color: Theme.of(context).colorScheme.primary,
-                                width: 1.5,
-                              ),
-                            ),
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(14),
-                              borderSide: const BorderSide(
-                                color: Colors.redAccent,
-                              ),
-                            ),
-                            focusedErrorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(14),
-                              borderSide: const BorderSide(
-                                color: Colors.redAccent,
-                                width: 1.5,
-                              ),
-                            ),
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -277,12 +244,12 @@ class _EditEventScreenState extends State<EditEventScreen> {
                           child: ElevatedButton(
                             onPressed: _isSaving ? null : _save,
                             child: _isSaving
-                                ? const SizedBox(
+                                ? SizedBox(
                                     width: 20,
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: Colors.white,
+                                      color: colorScheme.onPrimary,
                                     ),
                                   )
                                 : const Text('Salvar'),
@@ -294,10 +261,10 @@ class _EditEventScreenState extends State<EditEventScreen> {
                   const SizedBox(height: 24),
                   Text(
                     'Participantes ${_participants.length}',
-                    style: const TextStyle(
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFF1B1B1B),
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -337,6 +304,8 @@ class EditEventParticipantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = AppColors.of(context);
     final participantId = participant['participantId'] as String? ?? '';
     final isDependent = participant['isDependent'] == true;
     final role = (participant['role'] as String? ?? '').toUpperCase();
@@ -355,15 +324,15 @@ class EditEventParticipantCard extends StatelessWidget {
         ? 'Organizador'
         : (isBadgeDependent ? 'Dependente' : 'Participante');
     final badgeColor = isAdmin
-        ? const Color(0xFFE9F3FA)
+        ? appColors.infoContainer
         : (isBadgeDependent
-              ? const Color(0xFFFCEFD9)
-              : const Color(0xFFE2F0E2));
+              ? appColors.warningContainer
+              : appColors.successContainer);
     final badgeTextColor = isAdmin
-        ? const Color(0xFF2C6F9F)
+        ? appColors.onInfoContainer
         : (isBadgeDependent
-              ? const Color(0xFFB07A1E)
-              : const Color(0xFF3D8F3D));
+              ? appColors.onWarningContainer
+              : appColors.onSuccessContainer);
     final removeButton = IconButton(
       tooltip: isDependent ? 'Remover dependente' : 'Remover participante',
       padding: EdgeInsets.zero,
@@ -382,9 +351,9 @@ class EditEventParticipantCard extends StatelessWidget {
             )
           : null,
       onPressed: onRemove,
-      icon: const Icon(
+      icon: Icon(
         Icons.delete_forever_outlined,
-        color: Color(0xFFCF2A2A),
+        color: colorScheme.error,
         size: 26,
       ),
     );
@@ -404,7 +373,7 @@ class EditEventParticipantCard extends StatelessWidget {
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
       onPressed: onEditDependent,
-      icon: const Icon(Icons.edit_outlined, color: Color(0xFF1D7B72), size: 26),
+      icon: Icon(Icons.edit_outlined, color: colorScheme.primary, size: 26),
     );
     final badge = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -446,11 +415,12 @@ class EditEventParticipantCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               name,
-                              style: const TextStyle(
-                                color: Color(0xFF1B1B1B),
-                                fontSize: 18,
-                                fontWeight: FontWeight.w400,
-                              ),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w400,
+                                    color: colorScheme.onSurface,
+                                  ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -462,12 +432,13 @@ class EditEventParticipantCard extends StatelessWidget {
                           padding: const EdgeInsets.only(top: 1),
                           child: Text(
                             warningText,
-                            style: const TextStyle(
-                              color: Color(0xFFCF2A2A),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              height: 1.1,
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.1,
+                                  color: colorScheme.error,
+                                ),
                           ),
                         ),
                     ],
@@ -485,10 +456,10 @@ class EditEventParticipantCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     name,
-                    style: const TextStyle(
-                      color: Color(0xFF1B1B1B),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontSize: 18,
                       fontWeight: FontWeight.w400,
+                      color: colorScheme.onSurface,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

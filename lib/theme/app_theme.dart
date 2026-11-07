@@ -11,36 +11,64 @@ abstract final class AppTheme {
     final scheme = ColorScheme.fromSeed(
       seedColor: AppColors.seed,
       brightness: Brightness.light,
-      surface: AppColors.surfaceTintBlue,
+      surface: const Color(0xFFF5F7FA),
     );
-    return _baseTheme(scheme);
+    return _baseTheme(scheme, AppColors.light);
   }
 
   static ThemeData get dark {
     final scheme = ColorScheme.fromSeed(
       seedColor: AppColors.seed,
       brightness: Brightness.dark,
+      surface: const Color(0xFF101418),
     );
-    return _baseTheme(scheme);
+    return _baseTheme(scheme, AppColors.dark);
   }
 
-  static ThemeData _baseTheme(ColorScheme scheme) {
+  static ThemeData _baseTheme(ColorScheme scheme, AppColors appColors) {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
+      scaffoldBackgroundColor: scheme.surface,
+      extensions: [appColors],
       appBarTheme: AppBarTheme(
         elevation: 0,
-        scrolledUnderElevation: 1,
-        backgroundColor: scheme.inversePrimary,
+        scrolledUnderElevation: 0,
+        backgroundColor: scheme.surface,
         foregroundColor: scheme.onSurface,
       ),
       cardTheme: CardThemeData(
         elevation: 1,
         margin: EdgeInsets.zero,
         color: scheme.surfaceContainerLow,
-        surfaceTintColor: scheme.surfaceTint,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: scheme.surfaceContainerHighest,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: scheme.outlineVariant),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: scheme.outlineVariant),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: scheme.primary, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: scheme.error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: scheme.error, width: 1.5),
+        ),
+      ),
+      dividerTheme: DividerThemeData(color: scheme.outlineVariant),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: AppButtonStyles.elevated,
       ),

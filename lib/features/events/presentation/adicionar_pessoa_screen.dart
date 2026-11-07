@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../utils/app_navigation.dart';
 import '../../../dtos/event_card_dto.dart';
 import '../../../services/firestore/event_service.dart';
+import '../../../theme/app_colors.dart';
 import 'event_title_card.dart';
 import 'incluir_dependente_screen.dart';
 
@@ -118,6 +119,8 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = AppColors.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Adicionar participante'),
@@ -139,9 +142,6 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                     EventTitleCard(
                       event: _event!,
                       isAdmin: false,
-                      backgroundColor: Theme.of(
-                        context,
-                      ).appBarTheme.backgroundColor,
                       includeOuterPadding: false,
                     ),
                     const SizedBox(height: 18),
@@ -158,12 +158,12 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFE9F3FA),
+                                    color: appColors.infoContainer,
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: const Icon(
+                                  child: Icon(
                                     Icons.qr_code,
-                                    color: Color(0xFF2C6F9F),
+                                    color: appColors.onInfoContainer,
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -181,8 +181,8 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                                       const SizedBox(height: 4),
                                       Text(
                                         _inviteSubtitle,
-                                        style: const TextStyle(
-                                          color: Color(0xFF667085),
+                                        style: TextStyle(
+                                          color: colorScheme.onSurfaceVariant,
                                         ),
                                       ),
                                     ],
@@ -194,14 +194,16 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: colorScheme.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: const Color(0xFFE5E7EB),
+                                  color: colorScheme.outlineVariant,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.06),
+                                    color: colorScheme.shadow.withValues(
+                                      alpha: 0.06,
+                                    ),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
@@ -290,10 +292,11 @@ class _AdicionarPessoaScreenState extends State<AdicionarPessoaScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: ListTile(
-                        leading: const CircleAvatar(
+                        leading: CircleAvatar(
+                          backgroundColor: appColors.warningContainer,
                           child: Icon(
                             Icons.person_outline,
-                            color: Color(0xFF8A5B00),
+                            color: appColors.onWarningContainer,
                           ),
                         ),
                         title: const Text('Dependente'),

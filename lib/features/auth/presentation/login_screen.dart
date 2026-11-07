@@ -6,7 +6,6 @@ import 'package:secret_santa/utils/app_routes.dart';
 
 import '../data/google_auth_api.dart';
 import '../data/google_auth_service.dart';
-import '../../../theme/app_colors.dart';
 import 'widgets/google_sign_in_button.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -71,10 +70,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final supported = GoogleAuthService.isPlatformSupported;
-    const mutedText = Color(0xFF64748B);
 
     return Scaffold(
-      backgroundColor: AppColors.surfaceTintBlue,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -90,31 +87,33 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFD6E4FF),
+                        color: theme.colorScheme.primaryContainer,
                         borderRadius: BorderRadius.circular(24),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.card_giftcard_outlined,
                         size: 40,
-                        color: Color(0xFF2B3F73),
+                        color: theme.colorScheme.onPrimaryContainer,
                       ),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const Text(
+                  Text(
                     'Secret Santa',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: theme.textTheme.headlineSmall?.copyWith(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF0B1220),
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Entre para participar do amigo secreto',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: mutedText),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 40),
                   if (!supported) ...[
@@ -143,10 +142,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: _onGoogleSignIn,
                   ),
                   const SizedBox(height: 24),
-                  const Text(
+                  Text(
                     'Ao entrar você aceita os termos de uso e a política de privacidade.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12, color: mutedText),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),

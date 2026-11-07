@@ -15,11 +15,12 @@ class GoogleSignInButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(16);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Material(
-      color: Colors.white,
+      color: colorScheme.surfaceContainerHighest,
       elevation: 2,
-      shadowColor: Colors.black.withValues(alpha: 0.12),
+      shadowColor: colorScheme.shadow.withValues(alpha: 0.12),
       borderRadius: radius,
       child: InkWell(
         onTap: isLoading ? null : onPressed,
@@ -37,25 +38,25 @@ class GoogleSignInButton extends StatelessWidget {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               else
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 12,
-                  backgroundColor: Color(0xFFF1F4F9),
+                  backgroundColor: colorScheme.surface,
                   child: Text(
                     'G',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF4B5563),
+                      color: colorScheme.primary,
                     ),
                   ),
                 ),
               const SizedBox(width: 12),
               Text(
                 isLoading ? 'Entrando…' : label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black,
+                  color: colorScheme.onSurface,
                 ),
               ),
             ],

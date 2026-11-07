@@ -157,10 +157,10 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
           Expanded(
             child: Text(
               name,
-              style: const TextStyle(
-                color: Color(0xFF1B1B1B),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ),
@@ -238,12 +238,11 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor =
-        Theme.of(context).appBarTheme.backgroundColor ??
-        Theme.of(context).colorScheme.primary;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final backgroundColor = colorScheme.primaryContainer;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F3F5),
       appBar: AppBar(
         title: Text(
           _isEditing ? 'Editar dependente' : 'Adicionar participante',
@@ -262,9 +261,6 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                 EventTitleCard(
                   event: widget.event!,
                   isAdmin: false,
-                  backgroundColor: Theme.of(
-                    context,
-                  ).appBarTheme.backgroundColor,
                   includeOuterPadding: false,
                 )
               else
@@ -280,10 +276,10 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                   ),
                   child: Text(
                     _isEditing ? 'Editar dependente' : 'Novo dependente',
-                    style: const TextStyle(
+                    style: theme.textTheme.titleLarge?.copyWith(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF1B1B1B),
+                      color: colorScheme.onPrimaryContainer,
                     ),
                   ),
                 ),
@@ -302,34 +298,7 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                             labelText: 'Nome do dependente',
                             hintText: 'Ex.: Alice Galdino',
                             filled: true,
-                            fillColor: _isEditing
-                                ? const Color(0xFFF3F4F6)
-                                : Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE5E7EB),
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE5E7EB),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: backgroundColor,
-                                width: 1.5,
-                              ),
-                            ),
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Colors.redAccent,
-                              ),
-                            ),
+                            fillColor: colorScheme.surfaceContainerHighest,
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
@@ -341,22 +310,22 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                         const SizedBox(height: 18),
                         Row(
                           children: [
-                            const Expanded(
+                            Expanded(
                               child: Text(
                                 'Responsáveis',
-                                style: TextStyle(
+                                style: theme.textTheme.titleMedium?.copyWith(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF111827),
+                                  color: colorScheme.onSurface,
                                 ),
                               ),
                             ),
                             Text(
                               '${_responsaveisSelecionados.length} selecionado(s)',
-                              style: const TextStyle(
+                              style: theme.textTheme.bodyMedium?.copyWith(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: Color(0xFF6B7280),
+                                color: colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -367,40 +336,21 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                           decoration: InputDecoration(
                             hintText: 'Buscar participante...',
                             filled: true,
-                            fillColor: Colors.white,
-                            prefixIcon: const Icon(
+                            prefixIcon: Icon(
                               Icons.search,
-                              color: Color(0xFF6B7280),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE5E7EB),
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE5E7EB),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: backgroundColor,
-                                width: 1.5,
-                              ),
+                              color: colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ),
                         const SizedBox(height: 12),
                         if (_responsaveisDisponiveis.isEmpty)
                           AppCard(
-                            color: Colors.white,
                             padding: const EdgeInsets.all(16),
-                            child: const Text(
+                            child: Text(
                               'Nenhum participante disponível para ser responsável.',
-                              style: TextStyle(color: Color(0xFF667085)),
+                              style: TextStyle(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
                             ),
                           )
                         else
@@ -425,7 +375,7 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                           ),
                         const SizedBox(height: 18),
                         AppCard(
-                          color: const Color(0xFFE7EEF4),
+                          color: colorScheme.primaryContainer,
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -446,13 +396,13 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: const [
+                                  children: [
                                     Text(
                                       'Permitir sortear os responsáveis',
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
-                                        color: Color(0xFF1F2937),
+                                        color: colorScheme.onPrimaryContainer,
                                       ),
                                     ),
                                     SizedBox(height: 6),
@@ -460,7 +410,7 @@ class _IncluirDependenteScreenState extends State<IncluirDependenteScreen> {
                                       'Habilite para que o dependente possa sortear um de seus responsáveis',
                                       style: TextStyle(
                                         fontSize: 13,
-                                        color: Color(0xFF6B7280),
+                                        color: colorScheme.onPrimaryContainer,
                                       ),
                                     ),
                                   ],

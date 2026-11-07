@@ -44,40 +44,19 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   }
 
   InputDecoration _inputDecoration(String label, {IconData? icon}) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return InputDecoration(
       labelText: label,
       hintText: label,
-      filled: true,
-      fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       prefixIcon: icon == null
           ? null
-          : Icon(icon, size: 20, color: Colors.grey[600]),
+          : Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
       suffixIcon: icon == null
           ? null
-          : Icon(icon, size: 20, color: Colors.grey[600]),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFFE6E8EC)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFFE6E8EC)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: primaryColor, width: 1.5),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Colors.redAccent),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
-      ),
+          : Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
     );
   }
 
@@ -283,12 +262,12 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               ElevatedButton(
                 onPressed: _isSaving || !_isFormValid ? null : _submitForm,
                 child: _isSaving
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onPrimary,
                         ),
                       )
                     : const Text('Salvar Evento'),

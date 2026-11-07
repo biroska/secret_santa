@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:secret_santa/features/events/presentation/edit_event_screen.dart';
+import 'package:secret_santa/theme/app_colors.dart';
 
 void main() {
   testWidgets('shows a trash icon on the left for removable participants', (
@@ -179,10 +180,10 @@ void main() {
           .first,
     );
     final decoration = badge.decoration! as BoxDecoration;
-    expect(decoration.color, const Color(0xFFE2F0E2));
+    expect(decoration.color, AppColors.light.successContainer);
     expect(
       (decoration.border! as Border).top.color,
-      const Color(0xFF3D8F3D).withValues(alpha: 0.4),
+      AppColors.light.onSuccessContainer.withValues(alpha: 0.4),
     );
   });
 }
